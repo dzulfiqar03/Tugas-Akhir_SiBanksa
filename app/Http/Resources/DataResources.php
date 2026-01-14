@@ -22,7 +22,7 @@ class DataResources extends JsonResource
             return [
                 'Data' => 'RW',
                 'sub-data' => [
-                   
+
                     [
                         'nama' => 'Bank Sampah',
                         'icon' => 'fa fa-recycle',
@@ -78,7 +78,7 @@ class DataResources extends JsonResource
                     [
                         'nama'  => 'Dashboard',
                         'route' => route('dashboard'),
-                        'uri' => '#',
+                        'uri' => 'dashboard',
                         'icon'  => 'fas fa-tachometer-alt',
                     ],
 
@@ -106,8 +106,8 @@ class DataResources extends JsonResource
                             ],
                             [
                                 'nama'  => 'Jadwal Pelaksanaan',
-                                'route' => '#',
-                                'uri' => '#',
+                                'route' => route('jadwal-pelaksanaan'),
+                                'uri' => 'jadwal-pelaksanaan',
                                 'icon'  => 'fas fa-calendar-alt',
                             ],
                         ],

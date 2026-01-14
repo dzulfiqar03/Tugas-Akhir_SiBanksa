@@ -7,12 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class PencatatanSetoran extends Model
 {
-    protected $fillable = ['id_userdetail', 'tanggal_setoran', 'total_setoran'];
+    protected $fillable = ['id_userdetail', 'id_jadwal', 'total_setoran'];
 
 
     public function user_detail()
     {
         return $this->belongsTo(UserDetail::class, 'id_userdetail', 'id');
+    }
+
+    public function jadwal()
+    {
+        return $this->belongsTo(JadwalPelaksanaan::class, 'id_jadwal', 'id');
     }
 
         public function pencatatan_items()

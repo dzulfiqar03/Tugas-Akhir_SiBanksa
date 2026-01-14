@@ -8,10 +8,10 @@
     <!-- LEFT : BREADCRUMB + TITLE -->
     <div class="flex flex-col gap-1">
         <x-breadcrumbs :items="[
-            ['label' => 'Dashboard', 'url' => $__env->yieldContent('main-route')],
-            ['label' => $__env->yieldContent('content'), 'url' => $__env->yieldContent('route')],
-            ['label' => $__env->yieldContent('sub-content')],
-        ]" />
+    ['label' => 'Dashboard', 'url' => route('dashboard')], 
+    ['label' => View::getSection('content'), 'url' => View::getSection('route')],
+    ['label' => View::getSection('sub-content')],
+]" />
 
         <h1 class="text-2xl font-semibold tracking-wide text-gray-800 dark:text-gray-100">
             @yield('title', '')

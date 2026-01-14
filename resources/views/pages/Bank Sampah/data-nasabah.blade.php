@@ -2,6 +2,9 @@
 
 @section('title', 'Data Nasabah - Bank Sampah')
 
+@section('content', 'Manajemen Nasabah')
+@section('route', route('data-nasabah'))
+@section('sub-content', 'Data Nasabah')
 
 @section('data-nasabah')
 
@@ -16,7 +19,7 @@
 
                 <!-- Header -->
                 <div
-                    class=" card-header flex justify-between items-center  px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+                    class="pb-2 mb-3   card-header flex justify-between items-center  px-4 py-3 border-b border-gray-200 dark:border-gray-600">
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Form Data Nasabah</h3>
 
                     <button @click="open = !open"
@@ -128,7 +131,7 @@
 
                 @section('tbbody-nasabah')
                     @foreach ($nasabah as $index => $user)
-                        <tr>
+                        <tr data-kategori= "{{ $user->user_detail->gender->gender }}">
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $user->user_detail->fullName }}</td>
                             <td class="text-center">{{ $user->user_detail->status }}</td>

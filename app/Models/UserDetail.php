@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\BankSampah\Kepengurusan;
 use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\BankSampah\Sampah;
@@ -62,5 +63,10 @@ class UserDetail extends Model
     public function kepengurusan()
     {
         return $this->hasMany(Kepengurusan::class, 'id_userdetail', 'id');
+    }
+
+    public function jadwal()
+    {
+        return $this->hasMany(JadwalPelaksanaan::class, 'id_userdetail', 'id');
     }
 }

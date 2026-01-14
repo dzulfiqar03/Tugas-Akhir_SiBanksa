@@ -5,8 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-use function Symfony\Component\Clock\now;
-
 return new class extends Migration
 {
     /**
@@ -14,10 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pencatatan_setoran', function (Blueprint $table) {
+        Schema::create('jadwal_pelaksanaan', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_userdetail')->constrained('user_details')->onDelete('cascade');
-            $table->integer('total_setoran')->default(0); // <--- hasil akhir
+            $table->date('tanggal_setoran')->default(value: DB::raw('CURRENT_DATE'));
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pencatatan_setoran');
+        Schema::dropIfExists('jadwal_pelaksanaan');
     }
 };

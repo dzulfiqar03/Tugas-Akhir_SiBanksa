@@ -7,7 +7,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 use Symfony\Component\Routing\Route;
 
-class SampahRequest extends FormRequest
+class JadwalPelaksanaanRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,10 +25,7 @@ class SampahRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_sampah'        => 'required|string',
-            'satuan'        => 'required|string',
-            'harga'           => 'required|integer',
-            'kategori'        => 'required',
+            'tanggal_setoran'        => 'required|date|unique:jadwal_pelaksanaan,tanggal_setoran',
             'id_userdetail' => 'required|integer',
 
         ];
@@ -37,10 +34,7 @@ class SampahRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nama_sampah.required'    => 'Sampah wajib diisi',
-            'satuan.required'    => 'Satuan wajib diisi',
-            'harga.required'       => 'Harga wajib diisi',
-            'kategori.required'          => 'Kategori wajib diisi',
+            'tanggal_setoran.required'    => 'Tanggal Setoran wajib diisi',
             'id_userdetail.required'          => 'Id User wajib diisi',
         ];
     }

@@ -130,6 +130,11 @@
             <input type="hidden" name="id_rt" value="{{ Auth::user()->user_detail->id_rt }}">
             <input type="hidden" name="id_roles" value="3">
             @yield('formNasabah')
+        @elseif ($currentRouteName == 'jadwal-pelaksanaan')
+            @include('components.error-message')
+            <input type="hidden" name="id_userdetail" value="{{ Auth::user()->user_detail->id }}">
+            <input type="hidden" name="id" id="jadwal_id">
+            @yield('formJadwal')
         @elseif($currentRouteName === 'data-transaksi')
             @yield('formTransaksi')
         @elseif($currentRouteName === 'pencatatan-setoran')

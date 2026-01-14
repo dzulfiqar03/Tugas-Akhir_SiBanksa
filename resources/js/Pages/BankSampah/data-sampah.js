@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-    let table = new DataTable('#dataNasabah', {
+    let table = new DataTable('#dataSampah', {
         pageLength: 5,
         responsive: true,
         lengthMenu: [5, 10, 25, 50],
@@ -8,10 +8,58 @@ $(document).ready(function () {
             topStart: {
                 buttons: [
                     {
-                        extend: 'csvHtml5',
-                        text: '<i class="fa-solid fa-file-csv mr-2"></i> CSV',
-                        className: 'export-btn bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
+                        extend: 'pdfHtml5',
+                        text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
+                        className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+                        title: 'Data Sampah',
+                        exportOptions: {
+                            columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
+                        },
+                        customize: function (doc) {
+                            // Atur margin halaman PDF
+                            doc.pageMargins = [40, 60, 40, 40];
+
+                            // Tambahkan logo + namaSampah di atas tabel
+                            doc.content.splice(0, 0, {
+                                columns: [
+                                    {
+                                        image: 'data:image/png;base64,REPLACE_WITH_BASE64_LOGO', // Ganti base64 logomu di sini
+                                        width: 60
+                                    },
+                                    {
+                                        text: 'Bank Sampah - Data Sampah',
+                                        alignment: 'right',
+                                        fontSize: 16,
+                                        bold: true,
+                                        margin: [0, 20, 0, 0]
+                                    }
+                                ],
+                                columnGap: 10
+                            });
+
+                            // Tambahkan garis pemisah
+                            doc.content.splice(1, 0, {
+                                canvas: [
+                                    {
+                                        type: 'line',
+                                        x1: 0,
+                                        y1: 0,
+                                        x2: 515,
+                                        y2: 0,
+                                        lineWidth: 1,
+                                        lineColor: '#cccccc'
+                                    }
+                                ],
+                                margin: [0, 10, 0, 10]
+                            });
+
+                            // Atur gaya tabel (opsional)
+                            doc.styles.tableHeader.fillColor = '#f1f1f1';
+                            doc.styles.tableHeader.color = '#333333';
+                            doc.defaultStyle.fontSize = 10;
+                        }
                     },
+
                     {
                         extend: 'excelHtml5',
                         text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
@@ -21,10 +69,7 @@ $(document).ready(function () {
                         extend: 'print',
                         text: '<i class="fa-solid fa-print mr-2"></i> Print',
                         className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: '', // kosongin biar gak dobel judul default
-                        exportOptions: {
-                            columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
-                        },
+                        title: '', // kosongin biar gak dobel namaSampah default
                         customize: function (win) {
                             $(win.document.body)
                                 .css('font-family', 'Poppins, sans-serif')
@@ -39,7 +84,7 @@ $(document).ready(function () {
                         
                     </div>
                     <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Sampah</p>
+                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
                         <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
                     </div>
                 </div>
@@ -70,6 +115,7 @@ $(document).ready(function () {
                                 });
                         }
                     }
+
                 ]
             },
             topEnd: function () {
@@ -91,10 +137,8 @@ $(document).ready(function () {
             class="appearance-none border dark:border-gray-600 rounded-md pl-2 pr-6 py-1 text-sm
                    bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100">
             <option value="">Semua</option>
-            <option value="Kering">Kering</option>
-            <option value="Plastik">Plastik</option>
-            <option value="Logam">Logam</option>
-            <option value="Cair">Cair</option>
+            <option value="Daur Ulang">Daur Ulang</option>
+            <option value="Non Daur Ulang">Non Daur Ulang</option>
         </select>
        
     </div>
@@ -130,7 +174,6 @@ $(document).ready(function () {
         }
     });
 
-
     const $card = $('#card_project');
 
     const $icon = $('.card-header').find('i');
@@ -153,12 +196,12 @@ $(document).ready(function () {
             $card.find('.btn-cancel').addClass('hidden');
         }
 
-        $('#formNasabah input[name="_method"]').val("POST");
-        $('#formNasabah input[name="id"]').val("");
-        $('#formNasabah input[name="fullName"]').val("");
-        $('#formNasabah input[name="address"]').val("");
-        $('#formNasabah input[name="harga"]').val("");
-        $('#formNasabah input[name="kategori"]').val("");
+        $('#formSampah input[name="_method"]').val("POST");
+        $('#formSampah input[name="id"]').val("");
+        $('#formSampah input[name="nama_sampah"]').val("");
+        $('#formSampah input[name="satuan"]').val("");
+        $('#formSampah input[name="harga"]').val("");
+        $('#formSampah input[name="kategori"]').val("");
     });
 
     $(document).on('click', '.btn-cancel', function () {
@@ -173,16 +216,84 @@ $(document).ready(function () {
         $card.find('.btn-simpan').text('Simpan Buku')
 
     });
-    $('#formNasabah').on('submit', function (e) {
+
+
+
+    //     $('#formSampah').on('submit', function(e) {
+    //     e.preventDefault();
+
+    //     // reset error
+    //     $('#formSampah input, #formSampah select').removeClass('border-red-500 ring-1 ring-red-500');
+    //     $('#error-message').fadeOut();
+
+    //     const method = $('#formSampah input[name="_method"]').val();
+    //     const url = $(this).attr('action');
+    //     const formData = new FormData(this);
+
+    //     $.ajax({
+    //         url: url,
+    //         method: 'POST',
+    //         data: formData,
+    //         contentType: false,
+    //         processData: false,
+    //         headers: { 
+    //             'Accept': 'application/json',
+    //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    //         },
+    //         success: function(res) {
+    //             Swal.fire({
+    //                 icon: 'success',
+    //                 title: method === 'POST' ? 'Added!' : 'Updated!',
+    //                 text: res.message || 'Success',
+    //                 timer: 1500,
+    //                 showConfirmButton: false
+    //             }).then(() => location.reload());
+    //         },
+    //         error: function(xhr) {
+    //             if (xhr.status === 422) {
+    //                 const errors = xhr.responseJSON.errors;
+    //                 let errorHtml = '';
+    //                 let count = 0;
+
+    //                 Object.keys(errors).forEach(key => {
+    //                     errors[key].forEach(msg => {
+    //                         errorHtml += `
+    //                         <li class="text-[11px] text-red-600 flex items-center gap-2">
+    //                             <span class="w-1 h-1 bg-red-400 rounded-full"></span>
+    //                             ${msg}
+    //                         </li>`;
+    //                         count++;
+    //                     });
+
+    //                     // Highlight input
+    //                     $(`[name="${key}"]`).addClass('border-red-500 ring-1 ring-red-500');
+    //                 });
+
+    //                 $('#error-list').html(errorHtml);
+    //                 $('#error-count').text(count);
+    //                 $('#error-message').removeClass('hidden').fadeIn();
+
+    //                 // SweetAlert untuk gagal
+    //                 Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
+    //             } else {
+    //                 Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+    //             }
+    //         }
+    //     });
+    // });
+
+    $('#formSampah').on('submit', function (e) {
         e.preventDefault();
 
-        const method = $('#formNasabah input[name="_method"]').val();
-        const id = $('#formNasabah input[name="id"]').val();
+        const method = $('#formSampah input[name="_method"]').val();
+        const id = $('#formSampah input[name="id"]').val();
 
 
         const url = method === 'POST' ?
-            `/bank-sampah/nasabah/create` :
-            `/bank-sampah/nasabah/update/${id}`;
+            `/bank-sampah/Sampah/Create` :
+            `/bank-sampah/Sampah/Update/${id}`;
+
+
 
         try {
             const post = () => {
@@ -249,7 +360,7 @@ $(document).ready(function () {
             method === 'POST' ?
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: "Do you want to add this people?",
+                    text: "Do you want to add this Trash?",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -257,7 +368,7 @@ $(document).ready(function () {
                     confirmButtonText: 'Yes, add it!'
                 }).then(() => post()) : Swal.fire({
                     title: 'Are you sure?',
-                    text: "Do you want to update this people?",
+                    text: "Do you want to update this Trash?",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -282,10 +393,19 @@ $(document).ready(function () {
         }
     });
 
-
     // Edit button - delegated (works with DataTables)
-    $(document).on('click', '#dataNasabah .btn-edit', function () {
+    $(document).on('click', '#dataSampah .btn-edit', function () {
         const data = $(this).data();
+
+        // isi form
+        $('#formSampah input[name=_method]').val("PUT");
+        $('#formSampah input[name=id]').val(data.id);
+        $('#formSampah input[name=nama_sampah]').val(data.nama_sampah);
+        $('#formSampah input[name=satuan]').val(data.satuan);
+        $('#formSampah input[name=harga]').val(data.harga);
+
+        $('#formSampah select[name="kategori"]').val(data.kategori).trigger('change');
+
         const isCollapsed = $('#card_project').hasClass('collapsed-card');
         // open card
         $('#card_project').removeClass('collapsed-card');
@@ -296,31 +416,22 @@ $(document).ready(function () {
             $card.find('.card-body').slideDown(200);
             $card.find('.btn-cancel').removeClass('hidden');
 
-            $card.find('.btn-simpan').text('Update Nasabah')
+            $card.find('.btn-simpan').text('Update Sampah')
         } else {
             $card.addClass('collapsed-card');
             $card.find('.card-body').slideUp(200);
             $card.find('.btn-cancel').addClass('hidden');
         }
         $('#card_project .btn-cancel').removeClass('hidden');
-        // isi form
-        $('#formNasabah input[name=_method]').val("PUT");
-        $('#formNasabah input[name=id]').val(data.id);
-        $('#formNasabah input[name=fullName]').val(data.name);
-        $('#formNasabah input[name=address]').val(data.address);
-        $('#formNasabah select[name=rt]').val(data.rt);
-        $('#formNasabah select[name=status]').val(data.status);
-        $('#formNasabah input[name=urlProfil]').val(data.urlProfil);
-        $(`#formNasabah input[name="id_gender"][value="${data.gender}"]`)
-    .prop('checked', true)
-    .trigger('change');
     });
 
     // Cancel button
     $(document).on('click', '#card_project .btn-cancel', function () {
-        $('#formNasabah input[name="id"]').val("");
-        $('#formNasabah input[name="_method"]').val("POST");
+        $('#formSampah input[name="id"]').val("");
+        $('#formSampah input[name="_method"]').val("POST");
+
         $('#card_project .btn-cancel').addClass('hidden');
+
         // close form
         $('#card_project').addClass('collapsed-card');
         $('#card_project .card-body').hide();
@@ -338,7 +449,7 @@ $(document).ready(function () {
 
         const post = () => {
             $.ajax({
-                url: `/bank-sampah/nasabah/delete/${id}`,
+                url: `/Bank Sampah/Sampah/Delete/${id}`,
                 type: 'POST',
                 data: {
                     _method: 'DELETE',
@@ -383,7 +494,6 @@ $(document).ready(function () {
     });
 
 
-
     // 🔍 Search custom
     $('#tableSearch').on('keyup', function () {
         table.search(this.value).draw();
@@ -415,32 +525,34 @@ $(document).ready(function () {
     // Jalankan pertama kali & setiap update
     highlightMaxRow();
     table.on('draw', highlightMaxRow);
-
-
 });
 
 
-function filterTable(category) {
-    const rows = document.querySelectorAll("#table-body tr");
-    rows.forEach(row => {
-        const rowCategory = row.getAttribute("data-kategori");
-        if (category === "Semua" || rowCategory === category) {
-            row.style.display = ""; // Tampilkan baris
-        } else {
-            row.style.display = "none"; // Sembunyikan baris
-        }
+$(document).ready(function() {
+    $('#kategoriFilter').on("change", function() {
+        const selectedCategory = $(this).val();
+        filterTable(selectedCategory);
     });
+});
 
-    // Update tombol aktif
-    const buttons = document.querySelectorAll("button");
-    buttons.forEach(button => button.classList.remove("btn-success"));
-    buttons.forEach(button => button.classList.add("btn-outline-secondary"));
+function filterTable(category) {
+    $('#tableBody tr').each(function() {
+        const rowKategori = $(this).attr('data-kategori');
+        // Logika filter
+            if (category === "" || rowKategori === category) {
+                $(this).fadeIn(200); 
+            } else {
+                $(this).hide();
+            }
+    });
+}
 
-    const activeButton = [...buttons].find(btn => btn.textContent === category);
-    if (activeButton) {
-        activeButton.classList.remove("btn-outline-secondary");
-        activeButton.classList.add("btn-success");
-    }
+
+function updateRowNumbers() {
+    let n = 1;
+    $('#table-body tr:visible').each(function() {
+        $(this).find('td:first').text(n++);
+    });
 }
 
 const items = json($items);

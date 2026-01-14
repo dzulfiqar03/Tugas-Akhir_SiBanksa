@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
 
         // Ambil role dari user_detail → roles
         $role = $user->user_detail->roles->role;
-
+        $request->session()->put('user', $user);
 
         if ($role === 'Bank Sampah') {
             return redirect()->intended(route('dashboard'));
@@ -66,6 +66,8 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('web')->logout();
 
+
+        $request->session()->forget('user');
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();

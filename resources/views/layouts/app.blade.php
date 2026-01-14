@@ -76,20 +76,21 @@
                         @if (Auth::user()->user_detail->status === 'Pengajuan Verifikasi')
                             @vite('resources/js/Pages/Warga/dashboard.js')
                         @endif
-
-                     @elseif ($currentRouteName == 'rw.dashboard')
+                    @elseif ($currentRouteName == 'rw.dashboard')
                         @yield('dashboard')
                         @if (Auth::user()->user_detail->status === 'Pengajuan Verifikasi')
                             @vite('resources/js/Pages/Warga/dashboard.js')
                         @endif
                     @elseif ($currentRouteName == 'data-sampah')
                         @yield('data-sampah')
-
-        
-                        @vite('resources/js/Pages/data-sampah.js')
+                        @vite('resources/js/Pages/BankSampah/data-sampah.js')
+                        @vite(['resources/css/style.css'])
                     @elseif ($currentRouteName == 'data-nasabah')
                         @yield('data-nasabah')
-                        @vite('resources/js/Pages/data-nasabah.js')
+                        @vite('resources/js/Pages/BankSampah/data-nasabah.js')
+                    @elseif ($currentRouteName == 'jadwal-pelaksanaan')
+                        @yield('data-jadwalBankSampah')
+                        @vite('resources/js/Pages/BankSampah/data-jadwalBankSampah.js')
                     @elseif ($currentRouteName == 'data-tracking')
                         @yield('tracking')
                         @vite('resources/js/Pages/tracking-setor.js')
@@ -144,9 +145,9 @@
         </button>
     </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 
     <script>

@@ -2,10 +2,12 @@
 
 namespace App\Http\Resources;
 
+use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\Gender;
 use App\Models\RTPerumahan;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 class FormResources extends JsonResource
 {
@@ -31,9 +33,19 @@ class FormResources extends JsonResource
             $optionGender[] = $gen->gender; // kolom
         }
 
+        $optionJadwal = [];
+        if (Auth::check()) {
+            $jadwal = JadwalPelaksanaan::where('id_userdetail', Auth::user()->user_detail->id)->get();
+
+
+            foreach ($jadwal as $sch) {
+                $optionJadwal[] = $sch->Jadwal; // kolom
+            }
+        }
+
         return [
             'nasabah' => [
-                 [
+                [
                     'title' => 'Jenis Kelamin',
                     'name'  => 'id_gender',
                     'type'  => 'radio',
@@ -70,7 +82,7 @@ class FormResources extends JsonResource
                     'type' => 'select',
                     'options' => $optionRT,
                 ],
-               
+
 
                 [
                     'title' => 'Status',
@@ -262,6 +274,22 @@ class FormResources extends JsonResource
                 ]
 
 
+            ],
+
+            'bankSampah' => [
+                [
+                    'title' => 'Tanggal Setoran',
+                    'name' => 'tanggal_setoran',
+                    'type' => 'date',
+                    'placeholder' => 'Masukkan Tanggal Pelaksanaan',
+                ],
+
+                [
+                    'title' => 'Jadwal',
+                    'name' => 'id_jadwal',
+                    'type' => 'select',
+                    'options' => $optionJadwal,
+                ],
             ]
         ];
     }

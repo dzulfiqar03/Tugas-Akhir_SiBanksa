@@ -4,7 +4,7 @@
 @endphp
 
 {{-- TABEL UNTUK DATA REKENING --}}
-@if ($tables == "dataRekening")
+@if ($tables == 'dataRekening')
     <table id="{{ $tables }}" x-cloak
         class="stripe hover w-full text-sm text-gray-dark dark:bg-gray-800 dark:text-gray-100">
         <thead class="dark:bg-gray-900">
@@ -19,8 +19,8 @@
 @endif
 
 {{-- TABEL UNTUK DATA LAIN --}}
-@if ($tables != "dataRekening")
-    <table id=@yield('titleTable')  x-cloak
+@if ($tables != 'dataRekening')
+    <table id=@yield('titleTable') x-cloak
         class="stripe hover w-full text-sm text-gray-dark dark:bg-gray-800 dark:text-gray-100">
         <thead class="dark:bg-gray-900 ">
             <tr>
@@ -32,7 +32,9 @@
                     @yield('tbhead-tracking')
                 @elseif ($currentRouteName == 'data-transaksi')
                     @yield('tbhead-transaksi')
-                    @elseif ($currentRouteName == 'pencatatan-setoran')
+                @elseif ($currentRouteName == 'jadwal-pelaksanaan')
+                    @yield('tbhead-jadwalPelaksanaan')
+                @elseif ($currentRouteName == 'pencatatan-setoran')
                     @yield('tbhead-setoran')
                 @endif
             </tr>
@@ -46,8 +48,10 @@
                 @yield('tbbody-tracking')
             @elseif ($currentRouteName == 'data-transaksi')
                 @yield('tbbody-transaksi')
-                @elseif ($currentRouteName == 'pencatatan-setoran')
-                    @yield('tbbody-setoran')
+            @elseif ($currentRouteName == 'jadwal-pelaksanaan')
+                @yield('tbbody-jadwalPelaksanaan')
+            @elseif ($currentRouteName == 'pencatatan-setoran')
+                @yield('tbbody-setoran')
             @endif
         </tbody>
     </table>

@@ -2,10 +2,15 @@
 
 @section('title', 'Data Sampah - Bank Sampah')
 
+@section('content', 'Manajemen Sampah')
+@section('route', route('data-sampah'))
+@section('sub-content', 'Data Sampah')
 
 @section('data-sampah')
     <!-- PAGE CONTENT -->
-
+<style>
+    
+</style>
     <div class=" grid gap-3" x-data="{ open: false }">
 
 
@@ -15,7 +20,7 @@
 
                 <!-- Header -->
                 <div
-                    class="  card-header flex justify-between items-center  px-4 border-b border-gray-200 dark:border-gray-600">
+                    class="pb-2 mb-3  card-header flex justify-between items-center  px-4 border-b border-gray-200 dark:border-gray-600">
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Form Data Sampah</h3>
 
                     <button @click="open = !open" type="button" data-card-widget="collapse" title="Collapse"
@@ -115,7 +120,7 @@
 
                     @section('tbbody-sampah')
                         @foreach ($sampah as $index => $field)
-                             <tr>
+                             <tr data-kategori= "{{ $field['kategori']  }}">
                                                 <td>{{ $index + 1 }}</td>
                                                 <td>{{ $field['nama_sampah'] }}</td>
                                                 <td>{{ $field['satuan'] }}</td>

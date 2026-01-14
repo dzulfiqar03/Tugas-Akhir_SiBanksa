@@ -60,7 +60,12 @@
 <!-- SIDEBAR -->
 <aside
     class="fixed md:static inset-y-0 left-0 z-40 flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out"
-    x-data="{ sidebarOpen: true, sidebarExpanded: true, openMenus: [] }" x-cloak
+    x-data="{ 
+        sidebarOpen: window.innerWidth >= 768, 
+        sidebarExpanded: true, 
+        openMenus: [] 
+    }" x-cloak
+    @resize.window="if (window.innerWidth < 768) sidebarOpen = false; else sidebarOpen = true"
     :class="{
         'translate-x-0': sidebarOpen,
         '-translate-x-full md:translate-x-0': !sidebarOpen,
@@ -132,7 +137,7 @@
                         @if (!isset($menu['data']))
                             @php
                                 $active =
-                                    $currentRouteName === $menu['route']
+                                    $currentRouteName === $menu['uri']
                                         ? 'bg-gray-200 dark:bg-gray-700 font-semibold'
                                         : '';
                             @endphp
@@ -187,12 +192,12 @@
                                         @php
                                             $active =
                                                 $currentRouteName === $sub['uri']
-                                                    ? 'text-[#2986FE] font-semibold'
-                                                    : 'text-gray-700 dark:text-gray-300';
+                                                     ? 'bg-gray-200 dark:bg-gray-700 font-semibold dark:text-gray-200'
+                                        : '';
                                         @endphp
 
                                         <a href="{{ $sub['route'] }}"
-                                            class="flex items-center gap-3 p-2 pl-12 rounded hover:bg-gray-100 dark:hover:bg-gray-700 {{ $active }}">
+                                            class="flex text-white items-center gap-3 p-2 pl-12 rounded hover:bg-gray-100 dark:hover:bg-gray-700 {{ $active }}">
                                             <span x-show="sidebarExpanded">{{ $sub['nama'] }}</span>
                                         </a>
                                     @endforeach
