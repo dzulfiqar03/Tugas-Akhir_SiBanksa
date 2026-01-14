@@ -449,7 +449,7 @@ $(document).ready(function () {
 
         const post = () => {
             $.ajax({
-                url: `/Bank Sampah/Sampah/Delete/${id}`,
+                url: `/bank-sampah/Sampah/Delete/${id}`,
                 type: 'POST',
                 data: {
                     _method: 'DELETE',
