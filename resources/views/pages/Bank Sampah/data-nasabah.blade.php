@@ -51,12 +51,12 @@
                                                 <label class="flex-1 cursor-pointer group">
                                                     <input type="radio" name="{{ $field['name'] }}"
                                                         value="{{ $value + 1 }}"
-                                                        class="peer sr-only   @error($field['name']) border-red-500 ring-1 ring-red-500  @enderror  border-gray-200 "
+                                                        class="peer sr-only   @error($field['name']) border-red-500 ring-1 ring-red-500 @else border-gray-200 @enderror"
                                                         {{ old($field['name']) == $value + 1 ? 'checked' : '' }}>
                                                     <div
                                                         class="flex items-center justify-center gap-2 py-2.5 px-4 
-                                                     @error($field['name']) border-red-500 ring-1 ring-red-500   @enderror border-gray-200 
-                                                     bg-gray-50 text-gray-500 transition-all peer-checked:border-emerald-500 dark:peer-checked:bg-gray-900 dark:peer-checked:text-white  ">
+                                                 @error($field['name']) border-red-500 ring-1 ring-red-500 @else border-gray-200 @enderror
+                                                     bg-gray-50 text-gray-500 transition-all peer-checked:border-emerald-500  peer-checked:bg-emerald-500 peer-checked:text-white  ">
                                                         <div
                                                             class="w-2 h-2 rounded-full bg-gray-300  peer-checked:group-[]:bg-emerald-500">
                                                         </div>
@@ -139,10 +139,17 @@
                                 <!-- Tombol Update -->
                                 <button type="button"
                                     class="btn-edit px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none"
-                                    data-id="{{ $user->id }}" 
-                                    data-name="{{ $user->user_detail->fullName  }}" data-address="{{ $user->user_detail->address  }}" data-gender="{{ $user->user_detail->id_gender  }}"
-                                    data-rt="{{ $user->user_detail->id_rt }}" data-status="{{ $user->user_detail->status }}">
+                                    data-id="{{ $user->id }}" data-name="{{ $user->user_detail->fullName }}"
+                                    data-address="{{ $user->user_detail->address }}"
+                                    data-gender="{{ $user->user_detail->id_gender }}"
+                                    data-rt="{{ $user->user_detail->id_rt }}"
+                                    data-status="{{ $user->user_detail->status }}">
                                     Update
+                                </button>
+
+                                <button onclick="window.location.href='{{ route('show-nasabah', $user->id) }}'"
+                                    class="px-3 py-1 text-xs bg-blue-500 text-white rounded-lg">
+                                    Detail
                                 </button>
 
                                 <!-- Tombol Delete -->

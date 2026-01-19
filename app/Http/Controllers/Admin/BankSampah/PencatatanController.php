@@ -5,13 +5,21 @@ namespace App\Http\Controllers\Admin\BankSampah;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
+use App\Models\UserDetail;
+use App\Services\BankSampah\PencatatanServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PencatatanController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
+    public function __construct(protected PencatatanServices $pencatatanServices)
+    {
+       
+    }
     public function index()
     {
         $items = [
@@ -85,12 +93,28 @@ class PencatatanController extends Controller
         $menu = (new DataResources(null))->toArray(request());
         $form = (new FormResources(null))->toArray(request());
 
+        $jadwalPelaksanaan = UserDetail::find(Auth::user()->user_detail->id)->jadwal()->get();
+        $nasabahList = UserDetail::where('id_rt', Auth::user()->user_detail->rt->id)->where('status', 'Disetujui')->where('id_roles', 3)->get();
         $formName = 'formPencatatan';
+
+         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
         return view('pages/Bank Sampah/pencatatan-setoran', [
+                        'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
             'items' => $items,
             'sidebardata' => $menu,
             'formdata' => $form,
-            'formName' => $formName
+            'formName' => $formName,
+            'jadwalPelaksanaan' => $jadwalPelaksanaan,
+            'nasabahList' => $nasabahList
         ]);
     }
 
@@ -107,7 +131,19 @@ class PencatatanController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
+    try {
+
+        $pencatatan = $this->pencatatanServices->createPencatatanSetoran($request->all());
+
+        return response()->json([
+            'message' => 'Pencatatan setoran berhasil dibuat',
+            'data' => $pencatatan
+        ], 201);
+
+    } catch (\Throwable $th) {
+        //throw $th;
+    }
     }
 
     /**

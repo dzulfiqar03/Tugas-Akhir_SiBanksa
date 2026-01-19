@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-    let table = new DataTable('#dataNasabah', {
+    let table = new DataTable('#dataDetailNasabah', {
         pageLength: 5,
         responsive: true,
         lengthMenu: [5, 10, 25, 50],

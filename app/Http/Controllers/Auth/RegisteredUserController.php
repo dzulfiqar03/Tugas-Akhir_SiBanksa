@@ -48,8 +48,17 @@ class RegisteredUserController extends Controller
     public function store(RegisterRequest $request): RedirectResponse
     {
 
+    
         try {
-            $users = $this->authServices->registerUser($request->validated());
+
+        $data = $request->validated();
+        
+       
+        $payload = array_merge($data['nasabah'], [
+            'id_roles' => $data['id_roles'],
+            'status' => $data['status']
+        ]);
+            $users = $this->authServices->registerUser($payload);
             event(new Registered($users));
             return redirect()->route('login')->with('success', 'Registrasi berhasil!');
         } catch (\Exception $e) {

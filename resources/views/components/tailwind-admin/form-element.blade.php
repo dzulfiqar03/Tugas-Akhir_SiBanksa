@@ -138,6 +138,9 @@
         @elseif($currentRouteName === 'data-transaksi')
             @yield('formTransaksi')
         @elseif($currentRouteName === 'pencatatan-setoran')
+        @include('components.error-message')
+
+        <input type="hidden" name="id_userdetail" value="{{ Auth::user()->user_detail->id }}">
             @yield('formSetoran')
         @endif
 

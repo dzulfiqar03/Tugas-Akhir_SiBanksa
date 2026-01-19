@@ -8,6 +8,7 @@ use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
 use App\Services\BankSampah\SampahServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DataSampahController extends Controller
 {
@@ -25,7 +26,18 @@ class DataSampahController extends Controller
         $formName = 'formSampah';
 
         $sampah = $this->sampahServices->getAllSampah();
+         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
         return view('pages/Bank Sampah/data-sampah', [
+                        'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,
             'formdata' => $form,
             'formName' => $formName,

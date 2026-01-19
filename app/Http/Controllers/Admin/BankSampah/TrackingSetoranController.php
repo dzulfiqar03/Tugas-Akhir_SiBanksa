@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\BankSampah;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TrackingSetoranController extends Controller
 {
@@ -115,10 +116,21 @@ class TrackingSetoranController extends Controller
             ],
         ];
 
+         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
         
 
         $menu = (new DataResources(null))->toArray(request());
         return view('pages/Bank Sampah/tracking-setor', [
+                        'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
             'workflowSteps' => $workflowSteps,
             'sidebardata' => $menu,
             'items' => $items,

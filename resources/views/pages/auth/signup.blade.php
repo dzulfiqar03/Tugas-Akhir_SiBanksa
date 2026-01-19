@@ -19,78 +19,7 @@
                 </h1>
 
                 <div class="flex gap-3">
-                    {{-- NOTIFICATION --}}
-                    {{-- 
-                    <div class="flex">
-                        @if ($errors->any())
-                          @php
-
-                                    $isTargetError = old('id_roles') == 2 || old('id_roles') == 3;
-                                @endphp
-                            @if ($isTargetError)
-                              
-                                <div
-                                    class="px-4 py-1.5 rounded-full bg-red-100 dark:bg-red-500/10 text-white-700 dark:text-red-400 text-xs font-bold uppercase tracking-wider">
-                                    Error
-                                </div>
-                            @endif
-
-                        @endif
-                        <el-dropdown class="relative ml-3">
-
-                            <div
-                                class="relative inline-flex items-center  text-sm font-medium text-center text-gray-500 hover:text-gray-900 focus:outline-none">
-
-                                <button
-                                    @if ($errors->any()) @if ($isTargetError)
-                         :class='animate-pulse' @endif
-                                    @endif
-                                    class="relative flex  rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                                        </path>
-                                    </svg>
-                                </button>
-
-
-                                @if ($errors->count() > 0)
-                                    @if ($isTargetError)
-                                        <div
-                                            class="absolute animate-pulse inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -bottom-2 -right-2">
-                                            {{ $errors->count() }}
-                                        </div>
-                                    @endif
-
-                                @endif
-                            </div>
-
-                            <el-menu anchor="bottom end" popover
-                                class="w-48 origin-top-right rounded-md py-1 outline -outline-offset-1  transition transition-discrete [--anchor-gap:--spacing(2)] data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in">
-                                @if ($errors->any())
-
-                                    @if ($isTargetError)
-                                        <div x-collapse class="px-3 pb-3 border-t border-red-50 dark:border-red-500 /10">
-                                            <div class="max-h-24 overflow-y-auto pt-2 custom-scrollbar">
-                                                <ul class="space-y-1">
-                                                    @foreach ($errors->all() as $error)
-                                                        <li
-                                                            class="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2">
-                                                            <span class="w-1 h-1 bg-red-400 rounded-full"></span>
-                                                            {{ $error }}
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                @endif
-
-                            </el-menu>
-                        </el-dropdown>
-                    </div> --}}
+        
 
 
 
@@ -289,31 +218,46 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                     @foreach ($formdata['nasabah'] as $field)
                         @if ($currentRouteName == 'register')
-                            @if ($field['type'] == 'radio')
-                                <div class="col-span-full">
-                                    <label
-                                        class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">{{ $field['title'] }}</label>
-                                    <div class="flex gap-3">
-                                        @foreach ($field['options'] as $value => $option)
-                                            <label class="flex-1 cursor-pointer group">
-                                                <input type="radio" name="nasabah[{{ $field['name'] }}]"
-                                                    value="{{ $value + 1 }}"
-                                                    class="peer sr-only  @if ($isNasabahActive) @error('nasabah.' . $field['name']) border-red-500 ring-1 ring-red-500 @else border-gray-200 @enderror @endif"
-                                                    {{ old('nasabah.' . $field['name']) == $value + 1 ? 'checked' : '' }}>
-                                                <div
-                                                    class="flex items-center justify-center gap-2 py-2.5 px-4 
-                                                    @if ($isNasabahActive) @error('nasabah.' . $field['name']) border-red-500 ring-1 ring-red-500 @else border-gray-200 @enderror @endif
-                                                     bg-gray-50 text-gray-500 transition-all peer-checked:border-emerald-500 dark:peer-checked:bg-gray-900 dark:peer-checked:text-white  ">
-                                                    <div
-                                                        class="w-2 h-2 rounded-full bg-gray-300  peer-checked:group-[]:bg-emerald-500">
-                                                    </div>
-                                                    <span class="text-sm font-bold">{{ $option }}</span>
-                                                </div>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @elseif ($field['name'] == 'rt')
+                           @if ($field['type'] == 'radio')
+    <div class="col-span-full">
+        <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
+            {{ $field['title'] }}
+        </label>
+        
+        <div class="flex gap-3">
+            @foreach ($field['options'] as $index => $option)
+                @php
+                    // Sesuaikan value jika di database mulai dari 1
+                    $currentValue = $index + 1;
+                    $errorKey = 'nasabah.' . $field['name'];
+                    $hasError = $errors->has($errorKey);
+                @endphp
+                
+                <label class="flex-1 cursor-pointer group">
+                    <input type="radio" 
+                        name="nasabah[{{ $field['name'] }}]"
+                        value="{{ $currentValue }}"
+                        class="peer sr-only"
+                        {{ old('nasabah.' . $field['name']) == $currentValue ? 'checked' : '' }}>
+                    
+                    <div class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border-2 bg-gray-50 text-gray-500 transition-all 
+                        {{ $hasError ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200' }}
+                        peer-checked:border-emerald-500 peer-checked:bg-emerald-50/50 peer-checked:text-emerald-700
+                        dark:peer-checked:bg-emerald-500/10 dark:peer-checked:text-emerald-400">
+                        
+                        <div class="w-2 h-2 rounded-full transition-colors
+                            {{ $hasError ? 'bg-red-500' : 'bg-gray-300' }}
+                            peer-checked:bg-emerald-500">
+                        </div>
+                        
+                        <span class="text-sm font-bold">{{ $option }}</span>
+                    </div>
+                </label>
+            @endforeach
+        </div>
+
+    </div>
+ @elseif ($field['name'] == 'rt')
                                 <div class="col-span-2">
                                     <label
                                         class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">{{ $field['title'] }}</label>

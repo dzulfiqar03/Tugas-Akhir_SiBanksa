@@ -26,6 +26,8 @@
             <tr>
                 @if ($currentRouteName == 'data-nasabah')
                     @yield('tbhead-nasabah')
+                @elseif ($currentRouteName == 'show-nasabah')
+                    @yield('tbhead-detailNasabah')
                 @elseif ($currentRouteName == 'data-sampah')
                     @yield('tbhead-sampah')
                 @elseif ($currentRouteName == 'data-tracking')
@@ -42,6 +44,8 @@
         <tbody id="tableBody">
             @if ($currentRouteName == 'data-nasabah')
                 @yield('tbbody-nasabah')
+            @elseif ($currentRouteName == 'show-nasabah')
+                @yield('tbbody-detailNasabah')
             @elseif ($currentRouteName == 'data-sampah')
                 @yield('tbbody-sampah')
             @elseif ($currentRouteName == 'data-tracking')

@@ -7,6 +7,7 @@ use App\Models\UserDetail;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthServices
 {
@@ -21,8 +22,9 @@ class AuthServices
 
     public function registerUser(array $data)
     {
-        return DB::transaction(function () use ($data) {
+       $user = DB::transaction(function () use ($data) {
 
+        
             $userData = [
                 'email'             => $data['email'],
                 'password'          => Hash::make($data['password']),
@@ -46,7 +48,29 @@ class AuthServices
 
             $this->userDetail::create($userDetailData);
 
+           
+
             return $user;
         });
+
+    try {
+        $admins = User::whereHas('user_detail', function ($query) use ($data) {
+            $query->where('id_rt', $data['id_rt'])
+                  ->where('id_roles', 2); 
+        })->get();
+
+        foreach ($admins as $adminUser) {
+            $adminUser->notify(new \App\Notifications\Admin\UserRegistration(
+                $user->id, 
+                "Pengajuan Akun Baru dari " . $data['fullName']
+            ));
+        }
+    } catch (\Exception $e) {
+
+    Log::error("Gagal kirim notif registrasi: " . $e->getMessage());
+    }
+
+    return $user;
+
     }
 }

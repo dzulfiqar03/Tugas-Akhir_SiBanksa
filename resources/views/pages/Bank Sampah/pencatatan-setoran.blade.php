@@ -1,7 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Data Nasabah - Bank Sampah')
+@section('title', 'Data Pencatatan Setoran - Bank Sampah')
 
+
+@section('content', 'Manajemen Sampah')
+@section('route', route('pencatatan-setoran'))
+@section('sub-content', 'Data Pencatatan Setoran')
 
 @section('pencatatan-setoran')
     <!-- PAGE CONTENT -->
@@ -124,6 +128,40 @@
                         $chunks = collect($formdata['sampah']['formJenisSampah'])->chunk($itemsPerStep);
                     @endphp
 
+                    <div class="col-span-2 md:col-span-1">
+                        <label for="jadwalPelaksanaan" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Jadwal Pelaksanaan
+                        </label>
+                        <select id="jadwalPelaksanaan" name="jadwalPelaksanaan"
+                            class="w-full border border-gray-300 rounded px-2 py-1 text-sm
+               focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="" disabled selected>Pilih Jadwal Pelaksanaan</option>
+                            @foreach ($jadwalPelaksanaan as $jadwal)
+                                <option value="{{ $jadwal->id }}" {{ old('jadwalPelaksanaan') == $jadwal->id ? 'selected' : '' }}>
+                                    {{ \Carbon\Carbon::parse($jadwal->hari)->translatedFormat('l') }} -
+                                    {{ \Carbon\Carbon::parse($jadwal->waktu)->format('H:i') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-span-2 md:col-span-1">
+                        <label for="nasabah" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Nasabah
+                        </label>
+                        <select id="nasabah" name="nasabah"
+                            class="w-full border border-gray-300 rounded px-2 py-1 text-sm
+               focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="" disabled selected>Pilih Nasabah</option>
+                            @foreach ($nasabahList as $nasabah)
+                                <option value="{{ $nasabah->id }}" {{ old('nasabah') == $nasabah->id ? 'selected' : '' }}>
+                                    {{ $nasabah->fullName }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+
                     <div x-data="{
                         step: 1,
                         itemsPerStep: {{ $itemsPerStep }},
@@ -165,9 +203,16 @@
                                             <div class="text-xs text-gray-500 mb-1">
                                                 {{ $field['satuan'] }}
                                             </div>
+
+                                            <input type="hidden" name="items[{{ $loop->index }}][id_sampah]" value="{{ $field['id'] }}">
                                             <input type="number" step="0.01" min="0"
-                                                name="sampah[{{ $field['id'] }}][berat]"
-                                                class="w-full text-right border rounded px-2 py-1">
+                                                
+                                            name="items[{{ $loop->index }}][berat]"
+                value="{{ old("items.{$loop->index}.berat") }}"
+                                                 placeholder="0"
+                                                class="w-full border border-gray-300 rounded px-2 py-1 text-sm
+                       focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+
                                         </div>
                                     @endforeach
                                 </div>

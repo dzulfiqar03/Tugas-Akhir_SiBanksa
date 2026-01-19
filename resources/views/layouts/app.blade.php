@@ -9,6 +9,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="user-id" content="{{ Auth::id() }}">
     <title>
         @if ($currentRouteName === 'check-internet')
             404 Not Found
@@ -88,6 +89,9 @@
                     @elseif ($currentRouteName == 'data-nasabah')
                         @yield('data-nasabah')
                         @vite('resources/js/Pages/BankSampah/data-nasabah.js')
+                    @elseif ($currentRouteName == 'show-nasabah')
+                        @yield('data-detailNasabah')
+                        @vite('resources/js/Pages/BankSampah/data-detailNasabah.js')
                     @elseif ($currentRouteName == 'jadwal-pelaksanaan')
                         @yield('data-jadwalBankSampah')
                         @vite('resources/js/Pages/BankSampah/data-jadwalBankSampah.js')
@@ -179,9 +183,10 @@
         }
     </script>
 
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     @include('link.bodylink')
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
 
 </body>

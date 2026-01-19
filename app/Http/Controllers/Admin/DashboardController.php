@@ -14,12 +14,24 @@ class DashboardController extends Controller
      */
     public function index()
     {
-         $menu = (new DataResources(null))->toArray(request());
+        $menu = (new DataResources(null))->toArray(request());
 
-         $user = Auth::user();
+
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+        $user = Auth::user();
         return view('dashboard', [
+            'initialNotifications' => $notifications,
+            'unreadCount' => $user->unreadNotifications->count(),
             'sidebardata' => $menu,
-            'user'=>$user
+            'user' => $user
         ]);
     }
 

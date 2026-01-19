@@ -179,14 +179,20 @@ class DataResources extends JsonResource
                 [
                     'nama' => 'Dashboard',
                     'route' => route('warga.dashboard'),
+                    'uri' => '#',
+                    'icon'  => 'fas fa-sign-out-alt text-danger',
                 ],
                 [
                     'nama' => 'Transaksi Setoran',
                     'route' => route('warga.data-transaksi'),
+                    'uri' => '#',
+                    'icon'  => 'fas fa-sign-out-alt text-danger',
                 ],
                 [
                     'nama' => 'Penjadwalan',
                     'route' => route('warga.penjadwalan'),
+                    'uri' => '#',
+                    'icon'  => 'fas fa-sign-out-alt text-danger',
                 ],
             ],
         ];

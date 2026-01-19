@@ -2,9 +2,10 @@
 
 namespace App\Services\BankSampah;
 
+use App\Events\SetoranDiverifikasi;
 use App\Models\User;
 use App\Models\UserDetail;
-
+use App\Notifications\Admin\UserVerification;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -85,15 +86,20 @@ class NasabahServices
 
     public function updateNasabah($id, array $data)
     {
-        return DB::transaction(function () use ($id, $data) {
+        $user= DB::transaction(function () use ($id, $data) {
 
             $updateNasabah = $this->getNasabah($id);
             
             $updateNasabah->update($data);
 
+            
+
             $updateNasabah->user_detail->update($data);
             return $updateNasabah;
         });
+
+        $user->notify(new UserVerification($user->id));
+        return $user;
     }
 
     public function deleteNasabah($id)

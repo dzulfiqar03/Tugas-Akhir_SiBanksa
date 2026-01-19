@@ -35,6 +35,11 @@ Route::middleware(['conn'])->group(function () {
 
     Route::middleware(['auth'])->group(function () {
 
+        Route::post('/notifications/{id}/read', function ($id) {
+            auth()->user()->notifications()->findOrFail($id)->markAsRead();
+            return response()->noContent();
+        })->name('notifications.read');
+
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -52,7 +57,7 @@ Route::middleware(['conn'])->group(function () {
 
             Route::middleware(['roles:Bank Sampah'])->group(function () {
                 Route::get('/bank-sampah/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-                
+
                 Route::get('/bank-sampah/Jadwal', [JadwalPelaksanaanController::class, 'index'])->name('jadwal-pelaksanaan');
                 Route::post('/bank-sampah/Jadwal/Create', [JadwalPelaksanaanController::class, 'store'])->name('add-jadwalBankSampah');
                 Route::put('/bank-sampah/Jadwal/Update/{Jadwal}', [JadwalPelaksanaanController::class, 'update'])->name('update-jadwalBankSampah');
@@ -65,10 +70,12 @@ Route::middleware(['conn'])->group(function () {
 
 
                 Route::get('/bank-sampah/nasabah', [DataNasabahController::class, 'index'])->name('data-nasabah');
+                Route::get('/bank-sampah/nasabah/detail/{id}', [DataNasabahController::class, 'show'])->name('show-nasabah');
                 Route::post('/bank-sampah/nasabah/create', [DataNasabahController::class, 'store'])->name('add-nasabah');
                 Route::put('/bank-sampah/nasabah/update/{id}', [DataNasabahController::class, 'update'])->name('update-nasabah');
                 Route::delete('/bank-sampah/nasabah/delete/{id}', [DataNasabahController::class, 'destroy'])->name('delete-nasabah');
 
+                Route::post('/nasabah/{id}/send-reminder', action: [DataNasabahController::class, 'sendReminder'])->name('nasabah.send-reminder');
 
                 Route::get('/bank-sampah/tracking', [TrackingSetoranController::class, 'index'])->name('data-tracking');
                 Route::get('/bank-sampah/transaksi', [DataTransaksiController::class, 'index'])->name('data-transaksi');

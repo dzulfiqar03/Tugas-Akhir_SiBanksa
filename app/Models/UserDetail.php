@@ -45,9 +45,9 @@ class UserDetail extends Model
         return $this->hasMany(PencatatanSetoran::class, 'id_userdetail', 'id');
     }
 
-    public function transaction()
+    public function userbank()
     {
-        return $this->hasMany(UserTransaction::class, 'id_userdetail', 'id');
+        return $this->hasMany(UserBank::class, 'id_userdetail', 'id');
     }
 
     public function document()

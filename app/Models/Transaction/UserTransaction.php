@@ -3,12 +3,13 @@
 namespace App\Models\Transaction;
 
 use App\Models\BankSampah\PencatatanSetoran;
+use App\Models\UserBank;
 use App\Models\UserDetail;
 use Illuminate\Database\Eloquent\Model;
 
 class UserTransaction extends Model
 {
-     protected $fillable = ['id_userdetail', 'id_bank', 'nomor_rekening', 'pencatatan_setoran_id', 'bukti_pembayaran'];
+     protected $fillable = ['id_userdetail', 'id_userbank', 'pencatatan_setoran_id', 'bukti_pembayaran'];
 
 
     public function user_detail()
@@ -16,9 +17,9 @@ class UserTransaction extends Model
         return $this->belongsTo(UserDetail::class, 'id_userdetail', 'id');
     }
 
-    public function bank()
+    public function userbank()
     {
-        return $this->belongsTo(Bank::class,'id_bank', 'id');
+        return $this->belongsTo(UserBank::class, 'id_userbank', 'id');
     }
 
     public function setoran()

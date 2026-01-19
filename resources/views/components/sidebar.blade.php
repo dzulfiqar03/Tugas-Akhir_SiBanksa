@@ -53,6 +53,23 @@
                 $sections['LAINNYA'][] = $menu;
             }
         }
+        
+    } else {
+        $sections = [
+            'MAIN' => [],
+            'LAINNYA' => [],
+        ];
+
+        foreach ($menus as $menu) {
+            // MAIN
+            if (in_array($menu['nama'], ['Dashboard'])) {
+                $sections['MAIN'][] = $menu;
+            }
+            // LAINNYA
+            else {
+                $sections['LAINNYA'][] = $menu;
+            }
+        }
     }
 
 @endphp
@@ -60,10 +77,10 @@
 <!-- SIDEBAR -->
 <aside
     class="fixed md:static inset-y-0 left-0 z-40 flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out"
-    x-data="{ 
-        sidebarOpen: window.innerWidth >= 768, 
-        sidebarExpanded: true, 
-        openMenus: [] 
+    x-data="{
+        sidebarOpen: window.innerWidth >= 768,
+        sidebarExpanded: true,
+        openMenus: []
     }" x-cloak
     @resize.window="if (window.innerWidth < 768) sidebarOpen = false; else sidebarOpen = true"
     :class="{
@@ -149,7 +166,8 @@
                           hover:bg-gray-100 dark:hover:bg-gray-700">
 
 
-                                <span class="w-6 h-6 dark:text-white   rounded"><i class="{{ $menu['icon'] }}"></i></span>
+                                <span class="w-6 h-6 dark:text-white   rounded"><i
+                                        class="{{ $menu['icon'] }}"></i></span>
 
                                 <div class=" @if (Auth::user()->user_detail->status === 'Pengajuan Verifikasi') flex gap-3 @endif">
                                     <span x-show="sidebarExpanded" class="text-gray-800 dark:text-gray-100">
@@ -170,11 +188,14 @@
                             {{-- ================================================================= --}}
                             {{-- MENU DENGAN SUBMENU --}}
                             {{-- ================================================================= --}}
-                            <div class="space-y-2" x-data="{ open: {{ in_array($currentRouteName, collect($menu['data'])->pluck('route')->toArray()) ? 'true' : 'false' }} }">
+                            <div class="space-y-2" x-data="{
+                                open: {{ collect($menu['data'])->contains('uri', $currentRouteName) ? 'true' : 'false' }}
+                            }">
                                 <button @click="open = !open"
                                     class="flex justify-between w-full p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
                                     <div class="flex items-center gap-3">
-                                        <span class="w-6 h-6 dark:text-white "><i class="{{ $menu['icon'] }}"></i></span>
+                                        <span class="w-6 h-6 dark:text-white "><i
+                                                class="{{ $menu['icon'] }}"></i></span>
                                         <span class="text-gray-800  dark:text-white"
                                             x-show="sidebarExpanded">{{ $menu['nama'] }}</span>
                                     </div>
@@ -192,12 +213,12 @@
                                         @php
                                             $active =
                                                 $currentRouteName === $sub['uri']
-                                                     ? 'bg-gray-200 dark:bg-gray-700 font-semibold dark:text-gray-200'
-                                        : '';
+                                                    ? 'bg-gray-200 dark:bg-gray-700 font-semibold dark:text-gray-200'
+                                                    : '';
                                         @endphp
 
                                         <a href="{{ $sub['route'] }}"
-                                            class="flex text-white items-center gap-3 p-2 pl-12 rounded hover:bg-gray-100 dark:hover:bg-gray-700 {{ $active }}">
+                                            class="flex text-gray-800 dark:text-white items-center gap-3 p-2 pl-12 rounded hover:bg-gray-100 dark:hover:bg-gray-700 {{ $active }}">
                                             <span x-show="sidebarExpanded">{{ $sub['nama'] }}</span>
                                         </a>
                                     @endforeach
