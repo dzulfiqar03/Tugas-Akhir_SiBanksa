@@ -18,6 +18,7 @@ class DataNasabahController extends Controller
      * Display a listing of the resource.
      */
 
+
     public function __construct(protected NasabahServices $nasabahServices) {}
     public function index()
     {
@@ -80,71 +81,32 @@ class DataNasabahController extends Controller
         $nasabah = $this->nasabahServices->getNasabah($id);
 
 
-        $userName = "";
-        $fullName = "";
-        $id_rt = 0;
-        $address = "";
-        $telephone_number = "";
-        $status = "";
-        $nomorRekening = "";
-
-        if (!empty($nasabah->user_detail->userName)) {
-            $userName =  $nasabah->user_detail->userName;
-        } else {
-            $userName = "";
-        }
-
-        if (!empty($nasabah->user_detail->fullName)) {
-            $fullName =   $nasabah->user_detail->fullName;
-        } else {
-            $fullName = "";
-        }
-
-        if ($nasabah->user_detail->id_rt === 0) {
-            $id_rt =   $nasabah->user_detail->id_rt;
-        } else {
-            $id_rt = 0;
-        }
-
-        if (!empty($nasabah->user_detail->address)) {
-            $address =   $nasabah->user_detail->address;
-        } else {
-            $address = "";
-        }
-
-        if (!empty($nasabah->user_detail->telephone_number)) {
-            $telephone_number =   $nasabah->user_detail->telephone_number;
-        } else {
-            $telephone_number = "";
-        }
-
-        if (!empty($nasabah->user_detail->status)) {
-            $status = $nasabah->user_detail->status;
-        } else {
-            $status = "";
-        }
-
-
-        foreach ($nasabah->user_detail->userbank as $bank) {
-            $nomorRekening = $bank->nomor_rekening;
-        }
-
+        $userName = $nasabah->user_detail->userName ?? "";
+        $fullName = $nasabah->user_detail->fullName ?? "";
+        $id_rt = $nasabah->user_detail->id_rt ?? 0;
+        $address = $nasabah->user_detail->address ?? "";
+        $telephone_number = $nasabah->user_detail->telephone_number ?? "";
+        $status = $nasabah->user_detail->status ?? "";
+        $nomorRekening = $nasabah->user_detail?->userbank?->first()?->nomor_rekening ?? "";
 
         $fieldNasabahProfile = [
-            $userName,
-            $fullName,
-            $id_rt,
-            $address,
-            $telephone_number,
-            $status,
-            $nomorRekening
+            'User Name' =>  $userName,
+            'Nama Lengkap' =>   $fullName,
+            'RT' =>  $id_rt,
+            'Alamat' =>  $address,
+            'Nomor Telepon' =>  $telephone_number,
+            'Status' =>  $status,
+            'Nomor Rekening' =>  $nomorRekening
         ];
 
         $filledNasabah = 0;
-        foreach ($fieldNasabahProfile as $field) {
+        $nullForm = [];
+        foreach ($fieldNasabahProfile as $key => $field) {
 
             if (!empty($field)) {
                 $filledNasabah++;
+            } else {
+                $nullForm[] = $key;
             }
         }
 
@@ -153,26 +115,23 @@ class DataNasabahController extends Controller
         $nameDocument = "";
         $nameEvidence = "";
 
-        if (!empty($nasabah->user_detail->document->name)) {
-            $nameDocument =   $nasabah->user_detail->document->name;
-        } else {
-            $nameDocument = "";
-        }
-        if (!empty($nasabah->user_detail->image->name)) {
-            $nameEvidence =   $nasabah->user_detail->image->name;
-        } else {
-            $nameEvidence = "";
-        }
+
+        $nameDocument = $nasabah->user_detail?->document?->first()?->name ?? "";
+        $nameEvidence = $nasabah->user_detail?->image?->first()->name ?? "";
+
         $fieldNasabahDocument = [
-            $nameDocument,
-            $nameEvidence
+            "Dokumen" =>  $nameDocument,
+            'Bukti Foto' => $nameEvidence
         ];
 
         $filledDoc = 0;
-        foreach ($fieldNasabahDocument as $doc) {
+        $nullDoc = [];
+        foreach ($fieldNasabahDocument as $key => $doc) {
 
             if (!empty($doc)) {
                 $filledDoc++;
+            } else {
+                $nullDoc[] = $key;
             }
         }
 
@@ -186,6 +145,8 @@ class DataNasabahController extends Controller
             'percentageSuccessProfile' => $percentageSuccessfullProfile,
             'percentageSuccessfullDocument' => $percentageSuccessfullDocument,
             'sidebardata' => $menu,
+            'nullForm' => $nullForm,
+            'nullDoc' => $nullDoc
         ]);
     }
 
@@ -230,17 +191,16 @@ class DataNasabahController extends Controller
         }
     }
 
-    public function sendReminder($id)
-{
-    try {
-        $user = User::findOrFail($id);
-        
+    public function sendReminder(Request $request, $id)
+    {
+        try {
+            $user = User::findOrFail($id);
 
-        $user->notify(new ReminderVerification($user->id, "Profil dan Dokumen Anda Belum Lengkap, Segera Lengkapi"));
+            $user->notify(new ReminderVerification($user->id, "Profil dan Dokumen Anda Belum Lengkap, Segera Lengkapi: " . $request->missing_info));
 
-        return back()->with('success', 'Pengingat verifikasi berhasil dikirim ke nasabah!');
-    } catch (\Exception $e) {
-        return back()->with('error', 'Gagal mengirim pengingat: ' . $e->getMessage());
+            return back()->with('success', 'Pengingat verifikasi berhasil dikirim ke nasabah!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mengirim pengingat: ' . $e->getMessage());
+        }
     }
-}
 }

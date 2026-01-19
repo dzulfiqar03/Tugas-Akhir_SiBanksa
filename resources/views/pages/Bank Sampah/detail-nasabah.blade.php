@@ -3,6 +3,7 @@
 @section('title', 'Data Nasabah - Bank Sampah')
 
 @section('content', 'Manajemen Nasabah')
+@section('main-route', route('dashboard'))
 @section('route', route('data-nasabah'))
 @section('sub-content', 'Data Nasabah')
 @section('othersub-content', 'Detail Nasabah ' . $nasabah->user_detail->fullName)
@@ -122,6 +123,8 @@
                                 @if ($percentageSuccessProfile < 100 && $percentageSuccessfullDocument < 100)
                                     <form action="{{ route('nasabah.send-reminder', $nasabah->id) }}" method="POST">
                                         @csrf
+                                        <input type="hidden" name="missing_info"
+                                            value="Profil: {{ implode(', ', $nullForm) }} | Dokumen: {{ implode(', ', $nullDoc) }}">
                                         <button type="submit"
                                             class="flex items-center gap-2 px-3 py-2 bg-red-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-all shadow-sm">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

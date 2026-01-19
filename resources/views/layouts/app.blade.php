@@ -155,33 +155,49 @@
 
 
     <script>
-        function themeData() {
-            return {
-                darkMode: false, // default light
-                initTheme() {
-                    const saved = localStorage.getItem('darkMode');
-                    // pastikan hanya 'true' dianggap dark, selain itu light
-                    this.darkMode = saved === 'true' ? true : false;
-                    this.updateHtml();
+      
+      function themeData() {
+    return {
+        darkMode: false,
+        initTheme() {
+            const saved = localStorage.getItem('darkMode');
+            
+            if (saved !== null) {
 
-                    this.$watch('darkMode', value => {
-                        localStorage.setItem('darkMode', value ? 'true' : 'false');
-                        this.updateHtml();
-                    });
-                },
-                toggleDarkMode() {
-                    this.darkMode = !this.darkMode;
-                },
-                updateHtml() {
-                    if (this.darkMode) {
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                    }
+                this.darkMode = saved === 'true';
+            } else {
+
+                this.darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+
+            this.updateHtml();
+
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (localStorage.getItem('darkMode') === null) {
+                    this.darkMode = e.matches;
+                    this.updateHtml();
                 }
+            });
+
+            this.$watch('darkMode', value => {
+                localStorage.setItem('darkMode', value);
+                this.updateHtml();
+            });
+        },
+        toggleDarkMode() {
+            this.darkMode = !this.darkMode;
+        },
+        updateHtml() {
+            if (this.darkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
             }
         }
-    </script>
+    }
+}
+      </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 

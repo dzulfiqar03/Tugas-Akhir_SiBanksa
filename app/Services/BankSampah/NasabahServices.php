@@ -22,28 +22,28 @@ class NasabahServices
         $userDetail = $this->userDetail;
     }
 
-     public function getAllNasabah()
+    public function getAllNasabah()
     {
 
         $userRT = Auth::user()->user_detail->id_rt; // Ambil nilai RT user yang login
 
- 
-       $nasabah = $this->user::with('user_detail')
-    ->whereHas('user_detail', function ($query) use ($userRT) {
-        $query->where('id_rt', $userRT)->where('id_roles', 3);
-    })
-    ->get();
+
+        $nasabah = $this->user::with('user_detail')
+            ->whereHas('user_detail', function ($query) use ($userRT) {
+                $query->where('id_rt', $userRT)->where('id_roles', 3);
+            })
+            ->get();
 
         return $nasabah;
     }
 
-  public function getNasabah($id)
-{
-    // Mengambil user beserta detailnya, jika ID tidak ada maka otomatis 404
-    $findNasabah = $this->user::with('user_detail')->findOrFail($id);
+    public function getNasabah($id)
+    {
+        // Mengambil user beserta detailnya, jika ID tidak ada maka otomatis 404
+        $findNasabah = $this->user::with('user_detail')->findOrFail($id);
 
-    return $findNasabah;
-}
+        return $findNasabah;
+    }
 
 
     public function createNasabah(array $data)
@@ -86,13 +86,13 @@ class NasabahServices
 
     public function updateNasabah($id, array $data)
     {
-        $user= DB::transaction(function () use ($id, $data) {
+        $user = DB::transaction(function () use ($id, $data) {
 
             $updateNasabah = $this->getNasabah($id);
-            
+
             $updateNasabah->update($data);
 
-            
+
 
             $updateNasabah->user_detail->update($data);
             return $updateNasabah;

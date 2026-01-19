@@ -3,6 +3,7 @@
 @section('title', 'Data Nasabah - Bank Sampah')
 
 @section('content', 'Manajemen Nasabah')
+@section('main-route', route('dashboard'))
 @section('route', route('data-nasabah'))
 @section('sub-content', 'Data Nasabah')
 

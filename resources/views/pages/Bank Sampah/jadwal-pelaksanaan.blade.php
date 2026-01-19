@@ -3,6 +3,7 @@
 @section('title', 'Jadwal Pelaksanaan - Bank Sampah')
 
 @section('content', content: 'Manajemen Bank Sampah')
+@section('main-route', route('dashboard'))
 @section('route', route('jadwal-pelaksanaan'))
 @section('sub-content', 'Data Jadwal Pelaksanaan Bank Sampah')
 

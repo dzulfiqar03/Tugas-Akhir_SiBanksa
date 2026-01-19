@@ -140,7 +140,7 @@
                                         placeholder="{{ $field['placeholder'] }}"
                                         value="{{ old('bankSampah.' . $field['name']) }}"
                                         class="w-full h-11 rounded-xl @if ($isBankSampahActive) @error('bankSampah.' . $field['name']) border-red-500 ring-1 ring-red-500 @else border-gray-200 @enderror @endif
-                                         bg-gray-50  pl-5 text-sm pr-11 dark:bg-gray-800 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+                                         bg-gray-50  pl-5 text-sm pr-11 dark:bg-gray-800 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white">
                                     <button type="button" @click="show = !show"
                                         class="absolute right-3 top-1/4 text-gray-400 hover:text-emerald-600 transition-colors">
                                         <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor"
@@ -165,7 +165,7 @@
                                 <input type="{{ $field['type'] }}" name="bankSampah[{{ $field['name'] }}]"
                                     value="{{ old('bankSampah.' . $field['name']) }}"
                                     placeholder="{{ $field['placeholder'] }}"
-                                    class="w-full h-11 rounded-xl @if ($isBankSampahActive) @error('bankSampah.' . $field['name']) border-red-500 ring-1 ring-red-500 @else border-gray-200 @enderror @endif bg-gray-50  pl-5 dark:bg-gray-800 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+                                    class="w-full h-11 rounded-xl @if ($isBankSampahActive) @error('bankSampah.' . $field['name']) border-red-500 ring-1 ring-red-500 @else border-gray-200 @enderror @endif bg-gray-50  pl-5 dark:bg-gray-800 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all dark:text-white">
                             </div>
                         @endif
                     @endforeach

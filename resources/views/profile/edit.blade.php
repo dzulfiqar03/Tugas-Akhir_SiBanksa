@@ -6,7 +6,7 @@
 
 @section('sub-content', 'Detail Profile')
 
-@section('main-route', route('warga-dashboard'))
+@section('main-route', route('data-nasabah'))
 
 @section('route', route('profile.edit'))
 

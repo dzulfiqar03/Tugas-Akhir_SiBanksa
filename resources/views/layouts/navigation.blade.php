@@ -89,11 +89,9 @@
             ['label' => $__env->yieldContent('content'), 'url' => $__env->yieldContent('route')],
 
            $currentRouteName === 'show-nasabah' ?
-                       ['label' => $__env->yieldContent('sub-content'), 'url' => $__env->yieldContent('route')]:
+            ['label' => $__env->yieldContent('sub-content'), 'url' => $__env->yieldContent('route')]:
             ['label' => $__env->yieldContent('sub-content')],
-
-
-                       ['label' => $__env->yieldContent('othersub-content')]
+            ['label' => $__env->yieldContent('othersub-content')]
         ]" />
 
         <h1 class="text-2xl font-semibold tracking-wide text-gray-800 dark:text-gray-100">
@@ -106,7 +104,7 @@
         {{-- NOTIFICATION --}}
 <div class="flex" 
   x-data="{
-    notifications: {{ json_encode(auth()->user()->notifications->take(10)->map(fn($n) => [
+    notifications: {{ json_encode(auth()->user()->notifications->take(10)->whereNull('read_at')->map(fn($n) => [
         'id' => $n->id,
         'message' => $n->data['message'] ?? '',
         'url' => $n->data['url'] ?? '#',
