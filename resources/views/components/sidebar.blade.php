@@ -107,7 +107,7 @@
             <h1 class="text-xl font-semibold tracking-wide text-gray-800 dark:text-gray-100 
                    transition-all duration-300 font-[Poppins]"
                 x-show="sidebarExpanded" x-transition.opacity.scale>
-                <span class="font-light">Si</span>Banksa
+                <span class="font-light">SI </span>BANKSA
             </h1>
         </div>
 

@@ -15,13 +15,10 @@
         <div class="mb-5 text-center lg:text-left">
             <div class="flex items-center justify-between mb-6">
                 <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white font-[Poppins]">
-                    <span class="text-emerald-600 dark:text-emerald-400">Si</span>Banksa
+                    <span class="text-emerald-600 dark:text-emerald-400">SI </span>BANKSA
                 </h1>
 
                 <div class="flex gap-3">
-        
-
-
 
                     <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script>
                     <div

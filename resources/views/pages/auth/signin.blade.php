@@ -16,26 +16,12 @@
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
                         <h1
                             class="my-auto text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white font-[Poppins]">
-                            <span class="text-emerald-600 dark:text-emerald-400">Si</span>Banksa
+                            <span class="text-emerald-600 dark:text-emerald-400">SI </span>BANKSA
                         </h1>
 
                         <div class="w-full flex justify-end">
                             <div class="transform scale-90 flex w-max items-center gap-3">
-                                <button
-                                    class="group  relative flex items-center justify-start gap-0 hover:gap-3 overflow-hidden rounded-full bg-gray-100 px-4 py-3 text-sm font-medium text-gray-700 w-max transition-all duration-300 hover:bg-gray-200 hover:pl-6 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-                                    <!-- Logo -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                        stroke-width="1.8" stroke="currentColor" class="w-6 h-6">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3H6.75A2.25 2.25 0 004.5 5.25v13.5A2.25 2.25 0 006.75 21h6.75a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                                    </svg>
-
-                                    <!-- Teks Login -->
-                                    <span
-                                        class=" overflow-hidden scale-0  text-gray-700 w-0 transition-all duration-300 group-hover:scale-100 group-hover:w-auto">
-                                        Login
-                                    </span>
-                                </button>
+                               
 
 
                                 <a href="{{ route('register') }}"
