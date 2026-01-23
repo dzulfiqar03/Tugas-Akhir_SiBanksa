@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class TrackingSetoranController extends Controller
 {
@@ -128,7 +129,7 @@ class TrackingSetoranController extends Controller
         
 
         $menu = (new DataResources(null))->toArray(request());
-        return view('pages/Bank Sampah/tracking-setor', [
+        return Inertia::render('BankSampah/TrackingSetoran', [
                         'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'workflowSteps' => $workflowSteps,

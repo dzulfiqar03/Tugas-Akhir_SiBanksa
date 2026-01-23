@@ -5,10 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\FormResources;
-use App\Models\Gender;
-use App\Models\RTPerumahan;
 use App\Models\User;
-use App\Models\UserDetail;
 use App\Services\Auth\AuthServices;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -16,26 +13,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
     /**
      * Display the registration view.
      */
-
     public function __construct(protected AuthServices $authServices) {}
-    public function create(): View
+    public function create(): Response
     {
         $form = (new FormResources(null))->toArray(request());
 
-        $rt = RTPerumahan::all();
-        $gender = Gender::all();
         $formName = 'formRegister';
-        return view('pages.auth.signup', [
+
+        return Inertia::render('Auth/Register', [
+            'status' => session('status'),
             'formdata' => $form,
-            'rt' => $rt,
-            'gender' => $gender,
             'formName' => $formName
         ]);
     }
@@ -48,16 +43,16 @@ class RegisteredUserController extends Controller
     public function store(RegisterRequest $request): RedirectResponse
     {
 
-    
+
         try {
 
-        $data = $request->validated();
-        
-       
-        $payload = array_merge($data['nasabah'], [
-            'id_roles' => $data['id_roles'],
-            'status' => $data['status']
-        ]);
+            $data = $request->validated();
+
+
+            $payload = array_merge($data['nasabah'], [
+                'id_roles' => $data['id_roles'],
+                'status' => $data['status']
+            ]);
             $users = $this->authServices->registerUser($payload);
             event(new Registered($users));
             return redirect()->route('login')->with('success', 'Registrasi berhasil!');

@@ -7,6 +7,7 @@ use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DataTransaksiController extends Controller
 {
@@ -117,7 +118,7 @@ class DataTransaksiController extends Controller
         $form = (new FormResources(null))->toArray(request());
 
         $formName = 'formTransaksi';
-         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,
                 'message' => $n->data['message'] ?? '',
@@ -126,8 +127,8 @@ class DataTransaksiController extends Controller
                 'is_read' => $n->read_at !== null
             ];
         });
-        return view('pages/Bank Sampah/data-transaksi', [
-                        'initialNotifications' => $notifications,
+        return Inertia::render('BankSampah/DataTransaksi', [
+            'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'items' => $items,
             'sidebardata' => $menu,

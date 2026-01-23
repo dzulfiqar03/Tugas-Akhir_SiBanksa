@@ -72,7 +72,7 @@ class FormResources extends JsonResource
                 [
                     'title' => 'Phone Number',
                     'name' => 'phoneNumber',
-                    'type' => 'number',
+                    'type' => 'text',
                     'placeholder' => 'Masukkan Nomor Telepon',
                 ],
 
@@ -82,7 +82,6 @@ class FormResources extends JsonResource
                     'type' => 'select',
                     'options' => $optionRT,
                 ],
-
 
                 [
                     'title' => 'Status',

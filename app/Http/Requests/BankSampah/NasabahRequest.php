@@ -44,14 +44,5 @@ class NasabahRequest extends FormRequest
         ];
     }
 
-    // ⬇️ TARUH DI SINI
-    protected function failedValidation(Validator $validator)
-    {
-        if ($this->expectsJson()) {
-            throw new HttpResponseException(response()->json([
-                'message' => 'Validasi gagal',
-                'errors' => $validator->errors()
-            ], 422));
-        }
-    }
+   
 }

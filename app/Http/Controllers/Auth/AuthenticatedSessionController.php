@@ -8,19 +8,23 @@ use App\Http\Resources\FormResources;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(): Response
     {
         $form = (new FormResources(null))->toArray(request());
 
         $formName = 'formLogin';
-        return view('pages.auth.signin', [
+        return Inertia::render('Auth/Login', [
+            'canResetPassword' => Route::has('password.request'),
+            'status' => session('status'),
             'formdata' => $form,
             'formName' => $formName
         ]);
@@ -55,9 +59,6 @@ class AuthenticatedSessionController extends Controller
 
         return redirect()->intended('/dashboard');
     }
-
-
-
 
     /**
      * Destroy an authenticated session.

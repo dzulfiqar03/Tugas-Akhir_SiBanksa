@@ -10,6 +10,7 @@ use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Services\BankSampah\JadwalServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class JadwalPelaksanaanController extends Controller
 {
@@ -24,7 +25,7 @@ class JadwalPelaksanaanController extends Controller
         $form = (new FormResources(null))->toArray(request());
 
         $formName = 'formJadwalPelaksanaan';
-         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,
                 'message' => $n->data['message'] ?? '',
@@ -35,13 +36,15 @@ class JadwalPelaksanaanController extends Controller
         });
 
         $jadwal = $this->jadwalServices->getAllJadwal();
-        return view('pages/Bank Sampah/jadwal-pelaksanaan', [
-                        'initialNotifications' => $notifications,
+        $idUser = Auth::user()->user_detail->id;
+        return Inertia::render('BankSampah/JadwalPelaksanaan', [
+            'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,
             'formdata' => $form,
             'formName' => $formName,
-            'jadwal' => $jadwal
+            'jadwal' => $jadwal,
+            'idUser' => $idUser
 
         ]);
     }
@@ -61,15 +64,9 @@ class JadwalPelaksanaanController extends Controller
     {
         try {
             $this->jadwalServices->createJadwal($request->validated());
-            return response()->json([
-                'code' => 200,
-                'message' => 'Jadwal berhasil ditambahkan'
-            ], 200);
+            return redirect()->back()->with('message', 'Jadwal berhasil ditambahkan');
         } catch (\Exception $e) {
-            return response()->json([
-                'code' => 500,
-                'message' => $e->getMessage()
-            ], 500);
+            return back()->with('error', 'Gagal mendaftar: ' . $e->getMessage());
         }
     }
 
@@ -96,15 +93,9 @@ class JadwalPelaksanaanController extends Controller
     {
         try {
             $this->jadwalServices->updateJadwal($Jadwal->id, $request->validated());
-            return response()->json([
-                'code' => 200,
-                'message' => 'Jadwal berhasil diubah'
-            ], 200);
+            return redirect()->back()->with('message', 'Jadwal berhasil diubah');
         } catch (\Exception $e) {
-            return response()->json([
-                'code' => 500,
-                'message' => $e->getMessage()
-            ], 500);
+            return back()->with('error', 'Gagal mengubah: ' . $e->getMessage());
         }
     }
 
@@ -115,12 +106,9 @@ class JadwalPelaksanaanController extends Controller
     {
         try {
             $this->jadwalServices->deleteJadwal($Jadwal->id);
-            return response()->json(['code' => 200, 'message' => 'Jadwal berhasil Dihapus']);
+            return redirect()->back()->with('message', 'Jadwal berhasil dihapus');
         } catch (\Exception $e) {
-            return response()->json([
-                'code' => 500,
-                'message' => $e->getMessage()
-            ], 500);
+            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
     }
 }

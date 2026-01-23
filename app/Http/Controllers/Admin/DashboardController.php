@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -26,12 +27,16 @@ class DashboardController extends Controller
                 'is_read' => $n->read_at !== null
             ];
         });
+        $breadcrumbItems    = [
+            ['label' => 'Dashboard', 'url' => route('dashboard')],
+        ];
         $user = Auth::user();
-        return view('dashboard', [
+        return Inertia::render('BankSampah/Dashboard', [
             'initialNotifications' => $notifications,
             'unreadCount' => $user->unreadNotifications->count(),
             'sidebardata' => $menu,
-            'user' => $user
+            'user' => $user,
+            'breadcrumbItems' => $breadcrumbItems
         ]);
     }
 

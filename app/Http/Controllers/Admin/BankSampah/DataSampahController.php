@@ -9,6 +9,7 @@ use App\Http\Resources\FormResources;
 use App\Services\BankSampah\SampahServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DataSampahController extends Controller
 {
@@ -26,7 +27,7 @@ class DataSampahController extends Controller
         $formName = 'formSampah';
 
         $sampah = $this->sampahServices->getAllSampah();
-         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,
                 'message' => $n->data['message'] ?? '',
@@ -35,13 +36,21 @@ class DataSampahController extends Controller
                 'is_read' => $n->read_at !== null
             ];
         });
-        return view('pages/Bank Sampah/data-sampah', [
-                        'initialNotifications' => $notifications,
+        $idUser = Auth::user()->user_detail->id;
+        $breadcrumbItems    = [
+            ['label' => 'Dashboard', 'url' => route('dashboard')],
+            ['label' => 'Manajemen Bank Sampah', 'url' => null],
+            ['label' => 'Data Sampah', 'url' => route('data-sampah')],
+        ];
+        return Inertia::render('BankSampah/DataSampah', [
+            'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,
             'formdata' => $form,
             'formName' => $formName,
-            'sampah' => $sampah
+            'sampah' => $sampah,
+            'idUser' => $idUser,
+            'breadcrumbItems' => $breadcrumbItems
 
         ]);
     }
@@ -61,12 +70,9 @@ class DataSampahController extends Controller
     {
         try {
             $this->sampahServices->createSampah($request->validated());
-            return response()->json(['code' => 200, 'message' => 'Sampah berhasil ditambahkan']);
+            return redirect()->back()->with('message', 'Sampah berhasil ditambahkan');
         } catch (\Exception $e) {
-            return response()->json([
-                'code' => 500,
-                'message' => $e->getMessage()
-            ], 500);
+            return back()->with('error', 'Gagal mendaftar: ' . $e->getMessage());
         }
     }
 
@@ -94,12 +100,9 @@ class DataSampahController extends Controller
     {
         try {
             $this->sampahServices->updateSampah($id, $request->validated());
-            return response()->json(['code' => 200, 'message' => 'Sampah berhasil Diupdate']);
+            return redirect()->back()->with('message', 'Sampah berhasil ditambahkan');
         } catch (\Exception $e) {
-            return response()->json([
-                'code' => 500,
-                'message' => $e->getMessage()
-            ], 500);
+            return back()->with('error', 'Gagal update: ' . $e->getMessage());
         }
     }
 
@@ -110,12 +113,9 @@ class DataSampahController extends Controller
     {
         try {
             $this->sampahServices->deleteSampah($id);
-            return response()->json(['code' => 200, 'message' => 'Sampah berhasil Dihapus']);
+            return redirect()->back()->with('message', 'Data berhasil dihapus');
         } catch (\Exception $e) {
-            return response()->json([
-                'code' => 500,
-                'message' => $e->getMessage()
-            ], 500);
+            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
     }
 }

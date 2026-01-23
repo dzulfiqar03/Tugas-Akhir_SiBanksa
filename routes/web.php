@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\BankSampah\JadwalPelaksanaanController;
 use App\Http\Controllers\Admin\BankSampah\PencatatanController;
 use App\Http\Controllers\Admin\BankSampah\TrackingSetoranController;
 use App\Http\Controllers\Admin\DashboardController;
-
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\System\InternetConnController;
 use Illuminate\Support\Facades\Auth;
 
@@ -35,10 +35,8 @@ Route::middleware(['conn'])->group(function () {
 
     Route::middleware(['auth'])->group(function () {
 
-        Route::post('/notifications/{id}/read', function ($id) {
-            auth()->user()->notifications()->findOrFail($id)->markAsRead();
-            return response()->noContent();
-        })->name('notifications.read');
+        Route::post('/notifications/{id}/read',[NotificationController::class, 'readNotif'] )->name('notifications.read');
+        Route::post('/notifications/readAll',[NotificationController::class, 'readAllNotif'] )->name('notifications.readAll');
 
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
