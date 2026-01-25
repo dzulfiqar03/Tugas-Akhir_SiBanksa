@@ -45,16 +45,19 @@ const sections = computed(() => {
             else grouped['LAINNYA'].push(menu);
         });
     } else if (role === 'Ketua RW') {
-        grouped = { 'MANAJEMEN': [], 'TRANSAKSI': [], 'LAINNYA': [] };
+        grouped = { 'MAIN': [], 'MANAJEMEN': [], 'TRANSAKSI': [], 'LAINNYA': [] };
         menus.value.forEach(menu => {
-            if (menu.data || ['Bank Sampah', 'Nasabah', 'Tracking Setoran', 'Penjadwalan'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
+                        if (['Dashboard'].includes(menu.nama)) grouped['MAIN'].push(menu);
+            else if (menu.data || ['Bank Sampah', 'Nasabah', 'Tracking Setoran', 'Penjadwalan'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
             else if (menu.data || ['Transaksi', 'Transaksi Setoran'].includes(menu.nama)) grouped['TRANSAKSI'].push(menu);
             else grouped['LAINNYA'].push(menu);
         });
     } else {
-        grouped = { 'MAIN': [], 'LAINNYA': [] };
+        grouped = { 'MAIN': [],'MANAJEMEN': [], 'LAINNYA': [] };
         menus.value.forEach(menu => {
-            if (['Dashboard'].includes(menu.nama)) grouped['MAIN'].push(menu);
+                                    if (['Tracking Setoran'].includes(menu.nama)) grouped['MAIN'].push(menu);
+
+            else if (menu.data || ['Bank Sampah', 'Nasabah', 'Transaksi Setoran', 'Penjadwalan'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
             else grouped['LAINNYA'].push(menu);
         });
     }

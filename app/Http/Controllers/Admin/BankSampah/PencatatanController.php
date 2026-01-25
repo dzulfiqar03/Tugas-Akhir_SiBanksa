@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin\BankSampah;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BankSampah\PencatatanRequest;
 use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
+use App\Models\BankSampah\PencatatanSetoranItems;
+use App\Models\BankSampah\Sampah;
 use App\Models\UserDetail;
 use App\Services\BankSampah\PencatatanServices;
 use Illuminate\Http\Request;
@@ -92,9 +95,15 @@ class PencatatanController extends Controller
         $form = (new FormResources(null))->toArray(request());
 
         $jadwalPelaksanaan = UserDetail::find(Auth::user()->user_detail->id)->jadwal()->get();
-        $nasabahList = UserDetail::where('id_rt', Auth::user()->user_detail->rt->id)->where('status', 'Disetujui')->where('id_roles', 3)->get();
+        $nasabahList = UserDetail::where('id_rt', Auth::user()->user_detail->rt->id)->where('status', 'Disetujui')->where('id_roles', 3)->with(['sampah', 'pencatatan.pencatatan_items'])->get();
         $formName = 'formPencatatan';
 
+        $jenisSampah = Sampah::where('id_userdetail', Auth::user()->user_detail->id)->get();
+$pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+    ->whereHas('setoran', function($query) {
+        $query->where('id_userdetail', Auth::user()->user_detail->id);
+    })
+    ->get();
         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,
@@ -112,7 +121,9 @@ class PencatatanController extends Controller
             'formdata' => $form,
             'formName' => $formName,
             'jadwalPelaksanaan' => $jadwalPelaksanaan,
-            'nasabahList' => $nasabahList
+            'nasabahList' => $nasabahList,
+            'jenisSampah' => $jenisSampah,
+            'pencatatanSetoranItems' => $pencatatanSetoranItems
         ]);
     }
 
@@ -127,17 +138,14 @@ class PencatatanController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(PencatatanRequest $request)
     {
 
         try {
 
-            $pencatatan = $this->pencatatanServices->createPencatatanSetoran($request->all());
+            $this->pencatatanServices->createPencatatanSetoran($request->validated());
 
-            return response()->json([
-                'message' => 'Pencatatan setoran berhasil dibuat',
-                'data' => $pencatatan
-            ], 201);
+            return redirect()->back()->with('message', 'Sampah berhasil ditambahkan');
         } catch (\Throwable $th) {
             //throw $th;
         }

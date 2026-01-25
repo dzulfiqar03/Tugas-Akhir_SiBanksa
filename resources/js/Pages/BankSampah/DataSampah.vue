@@ -28,25 +28,40 @@ const props = defineProps({
     breadcrumbItems: Array,
 });
 
-// --- STATE ---
-const showForm = ref(false);
-const isEdit = ref(false);
-const dtInstance = ref(null);
 
 const form = useForm({
     id: null,
     nama_sampah: '',
     satuan: '',
-    harga: '',
+    harga: 0,
     kategori: '',
-    id_userdetail: props.idUser
+    id_userdetail: props.idUser,
+    saldo: 0
 });
+
+// --- STATE ---
+const showForm = ref(false);
+const isEdit = ref(false);
+const dtInstance = ref(null);
+
+let kas = ref(form.saldo);
+const harga_pengepul = ref();
+const kasCalculate = (e) => {
+
+   if (e.target.value.length === 0) {
+    form.saldo = 0
+   } else{
+   form.saldo = e.target.value - harga_pengepul.value
+
+   }
+};
+
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
-// --- DATATABLES CONFIG (Mengadopsi data-sampah.js Anda) ---
+
 const dtOptions = {
-    pageLength: 10,
+    pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
   
@@ -201,6 +216,8 @@ const handleSearch = (e) => {
     dtInstance.value.dt.search(e.target.value).draw();
 };
 
+
+
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
     // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
@@ -233,6 +250,7 @@ const editData = (item) => {
     form.satuan = item.satuan;
     form.harga = item.harga;
     form.kategori = item.kategori;
+    form.saldo = item.saldo;
     showForm.value = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
@@ -272,15 +290,7 @@ const handleSubmit = () => {
                             Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
                         }
                     },
-                    onFinish: function () {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: result.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
-                    }
+                    
     });
 };
 
@@ -336,6 +346,7 @@ const breadcrumbItems = [
         >
                                                     <input type="hidden" name="id_userdetail" :value="idUser">
 
+                                          <input type="hidden" name="saldo" v-model="form.saldo" >
                                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
   <div v-for="field in formdata.sampah.formSampah" :key="field.name" :class="field.name === 'kategori' ? 'md:col-span-2 lg:col-span-1' : ''">
                                                                         <InputLabel :for="field.name" :value="field.title" />                        
@@ -346,12 +357,37 @@ const breadcrumbItems = [
                                 <option v-for="opt in field.options" :key="opt.value || opt" :value="opt.value || opt">{{ opt.label || opt }}</option>
                             </select>
 
-                            <input v-else :type="field.type" v-model="form[field.name]" 
+                            <input v-else-if="field.type !== 'number'" :type="field.type" v-model="form[field.name]" 
                                 class="w-full border-gray-200 dark:border-gray-600 rounded-xl p-2.5 dark:bg-gray-900 dark:text-white text-black focus:ring-emerald-500" 
                                                                 :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
 
                                 :placeholder="field.placeholder">
                             
+
+                                <div v-else>
+                                    <div v-if="field.name === 'harga'">
+  <input  @keyup="kasCalculate" :type="field.type" v-model="form[field.name]" 
+                                class="w-full border-gray-200 dark:border-gray-600 rounded-xl p-2.5 dark:bg-gray-900 dark:text-white text-black focus:ring-emerald-500" 
+                                                                :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
+
+                                :placeholder="field.placeholder">
+
+                           <p v-if="form.harga > 0" class="dark:text-white transition-all ease-in-out duration-300">Saldo Bersih Sampah {{ form.nama_sampah }} <span 
+                            :class="[form.saldo <= 0 ? 'text-red-500' : 'text-emerald-500', 'font-bold']" > {{form.saldo}}</span></p>
+                                    </div>
+
+                          
+
+
+                                <input v-else :type="field.type" v-model="harga_pengepul" 
+                                class="w-full border-gray-200 dark:border-gray-600 rounded-xl p-2.5 dark:bg-gray-900 dark:text-white text-black focus:ring-emerald-500" 
+                                                                :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
+
+                                :placeholder="field.placeholder">
+
+                                </div>
+                              
+
 
                             </div>
 
@@ -403,8 +439,8 @@ const breadcrumbItems = [
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
                 <select @change="handleLengthChange"
                     class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
+                    <option value="5" selected="">5</option>
+                    <option value="10">10</option>
                     <option value="25">25</option>
                 </select>
             </div>
@@ -433,6 +469,10 @@ class="w-full display stripe hover cell-border">
                         <span class="font-medium text-gray-600 dark:text-gray-400">{{ data.cellData }}</span>
                     </template>
 
+                    <template v-for="i in [1,2, 4]" :key="i" #[`column-${i}`]="data">
+                        <span class="font-medium  capitalize dark:text-white">{{ data.cellData }}</span>
+                    </template>
+
                     <template #column-5="data"> 
                         <div class="flex justify-center gap-1">
                             <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
@@ -453,7 +493,10 @@ class="w-full display stripe hover cell-border">
 </template>
 
 <style>
-/* CSS yang diperbarui */
+.dark td{
+    color:white;
+}
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;

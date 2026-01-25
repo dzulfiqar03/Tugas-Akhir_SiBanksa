@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PencatatanSetoran extends Model
 {
+
+    protected $table = 'pencatatan_setoran';
     protected $fillable = ['id_userdetail', 'id_jadwal', 'total_setoran'];
 
 
@@ -20,7 +22,7 @@ class PencatatanSetoran extends Model
         return $this->belongsTo(JadwalPelaksanaan::class, 'id_jadwal', 'id');
     }
 
-        public function pencatatan_items()
+    public function pencatatan_items()
     {
         return $this->hasMany(PencatatanSetoranItems::class, 'pencatatan_setoran_id', 'id');
     }

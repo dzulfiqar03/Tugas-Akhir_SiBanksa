@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Http\Resources\DataResources;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware

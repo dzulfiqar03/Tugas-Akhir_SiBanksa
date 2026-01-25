@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class PencatatanSetoranItems extends Model
 {
+
+    protected $table = 'pencatatan_setoran_items';
+
         protected $fillable = ['pencatatan_setoran_id','sampah_id', 'jumlah', 'harga_satuan', 'subtotal' ];
 
         public function sampah()

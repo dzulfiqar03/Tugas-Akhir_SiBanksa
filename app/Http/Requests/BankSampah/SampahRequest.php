@@ -30,6 +30,7 @@ class SampahRequest extends FormRequest
             'harga'           => 'required|integer',
             'kategori'        => 'required',
             'id_userdetail' => 'required|integer',
+            'saldo' => 'required|integer',
 
         ];
     }
@@ -42,6 +43,7 @@ class SampahRequest extends FormRequest
             'harga.required'       => 'Harga wajib diisi',
             'kategori.required'          => 'Kategori wajib diisi',
             'id_userdetail.required'          => 'Id User wajib diisi',
+            'saldo.required'          => 'Saldo wajib diisi',
         ];
     }
 

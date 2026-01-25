@@ -40,7 +40,21 @@ class SampahServices
     {
         return DB::transaction(function () use ($data) {
 
-            $newSampah = $this->sampah::create($data);
+            $sampahEksisting = $this->sampah->where('nama_sampah', $data['nama_sampah'])->first();
+            $sampahEksistingkas = $sampahEksisting->saldo;
+            $newSampah = $this->sampah::updateOrCreate(
+                [
+                    'id_userdetail' => $data['id_userdetail'],
+                    'nama_sampah' => $data['nama_sampah']
+                ],
+                [
+
+                    'harga' => $data['harga'],
+                    'satuan' => $data['satuan'],
+                    'saldo' =>  $sampahEksistingkas + (int) $data['saldo']
+
+                ]
+            );
 
             return $newSampah;
         });
@@ -50,7 +64,22 @@ class SampahServices
     {
         return DB::transaction(function () use ($id, $data) {
 
-            $updateSampah = $this->getSampah($id)->update($data);
+            $sampahEksisting = $this->sampah->where('nama_sampah', $data['nama_sampah'])->first();
+            $sampahEksistingkas = $sampahEksisting->saldo;
+
+            $updateSampah = $this->getSampah($id)->update(
+                [
+                    'id_userdetail' => $data['id_userdetail'],
+                    'nama_sampah' => $data['nama_sampah'],
+                    'harga' => $data['harga'],
+                    'satuan' => $data['satuan'],
+                    'saldo' =>  $sampahEksistingkas + (int) $data['saldo'],
+                ]
+
+
+
+
+            );
 
 
             return $updateSampah;

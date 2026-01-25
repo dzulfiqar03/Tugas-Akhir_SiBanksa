@@ -69,4 +69,9 @@ class UserDetail extends Model
     {
         return $this->hasMany(JadwalPelaksanaan::class, 'id_userdetail', 'id');
     }
+
+    public function user_transaction()
+    {
+        return $this->hasMany(UserTransaction::class, 'id_userdetail', 'id');
+    }
 }

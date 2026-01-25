@@ -19,7 +19,7 @@ class UserVerification extends Notification implements ShouldQueue
     {
         $this->nasabahId = $nasabahId;
         $this->message = "Pengajuan Akun telah diverifikasi!";
-        $this->url = url("/warga/dashboard");
+        $this->url = url("/Warga/dashboard");
     }
 
     // Simpan ke Database & Kirim ke Broadcast (Reverb)

@@ -136,6 +136,12 @@ class FormResources extends JsonResource
                         'placeholder' => 'Masukkan satuan',
                     ],
                     [
+                        'title' => 'Harga Pengepul',
+                        'name' => 'harga_pengepul',
+                        'type' => 'number',
+                        'placeholder' => 'Masukkan Harga Pengepul',
+                    ],
+                     [
                         'title' => 'Harga',
                         'name' => 'harga',
                         'type' => 'number',

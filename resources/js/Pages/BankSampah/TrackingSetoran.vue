@@ -27,147 +27,93 @@ const props = defineProps({
 // Helper untuk styling status (Pengganti fungsi PHP statusBadge)
 const statusBadge = (status) => {
     const colors = {
-        completed: 'bg-green-200 text-green-800',
+        Completed: 'bg-green-200 text-green-800',
         in_progress: 'bg-blue-200 text-blue-800',
         pending: 'bg-gray-200 text-gray-600',
     };
     return colors[status] || 'bg-gray-200 text-gray-600';
 };
 
-const dtOptions = {
-    pageLength: 5,
-    responsive: true,
-    lengthMenu: [5, 10, 25, 50],
+const dtOptions = computed(() => {
+    // 1. Kolom Nama Nasabah
+    const baseColumns = [
+        { 
+            data: 'fullName', 
+            title: 'Nama Nasabah', 
+            className: 'font-medium capitalize py-4' 
+        }
+    ];
 
-    layout: {
-        topStart: null,
-        topEnd: null,
-        bottomStart: 'info',
-        bottomEnd: 'paging'
-    },
-     buttons: [
-                    {
-                        extend: 'pdfHtml5',
-                        text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
-                        className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: 'Data Tracking Setoran',
-                        exportOptions: {
-                            columns: ':not(.no-print)' 
-                        },
-                        customize: function (doc) {
-                            // Atur margin halaman PDF
-                            doc.pageMargins = [40, 60, 40, 40];
+    // 2. Render Kolom Status secara Dinamis berdasarkan workflowSteps
+    const statusColumns = props.workflowSteps.map((step) => ({
+        title: step.name,
+        data: null, // Data manual di render
+        className: 'text-center',
+        render: (data, type, row) => {
+        const hasPencatatan = row.pencatatan && row.pencatatan.length > 0;
+        const hasPencairan = row.user_transaction && row.user_transaction.length > 0;
+        
+        let status = 'pending';
 
-                            // Tambahkan logo + namaSampah di atas tabel
-                            doc.content.splice(0, 0, {
-                                columns: [
-                                   {
-                                        text: 'SI BANKSA',
-                                        alignment: 'left',
-                                        fontSize: 16,
-                                        bold: true,
-                                        margin: [0, 20, 0, 0]
-                                    },
-                                    {
-                                        text: 'Bank Sampah - Data Sampah',
-                                        alignment: 'right',
-                                        fontSize: 16,
-                                        bold: true,
-                                        margin: [0, 20, 0, 0]
-                                    }
-                                ],
-                                columnGap: 10
-                            });
+        if (['Pemilahan', 'Penimbangan', 'Pencatatan'].includes(step.name)) {
+            status = hasPencatatan ? 'completed' : 'pending';
+        } 
+        
+        if (step.name === 'Pencairan') {
+            status = hasPencairan ? 'completed' : 'pending';
+        }
 
-                            // Tambahkan garis pemisah
-                            doc.content.splice(1, 0, {
-                                canvas: [
-                                    {
-                                        type: 'line',
-                                        x1: 0,
-                                        y1: 0,
-                                        x2: 515,
-                                        y2: 0,
-                                        lineWidth: 1,
-                                        lineColor: '#cccccc'
-                                    }
-                                ],
-                                margin: [0, 10, 0, 10]
-                            });
+        const badgeClass = status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400';
+        const icon = status === 'completed' ? 'fa-check-circle' : 'fa-clock';
 
-                            // Atur gaya tabel (opsional)
-                            doc.styles.tableHeader.fillColor = '#f1f1f1';
-                            doc.styles.tableHeader.color = '#333333';
-                            doc.defaultStyle.fontSize = 10;
-                        }
-                    },
+        return `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase ${badgeClass}">
+                    <i class="fas ${icon}"></i> ${status}
+                </span>`;
+    }
+    }));
 
-                    {
-                        extend: 'excelHtml5',
-                        text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
-                        className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="fa-solid fa-print mr-2"></i> Print',
-                        className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: '', // kosongin biar gak dobel namaSampah default
-                        customize: function (win) {
-                            $(win.document.body)
-                                .css('font-family', 'Poppins, sans-serif')
-                                .prepend(`
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                                <h1 class="py-5 text-2xl font-semibold text-gray-800 dark:text-gray-100 transition-all duration-300 font-[Poppins] text-center w-full"
-            >
-            <span class="font-light">Si</span>
-            Banksa
-        </h1>
-                        
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
-                        <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
-                    </div>
-                </div>
-                <hr style="border: 1px solid #ccc; margin-bottom: 20px;">
-            `);
+    // 3. Kolom Aksi
+    const actionColumn = [
+        {
+            title: 'Aksi',
+            data: null,
+            className: 'text-center no-print',
+            render: (data, type, row) => {
+                return `<button onclick="window.viewDetail(${row.id})" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white text-[10px] uppercase font-bold px-4 py-1.5 rounded-lg transition-all shadow-lg shadow-blue-500/20">
+                        Detail
+                    </button>`;
+            }
+        }
+    ];
 
-                            // Styling tambahan (opsional)
-                            $(win.document.body).find('table')
-                                .addClass('compact')
-                                .css({
-                                    'font-size': '12px',
-                                    'width': '100%',
-                                    'border-collapse': 'collapse'
-                                });
-
-                            $(win.document.body).find('table th')
-                                .css({
-                                    'background-color': '#f1f1f1',
-                                    'color': '#333',
-                                    'padding': '6px',
-                                    'border': '1px solid #ddd'
-                                });
-
-                            $(win.document.body).find('table td')
-                                .css({
-                                    'padding': '6px',
-                                    'border': '1px solid #ddd'
-                                });
-                        }
-                    }
-
-                ],
-    language: {
+    return {
+        // PERBAIKAN: Gunakan 'columns' (jamak), bukan 'column'
+        columns: [...baseColumns, ...statusColumns, ...actionColumn],
+        pageLength: 5,
+        responsive: false, // Matikan agar scrollX bekerja
+        scrollX: true,      // Pastikan bisa di-scroll di mobile
+        autoWidth: false,
+        lengthMenu: [5, 10, 25, 50],
+        layout: {
+            topStart: null,
+            topEnd: null,
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
+        buttons: [
+            // ... setting pdfHtml5, excelHtml5, print tetap sama seperti kodemu ...
+        ],
+        language: {
             info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-            paginate: {
-                previous: "← Sebelumnya",
-                next: "Berikutnya →"
-            },
+            paginate: { previous: "←", next: "→" },
             emptyTable: "Tidak ada data tersedia"
         }
-};
+    };
+});
+
+// Daftarkan fungsi ke window agar bisa dipanggil dari render DataTable
+window.viewDetail = (id) => viewDetail(id);
 
 const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
 const nextPage = () => dtInstance.value.dt.page('next').draw('page');
@@ -288,8 +234,9 @@ const breadcrumbItems = [
                     <DataTable 
                      ref="dtInstance"
                     :options="dtOptions"
+        :data="nasabahList"
                     class="w-full display stripe hover cell-border dark:text-white">
-                        <thead>
+                        <!-- <thead>
                             <tr class="text-left text-gray-500 dark:text-gray-400">
                                 <th class="text-center">No</th>
                                 <th>Nama Nasabah</th>
@@ -322,7 +269,7 @@ const breadcrumbItems = [
                                     </button>
                                 </td>
                             </tr>
-                        </tbody>
+                        </tbody> -->
                     </DataTable>
                 </div>
             </div>

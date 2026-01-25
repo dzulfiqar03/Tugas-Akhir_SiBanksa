@@ -292,7 +292,7 @@ const handleSubmit = () => {
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',
-                            text: result.message,
+                            text: 'Berhasil Diproses',
                             timer: 1500,
                             showConfirmButton: false
                         }).then(() => location.reload());
@@ -418,7 +418,7 @@ const breadcrumbItems = [
                         
                         <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
                             <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
-                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Sampah' : 'Simpan Sampah' }}
+                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Nasabah' : 'Simpan Nasabah' }}
                             </button>
                         </div>
                    </FormWrapper>

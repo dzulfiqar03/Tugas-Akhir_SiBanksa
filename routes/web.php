@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\BankSampah\JadwalPelaksanaanController;
 use App\Http\Controllers\Admin\BankSampah\PencatatanController;
 use App\Http\Controllers\Admin\BankSampah\TrackingSetoranController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PreferenceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\System\InternetConnController;
 use Illuminate\Support\Facades\Auth;
@@ -35,14 +36,16 @@ Route::middleware(['conn'])->group(function () {
 
     Route::middleware(['auth'])->group(function () {
 
-        Route::post('/notifications/{id}/read',[NotificationController::class, 'readNotif'] )->name('notifications.read');
-        Route::post('/notifications/readAll',[NotificationController::class, 'readAllNotif'] )->name('notifications.readAll');
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'readNotif'])->name('notifications.read');
+        Route::post('/notifications/readAll', [NotificationController::class, 'readAllNotif'])->name('notifications.readAll');
 
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
         Route::middleware(['verified'])->group(function () {
+
+            Route::get('/preference', [PreferenceController::class, 'index'])->name('preference');
 
             Route::middleware(['roles:Ketua RW'])->group(function () {
                 Route::get('/KetuaRW/dashboard', [DashboardController::class, 'index'])->name('rw.dashboard');
@@ -77,8 +80,11 @@ Route::middleware(['conn'])->group(function () {
 
                 Route::get('/bank-sampah/tracking', [TrackingSetoranController::class, 'index'])->name('data-tracking');
                 Route::get('/bank-sampah/transaksi', [DataTransaksiController::class, 'index'])->name('data-transaksi');
+                
                 Route::get('/bank-sampah/pencatatan', [PencatatanController::class, 'index'])->name('pencatatan-setoran');
-            });
+                            Route::post('/bank-sampah/pencatatan/create', [PencatatanController::class, 'store'])->name('add-setoran');
+
+                });
 
             Route::middleware(['roles:Warga'])->group(function () {
                 Route::get('/Warga/dashboard', [DashboardController::class, 'index'])->name('warga.dashboard');

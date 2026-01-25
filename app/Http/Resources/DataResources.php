@@ -148,8 +148,8 @@ class DataResources extends JsonResource
 
                     [
                         'nama'  => 'Pengaturan',
-                        'route' => '#',
-                        'uri' => '#',
+                             'route' => route('preference'),
+                        'uri' => 'preference',
                         'icon'  => 'fas fa-cog',
                     ],
 
@@ -176,12 +176,13 @@ class DataResources extends JsonResource
         return [
             'Data' => 'Warga',
             'sub-data' => [
-                [
-                    'nama' => 'Dashboard',
-                    'route' => route('warga.dashboard'),
-                    'uri' => '#',
-                    'icon'  => 'fas fa-sign-out-alt text-danger',
-                ],
+
+            [
+                        'nama'  => 'Tracking Setoran',
+                        'route' => route('data-tracking'),
+                        'uri' => 'data-tracking',
+                        'icon'  => 'fas fa-route',
+                    ],
                 [
                     'nama' => 'Transaksi Setoran',
                     'route' => route('warga.data-transaksi'),
@@ -194,6 +195,27 @@ class DataResources extends JsonResource
                     'uri' => '#',
                     'icon'  => 'fas fa-sign-out-alt text-danger',
                 ],
+
+                  [
+                        'nama'  => 'Pengaturan',
+                        'route' => route('preference'),
+                        'uri' => 'preference',
+                        'icon'  => 'fas fa-cog',
+                    ],
+
+                    [
+                        'nama'  => 'Profile',
+                        'route' => '#',
+                        'uri' => '#',
+                        'icon'  => 'fas fa-user-circle',
+                    ],
+
+                    [
+                        'nama'  => 'LogOut',
+                        'route' => '#',
+                        'uri' => '#',
+                        'icon'  => 'fas fa-sign-out-alt text-danger',
+                    ],
             ],
         ];
     }

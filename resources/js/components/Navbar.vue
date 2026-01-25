@@ -74,30 +74,61 @@ const sections = computed(() => {
     return Object.fromEntries(Object.entries(grouped).filter(([_, v]) => v.length > 0));
 });
 
+const userId = document
+  .querySelector('meta[name="user-id"]')
+  ?.getAttribute('content')
+
 onMounted(() => {
-    if (window.Echo && user.value?.id) {
-        window.Echo.private(`App.Models.User.${user.value.id}`)
-            .notification((n) => {
-                new Audio('/sounds/notification.mp3').play();
-                
-                // Samakan struktur ini dengan struktur map di Controller Anda
-                notifications.value.unshift({
-                    id: n.id,
-                    message: n.message || n.data?.message, // Mengambil message dari broadcast data
-                    url: n.url || n.data?.url || '#',
-                    time: n.created_at,
-                    is_read: false
+  console.log('ECHO:', window.Echo)
+
+  window.Echo
+    .private(`App.Models.User.${userId}`)
+    .notification((n) => {
+       if (window.audioUnlocked && window.notificationAudio) {
+      window.notificationAudio.currentTime = 0
+      window.notificationAudio.play().catch(() => {})
+    }
+                Swal.fire({
+                    title: 'Notifikasi Baru!',
+                    text: n.message,
+                    icon: 'success',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 5000,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.style.cursor = 'pointer';
+                        toast.onclick = () => window.location.href = n.url
+                    },
+                    
                 });
+
+                notifications.value.unshift({
+                    id: Date.now(),
+                    message: n.message,
+                    url: n.url,
+                    time: 'Baru saja',
+                    read: false
+                });
+
                 count.value++;
-            });
+
+
+
+               setTimeout(() => {
+    location.reload();
+}, 5000);
+    })
+})
+
+onBeforeUnmount(() => {
+    if (window.Echo && userId) {
+        window.Echo.leave(`App.Models.User.${userId}`);
     }
 });
 
-onBeforeUnmount(() => {
-    if (window.Echo && user.value?.id) {
-        window.Echo.leave(`App.Models.User.${user.value.id}`);
-    }
-});
+
 
 const notifAktif = computed(() => {
 

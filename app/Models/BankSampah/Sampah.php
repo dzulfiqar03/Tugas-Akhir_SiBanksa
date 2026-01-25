@@ -9,7 +9,7 @@ class Sampah extends Model
 {
 
     protected $table = "sampah";
-    protected $fillable = ['nama_sampah', 'harga', 'satuan', 'kategori', 'id_userdetail'];
+    protected $fillable = ['nama_sampah', 'harga', 'satuan', 'kategori', 'id_userdetail', 'saldo'];
 
 
     public function user_detail()

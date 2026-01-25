@@ -1,4 +1,5 @@
 <template>
+
   <div :class="{ 'dark': isDark }">
     <Preloader />
     <div class="bg-gray-100 dark:bg-gray-900 flex min-h-screen transition-colors duration-300 overflow-hidden">
@@ -54,6 +55,7 @@ import Sidebar from '@/Components/Sidebar.vue';
 import Navbar from '@/Components/Navbar.vue';
 import Preloader from '@/Components/Preloader.vue';
 
+import EnableNotificationSound from '@/Components/EnableNotificationSound.vue'
 // Definisi Props yang dikirim dari Controller melalui Inertia
 const props = defineProps({
 

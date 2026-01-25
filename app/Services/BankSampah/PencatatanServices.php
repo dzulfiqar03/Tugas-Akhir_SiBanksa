@@ -5,6 +5,7 @@ namespace App\Services\BankSampah;
 use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\BankSampah\PencatatanSetoranItems;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PencatatanServices
 {
@@ -18,45 +19,48 @@ class PencatatanServices
 
     public function createPencatatanSetoran(array $data)
     {
-        $subTotal = 0;
-        $hargaSatuan = 0;
 
-        $data['id_userdetail'] = Auth::user()->user_detail->id;
 
-        
+    try {
+      $newSetoran=  DB::transaction(function () use ($data) {
+            // 1. Simpan ke tabel Induk (pencatatan_setoran)
+            $setoran = PencatatanSetoran::create([
+                'id_jadwal'     => $data['id_jadwal'],
+                'id_userdetail' => $data['id_userdetail'],
+                'total_setoran' => 0, // Akan di-update setelah loop item
+            ]);
 
-        foreach ($data['items'] as $item) {
-            $data['jumlah'] = $item['berat'];
-            $subTotal += $item['harga_satuan'] * $item['berat'];
+            $grandTotal = 0;
 
-            if (Auth::user()->user_detail->rt == 1 || Auth::user()->user_detail->rt == 2) {
-                $hargaSatuan = $item['harga_satuan'] / 1000;
-            } elseif (Auth::user()->user_detail->rt == 3 || Auth::user()->user_detail->rt == 4) {
-                $hargaSatuan = 2500;
-            } elseif (Auth::user()->user_detail->rt == 5 || Auth::user()->user_detail->rt == 6) {
-                $hargaSatuan = 3000;
-            } else {
-                $hargaSatuan = 3500;
+            // 2. Loop simpan ke tabel Detail (pencatatan_setoran_items)
+            foreach ($data['items'] as $item) {
+                // Hanya simpan jika berat/jumlah lebih dari 0
+
+                    $subtotal = $item['jumlah'] * $item['harga_satuan'];
+                    $grandTotal += $subtotal;
+
+                    PencatatanSetoranItems::create([
+                        'pencatatan_setoran_id' => $setoran->id,
+                        'sampah_id'             => $item['sampah_id'],
+                        'jumlah'                => $item['jumlah'], // Di DB kamu namanya 'jumlah'
+                        'harga_satuan'          => $item['harga_satuan'],
+                        'subtotal'              => $subtotal,
+                    ]);
+ 
             }
 
-            $data['sub_total'] = $data['jumlah'] * $hargaSatuan;
-            $pencatatanItem = new PencatatanSetoranItems();
-            $pencatatanItem->id_sampah = $item['id_sampah'];
-            $pencatatanItem->berat = $item['berat'];
-            $pencatatanItem->harga_satuan = $hargaSatuan;
-            $pencatatanItem->sub_total = $data['sub_total'];
-            $pencatatanItem->save();
+            // 3. Update total_setoran di tabel Induk
+            $setoran->update(['total_setoran' => $grandTotal]);
+            
+            // 4. (Opsional) Tambah saldo ke dompet Nasabah
+            // UserDetail::find($data['id_nasabah'])->increment('saldo', $grandTotal);
+        });
 
+        return $newSetoran;
 
+    } catch (\Exception $e) {
+        return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+    }
 
-        }
-
-   
-        $data['total_setoran'] = $subTotal;
-        $newPencatatanSetoran = $this->pencatatanSetoran::create($data);
-
-
-
-        return $newPencatatanSetoran;
     }
 }

@@ -9,6 +9,8 @@ import 'datatables.net-dt/css/dataTables.dataTables.css';
 import 'datatables.net-buttons-dt';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
+import FormWrapper from '@/Components/FormWrapper.vue';
+import InputLabel from '@/Components/InputLabel.vue';
 
 DataTable.use(DataTablesLib);
 
@@ -19,6 +21,8 @@ const props = defineProps({
     items: Array, // Data untuk tabel
     sidebardata: Object,
     breadcrumbItems: Array,
+    jenisSampah: Array,
+    pencatatanSetoranItems: Array
 });
 
 // State untuk Step Form
@@ -26,16 +30,22 @@ const step = ref(1);
 const itemsPerStep = 8;
 const showForm = ref(false);
 
+const isEdit = ref(false);
+
 // Inisialisasi Form dengan useForm
 const form = useForm({
     id_jadwal: '',
-    id_nasabah: '',
+    id_userdetail: '',
     // Kita buat array of objects untuk berat sampah sesuai id_sampah
-    items: props.formdata.sampah.formJenisSampah.map(s => ({
-        id_sampah: s.id,
-        nama: s.namaSampah,
+    items: props.jenisSampah.map(s => ({
+        sampah_id: s.id,
+        nama: s.nama_sampah,
         satuan: s.satuan,
-        berat: 0
+        harga_satuan: s.harga,
+        kategori: s.kategori,
+        saldo: s.saldo,
+        jumlah: 0
+
     }))
 });
 
@@ -50,166 +60,173 @@ const chunks = computed(() => {
 
 const totalSteps = computed(() => chunks.value.length);
 
-const submit = () => {
-    form.post(route(''), {
+
+const editData = (item) => {
+    isEdit.value = true;
+    form.id = item.id;
+    form.nama_sampah = item.nama_sampah;
+    form.satuan = item.satuan;
+    form.harga = item.harga;
+    form.kategori = item.kategori;
+    showForm.value = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const handleSubmit = () => {
+    const url = isEdit.value ? route('update-sampah', form.id) : route('add-setoran');
+    const method = isEdit.value ? 'put' : 'post';
+
+    form[method](url, {
         onSuccess: () => {
-            form.reset();
+            Swal.fire('Berhasil!', 'Data sampah telah diproses.', 'success');
             showForm.value = false;
-            step.value = 1;
-        }
+            form.reset();
+        },
+        onError: function (xhr) {
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON.errors;
+                            let errorHtml = '';
+                            let totalErrorCount = 0;
+                            Object.keys(errors).forEach(key => {
+                                errors[key].forEach(msg => {
+                                    errorHtml += ` <li class="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2">
+                           <span class="w-1 h-1 bg-red-400 rounded-full"></span>
+                           ${msg}
+                       </li>`;
+                                    totalErrorCount++;
+                                });
+                                $(`[name="${key}"]`).addClass('border-red-500 ring-1 ring-red-500');
+
+                            });
+
+                            $('#error-count').text(totalErrorCount);
+                            $('#error-list').html(errorHtml);
+                            $('#error-message').removeClass('hidden').fadeIn();
+                            Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
+                        } else {
+                            Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+                        }
+                    },
+                    
     });
 };
 
-const dtOptions = {
-    responsive: true,
-    pageLength: 10,
-    columns: [
-        { data: 'fullName' }, 
-        ...props.formdata.sampah.formJenisSampah.map((s, index) => ({
-            data: null,
+
+const selectedJadwalFilter = ref('');
+
+const categories = ['Non Daur Ulang', 'Daur Ulang', 'Lainnya']; 
+const activeCategory = ref('Non Daur Ulang');
+
+const filteredJenisSampah = computed(() => {
+    // Pastikan data ada sebelum di-filter
+    const data = props.jenisSampah || [];
+    
+    return data.filter(s => {
+        // Bandingkan kategori, pastikan handle null dengan optional chaining
+        return s.kategori?.trim() === activeCategory.value.trim();
+    });
+});
+
+const dtOptions = computed(() => {
+    // 1. Kolom Statis Awal (Nama)
+    const baseColumns = [
+        { data: 'fullName', title: 'Nasabah', className: 'font-medium capitalize' }
+    ];
+
+  const dynamicColumns = filteredJenisSampah.value.map((s) => ({
+    title: `${s.nama_sampah} (${s.satuan}) <br> <span class="text-xs">Rp${s.harga}</span>`,
+    data: null,
+    className: 'text-center',
+    render: (data, type, row) => {
+    const semuaSetoran = row.pencatatan || [];
+    let totalBerat = 0;
+
+    // FILTER berdasarkan jadwal yang dipilih
+    const setoranTersaring = semuaSetoran.filter(nota => {
+        if (!selectedJadwalFilter.value) return true; // Jika dropdown "Semua", tampilkan semua
+        return Number(nota.id_jadwal) === Number(selectedJadwalFilter.value);
+    });
+
+    setoranTersaring.forEach(nota => {
+        const items = nota.pencatatan_items || [];
+        const found = items.find(item => Number(item.sampah_id) === Number(s.id));
+        if (found) totalBerat += parseFloat(found.jumlah || 0);
+    });
+
+    return totalBerat > 0 ? `<b>${totalBerat}</b>` : `<span class="text-gray-400">0</span>`;
+}
+}));
+
+const columnTotal = {
+    title: 'Total Saldo (Rp)',
+    data: null,
+    className: 'text-center font-bold bg-emerald-50 dark:bg-emerald-900/20',
+    render: (data, type, row) => {
+    const semuaSetoran = row.pencatatan || [];
+    console.log(semuaSetoran);
+    const grandTotal = semuaSetoran.reduce((acc, nota) => {
+        // Cek filter jadwal
+        if (selectedJadwalFilter.value && Number(nota.id_jadwal) !== Number(selectedJadwalFilter.value)) {
+            return acc;
+        }
+        return acc + parseFloat(nota.total_setoran || 0);
+    }, 0);
+
+    return grandTotal > 0 
+        ? `<span class="text-emerald-600 font-bold">Rp${grandTotal.toLocaleString()}</span>` 
+        : `Rp 0`;
+}
+};
+
+    // 3. Kolom Statis Akhir (Aksi)
+    const actionColumn = [
+        { 
+            data: null, 
+            title: 'Aksi', 
+            orderable: false, 
+            className: 'text-center no-print',
             render: (data, type, row) => {
-                const itemSampah = row.formJenisSampah.find(item => item.id === s.id);
-                return itemSampah ? itemSampah.berat : 0;
+                return `<button class="text-red-500 hover:text-red-700" onclick="window.deleteData(${row.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>`;
             }
-        })),
-        { data: null, defaultContent: '', orderable: false } 
-    ],
-   
-     layout: {
+        }
+    ];
+
+    return {
+        responsive: true,
+        pageLength: 10,
+        key: form.id_jadwal,
+        // Gabungkan semua kolom menjadi satu array
+        columns: [...baseColumns, ...dynamicColumns, columnTotal, ...actionColumn],
+            layout: {
         topStart: null,
         topEnd: null,
         bottomStart: 'info',
         bottomEnd: 'paging'
     },
-     buttons: [
-                    {
-                        extend: 'pdfHtml5',
-                        text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
-                        className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: 'Data Pencatatan Setoran Nasabah',
-                        exportOptions: {
-                            columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
-                        },
-                        customize: function (doc) {
-                            // Atur margin halaman PDF
-                            doc.pageMargins = [40, 60, 40, 40];
-
-                            // Tambahkan logo + namaSampah di atas tabel
-                            doc.content.splice(0, 0, {
-                                columns: [
-                                   {
-                                        text: 'SI BANKSA',
-                                        alignment: 'left',
-                                        fontSize: 16,
-                                        bold: true,
-                                        margin: [0, 20, 0, 0]
-                                    },
-                                    {
-                                        text: 'Bank Sampah - Data Sampah',
-                                        alignment: 'right',
-                                        fontSize: 16,
-                                        bold: true,
-                                        margin: [0, 20, 0, 0]
-                                    }
-                                ],
-                                columnGap: 10
-                            });
-
-                            // Tambahkan garis pemisah
-                            doc.content.splice(1, 0, {
-                                canvas: [
-                                    {
-                                        type: 'line',
-                                        x1: 0,
-                                        y1: 0,
-                                        x2: 515,
-                                        y2: 0,
-                                        lineWidth: 1,
-                                        lineColor: '#cccccc'
-                                    }
-                                ],
-                                margin: [0, 10, 0, 10]
-                            });
-
-                            // Atur gaya tabel (opsional)
-                            doc.styles.tableHeader.fillColor = '#f1f1f1';
-                            doc.styles.tableHeader.color = '#333333';
-                            doc.defaultStyle.fontSize = 10;
-                        }
-                    },
-
-                    {
-                        extend: 'excelHtml5',
-                        text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
-                        className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="fa-solid fa-print mr-2"></i> Print',
-                        className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: '', // kosongin biar gak dobel namaSampah default
-                        customize: function (win) {
-                            $(win.document.body)
-                                .css('font-family', 'Poppins, sans-serif')
-                                .prepend(`
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                                <h1 class="py-5 text-2xl font-semibold text-gray-800 dark:text-gray-100 transition-all duration-300 font-[Poppins] text-center w-full"
-            >
-            <span class="font-light">Si</span>
-            Banksa
-        </h1>
-                        
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
-                        <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
-                    </div>
-                </div>
-                <hr style="border: 1px solid #ccc; margin-bottom: 20px;">
-            `);
-
-                            // Styling tambahan (opsional)
-                            $(win.document.body).find('table')
-                                .addClass('compact')
-                                .css({
-                                    'font-size': '12px',
-                                    'width': '100%',
-                                    'border-collapse': 'collapse'
-                                });
-
-                            $(win.document.body).find('table th')
-                                .css({
-                                    'background-color': '#f1f1f1',
-                                    'color': '#333',
-                                    'padding': '6px',
-                                    'border': '1px solid #ddd'
-                                });
-
-                            $(win.document.body).find('table td')
-                                .css({
-                                    'padding': '6px',
-                                    'border': '1px solid #ddd'
-                                });
-                        }
-                    }
-
-                ],
-    language: {
+        buttons: [
+            { extend: 'pdfHtml5', title: 'Data Setoran ' + activeCategory.value, exportOptions: { columns: ':visible' } },
+            { extend: 'excelHtml5', title: 'Data Setoran ' + activeCategory.value, exportOptions: { columns: ':visible' } }
+        ],
+        language: {
             info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-            paginate: {
-                previous: "← Sebelumnya",
-                next: "Berikutnya →"
-            },
-            emptyTable: "Tidak ada data tersedia"
+            emptyTable: "Tidak ada data untuk kategori " + activeCategory.value
         }
+    };
+});
+
+// Referensi instance tabel
+const dtInstance = ref(null);
+const handleSearch = (e) => {
+    dtInstance.value.dt.search(e.target.value).draw();
+};
+const exportData = (index) => {
+    dtInstance.value.dt.button(index).trigger();
 };
 
 const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
 const nextPage = () => dtInstance.value.dt.page('next').draw('page');
-const handleSearch = (e) => {
-    dtInstance.value.dt.search(e.target.value).draw();
-};
 
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
@@ -225,8 +242,12 @@ const handleLengthChange = (e) => {
     dtInstance.value.dt.page.len(parseInt(e.target.value)).draw();
 };
 
-const exportData = (index) => {
-    dtInstance.value.dt.button(index).trigger();
+
+const openCreateForm = () => {
+    isEdit.value = false;
+    form.reset();
+    showForm.value = !showForm.value;
+
 };
 
 const deleteData = (id) => {
@@ -249,37 +270,52 @@ const breadcrumbItems = [
     { label: 'Manajemen Bank Sampah', url:  null },
     { label: 'Penyetoran Sampah', url:  route('pencatatan-setoran') },
 ];
+
+// Status yang tersedia sesuai dengan data kategori Anda
+
+
+
 </script>
 
 <template>
     <Head title="Data Transaksi Setoran" />
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
-        <div class="grid gap-6">
-            <transition name="accordion">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-                <div class="card-header flex justify-between items-center px-4 py-3 border-b">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Form Setoran Nasabah</h3>
-                    <button @click="showForm = !showForm" class="bg-green-500 text-white px-4 py-2 rounded-md">
-                        <i class="fas" :class="showForm ? 'fa-minus' : 'fa-plus'"></i> 
-                        {{ showForm ? 'Batal' : 'Tambah Data' }}
-                    </button>
+             <div class="space-y-6">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Sampah</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar harga dan kategori sampah Anda.</p>
                 </div>
+                <button @click="openCreateForm" 
+                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                    <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
+                    {{ showForm ? 'Batal' : 'Tambah Data' }}
+                </button>
+            </div>
 
+        
+        <transition name="accordion">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
                 <div v-if="showForm" class="p-5 bg-gray-50 dark:bg-gray-900">
-                    <form @submit.prevent="submit" class="space-y-6">
+                                    <FormWrapper 
+            formName="formPencatatan" 
+            :errors="form.errors" 
+            :processing="form.processing"
+            @submit="handleSubmit"
+        >
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium mb-1">Jadwal Pelaksanaan</label>
                                 <select v-model="form.id_jadwal" class="w-full border rounded px-3 py-2 text-sm">
                                     <option value="" disabled>Pilih Jadwal</option>
                                     <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
-                                        {{ j.hari }} - {{ j.waktu }}
+                                        {{ j.tanggal_setoran }}
                                     </option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-1">Nasabah</label>
-                                <select v-model="form.id_nasabah" class="w-full border rounded px-3 py-2 text-sm">
+                                <select v-model="form.id_userdetail" class="w-full border rounded px-3 py-2 text-sm">
                                     <option value="" disabled>Pilih Nasabah</option>
                                     <option v-for="n in nasabahList" :key="n.id" :value="n.id">
                                         {{ n.fullName }}
@@ -302,10 +338,10 @@ const breadcrumbItems = [
 
                         <div v-for="(chunk, index) in chunks" :key="index">
                             <div v-show="step === index + 1" class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                <div v-for="item in chunk" :key="item.id_sampah" class="p-3 rounded-lg border bg-white shadow-sm">
+                                <div v-for="item in chunk" :key="item.sampah_id" class="p-3 rounded-lg border bg-white shadow-sm">
                                     <div class="text-sm font-medium truncate">{{ item.nama }}</div>
                                     <div class="text-xs text-gray-500 mb-2">Satuan: {{ item.satuan }}</div>
-                                    <input type="number" step="0.01" v-model="item.berat"
+                                    <input type="number" step="0.01" v-model="item.jumlah"
                                         class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-emerald-500"
                                         placeholder="0">
                                 </div>
@@ -325,17 +361,35 @@ const breadcrumbItems = [
                                 {{ form.processing ? 'Menyimpan...' : 'Simpan Setoran' }}
                             </button>
                         </div>
-                    </form>
+                    </FormWrapper>
                 </div>
             </div> 
             </transition>
-           
-   
+      
+        <div class="grid gap-6">
             
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                     <div class="flex flex-row items-end justify-between mb-6">
+            
 
-              <div class="flex flex-wrap items-center gap-2">
+                <div class="mb-6 flex flex-wrap gap-2 p-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl w-fit border border-gray-100 dark:border-gray-700">
+                    <button 
+                        v-for="cat in categories" 
+                        :key="cat"
+                        @click="activeCategory = cat"
+                        :class="[
+                            'px-6 py-2 text-sm font-bold rounded-xl transition-all duration-300',
+                            activeCategory === cat 
+                                ? 'bg-white dark:bg-gray-800 text-emerald-600 shadow-md ring-1 ring-black/5' 
+                                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                        ]"
+                    >
+                        {{ cat }}
+                    </button>
+                </div>
+
+                             <div class="flex flex-row items-end justify-between mb-6">
+
+              <div class="flex flex-wrap  items-center gap-2">
             <button @click="exportData(0)" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
                 <i class="fas fa-file-pdf"></i> PDF
             </button>
@@ -346,85 +400,52 @@ const breadcrumbItems = [
                 <i class="fas fa-print"></i> Print
             </button>
         </div>
-            <div class="flex flex-wrap md:flex-nowrap items-end justify-end gap-3">
+            <div class="flex flex-row gap-3">
                  <div class="flex items-end gap-2">
-                <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
+                <label class="text-xs m-auto  font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
                 <input @keyup="handleSearch" type="text" 
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
 
-            <div class="flex items-center gap-2">
-                <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                <select @change="handleCategoryFilter"
-                    class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                    <option value="">Semua</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Pengajuan Verifikasi">Pengajuan Verifikasi</option>
-                    <option value="Ditolak">Ditolak</option>
-                    <option value="Disetujui">Disetujui</option>
-                </select>
-            </div>
+            <<div class="flex items-center gap-2">
+    <label class="text-xs font-semibold text-gray-500 uppercase">Jadwal:</label>
+    <select v-model="selectedJadwalFilter"
+        class="border border-gray-200 rounded-lg px-2 py-1.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+        <option value="">Semua Jadwal</option>
+        <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
+            {{ j.tanggal_setoran }}
+        </option>
+    </select>
+</div>
 
             <div class="flex items-center gap-2  pl-3">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
                 <select @change="handleLengthChange"
                     class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
-                    <option value="5" selected>5</option>
-                    <option value="10">10</option>
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
                     <option value="25">25</option>
                 </select>
             </div>
             </div>
            
         </div>
-                
-                <div class="mb-4">
-                    <h3 class="text-lg font-bold text-gray-800 dark:text-white">Riwayat Setoran</h3>
-                </div>
 
                 <div class="overflow-x-auto">
-                    <DataTable 
-
-                    ref="dtInstance"
-                        :data="items" 
-                        :options="dtOptions"
-                        class="w-full display stripe hover cell-border"
-                    >
-                        <thead>
-                            <tr class="bg-gray-50 dark:bg-gray-700">
-                                <th>Nasabah</th>
-                                <th v-for="s in formdata.sampah.formJenisSampah" :key="s.id">
-                                    {{ s.namaSampah }} <br> 
-                                    <span class="text-[10px] text-gray-400">({{ s.satuan }})</span>
-                                </th>
-                                <th class="text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        
-                        <tbody>
-                            <tr v-for="row in items" :key="row.id">
-                                <td class="font-medium">{{ row.fullName }}</td>
-                                
-                                <td v-for="s in formdata.sampah.formJenisSampah" :key="s.id" class="text-center">
-                                    <span :class="s.berat > 0 ? 'text-emerald-600 font-bold' : 'text-gray-400'">
-            {{ s.berat || 0 }}
-        </span>
-                                </td>
-
-                                <td class="text-center">
-                                    <div class="flex justify-center gap-2">
-                                        <button @click="deleteData(row.id)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </DataTable>
-                </div>
+    <DataTable 
+:key="activeCategory + selectedJadwalFilter"
+        ref="dtInstance"
+        :data="nasabahList" 
+        :options="dtOptions"
+        class="w-full display stripe hover cell-border dark:text-gray-200"
+    >
+        </DataTable>
+</div>
             </div>
         </div>
+             </div>
+
     </AuthenticatedLayout>
 </template>
 
