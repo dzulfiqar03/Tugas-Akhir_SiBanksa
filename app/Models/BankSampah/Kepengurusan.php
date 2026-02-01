@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Kepengurusan extends Model
 {
-    protected $fillable = ['id_userdetail', 'username', 'fullname', 'address', 'telephone_number', 'id_gender', 'divisi'];
+    protected $fillable = ['id_userdetail', 'userName', 'fullName', 'address', 'telephone_number', 'id_gender', 'divisi'];
 
 
     public function user_detail()

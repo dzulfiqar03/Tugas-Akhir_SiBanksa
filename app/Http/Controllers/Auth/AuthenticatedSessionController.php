@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Admin\BankSampah\TrackingSetoranController;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\UserLogController;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\FormResources;
 use Illuminate\Http\RedirectResponse;
@@ -45,6 +47,13 @@ class AuthenticatedSessionController extends Controller
         $role = $user->user_detail->roles->role;
         $request->session()->put('user', $user);
 
+        app(UserLogController::class)->log(
+            'LOGIN',
+            $request->ip(),
+            $request->userAgent(),
+            $user->user_detail->id
+        );
+
         if ($role === 'Bank Sampah') {
             return redirect()->intended(route('dashboard'));
         }
@@ -57,6 +66,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('warga.dashboard'));
         }
 
+
         return redirect()->intended('/dashboard');
     }
 
@@ -65,6 +75,15 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+
+        $user = Auth::user();
+        $userId = $user ? $user->user_detail->id : null;
+        app(UserLogController::class)->log(
+            'LOGOUT',
+            $request->ip(),
+            $request->userAgent(),
+            $userId
+        );
         Auth::guard('web')->logout();
 
 

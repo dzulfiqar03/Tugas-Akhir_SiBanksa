@@ -1,29 +1,34 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useForm, Head } from '@inertiajs/vue3';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-// DataTables
-import DataTable from 'datatables.net-vue3';
-import DataTablesLib from 'datatables.net-dt';
-import 'datatables.net-dt/css/dataTables.dataTables.css';
-import 'datatables.net-buttons-dt';
-import 'datatables.net-buttons/js/buttons.html5';
-import 'datatables.net-buttons/js/buttons.print';
-import FormWrapper from '@/Components/FormWrapper.vue';
-import InputLabel from '@/Components/InputLabel.vue';
+import { ref, computed, onMounted } from 'vue'
+import { Head, useForm, router } from '@inertiajs/vue3'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 
-DataTable.use(DataTablesLib);
+// ================= DATATABLES =================
+import DataTable from 'datatables.net-vue3'
+import DataTablesCore from 'datatables.net'
+import Buttons from 'datatables.net-buttons'
+import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
+import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
+import Responsive from 'datatables.net-responsive-dt'
 
+// CSS (WAJIB)
+import 'datatables.net-dt/css/dataTables.dataTables.css'
+import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
+
+// Register
+DataTable.use(DataTablesCore)
+DataTable.use(Buttons)
+DataTable.use(ButtonsHtml5)
+DataTable.use(ButtonsPrint)
+DataTable.use(Responsive)
+
+// ================= PROPS =================
 const props = defineProps({
-    formdata: Object,
     jadwalPelaksanaan: Array,
     nasabahList: Array,
-    items: Array, // Data untuk tabel
-    sidebardata: Object,
-    breadcrumbItems: Array,
     jenisSampah: Array,
-    pencatatanSetoranItems: Array
-});
+    sidebardata: Object,
+})
 
 // State untuk Step Form
 const step = ref(1);
@@ -130,13 +135,13 @@ const filteredJenisSampah = computed(() => {
 const dtOptions = computed(() => {
     // 1. Kolom Statis Awal (Nama)
     const baseColumns = [
-        { data: 'fullName', title: 'Nasabah', className: 'font-medium capitalize' }
+        { data: 'fullName', title: 'Nasabah', className: 'font-medium capitalize dark:text-white text-black' }
     ];
 
   const dynamicColumns = filteredJenisSampah.value.map((s) => ({
-    title: `${s.nama_sampah} (${s.satuan}) <br> <span class="text-xs">Rp${s.harga}</span>`,
+    title: `${s.nama_sampah} (${s.satuan}) <br> <span class="text-xs dark:text-white text-black">Rp${s.harga}</span>`,
     data: null,
-    className: 'text-center',
+    className: 'text-center dark:text-white text-black capitalize',
     render: (data, type, row) => {
     const semuaSetoran = row.pencatatan || [];
     let totalBerat = 0;
@@ -160,7 +165,7 @@ const dtOptions = computed(() => {
 const columnTotal = {
     title: 'Total Saldo (Rp)',
     data: null,
-    className: 'text-center font-bold bg-emerald-50 dark:bg-emerald-900/20',
+    className: 'text-center dark:text-white text-black font-bold bg-emerald-50 dark:bg-emerald-900/20',
     render: (data, type, row) => {
     const semuaSetoran = row.pencatatan || [];
     console.log(semuaSetoran);
@@ -184,7 +189,7 @@ const columnTotal = {
             data: null, 
             title: 'Aksi', 
             orderable: false, 
-            className: 'text-center no-print',
+            className: 'text-center no-print dark:text-white text-black',
             render: (data, type, row) => {
                 return `<button class="text-red-500 hover:text-red-700" onclick="window.deleteData(${row.id})">
                             <i class="fas fa-trash"></i>
@@ -270,18 +275,16 @@ const breadcrumbItems = [
     { label: 'Manajemen Bank Sampah', url:  null },
     { label: 'Penyetoran Sampah', url:  route('pencatatan-setoran') },
 ];
-
-// Status yang tersedia sesuai dengan data kategori Anda
-
-
-
 </script>
 
 <template>
-    <Head title="Data Transaksi Setoran" />
+    <Head title="Pencatatan Setoran" />
+
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
-             <div class="space-y-6">
-                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-6">
+
+            <!-- HEADER -->
+                      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Sampah</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar harga dan kategori sampah Anda.</p>
@@ -293,8 +296,8 @@ const breadcrumbItems = [
                 </button>
             </div>
 
-        
-        <transition name="accordion">
+
+                 <Transition name="accordion">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
                 <div v-if="showForm" class="p-5 bg-gray-50 dark:bg-gray-900">
                                     <FormWrapper 
@@ -364,11 +367,11 @@ const breadcrumbItems = [
                     </FormWrapper>
                 </div>
             </div> 
-            </transition>
-      
-        <div class="grid gap-6">
-            
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            </Transition>
+
+            <!-- TABLE -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl">
+                 <div class="bg-white dark:bg-gray-800  rounded-2xl shadow-sm ">
             
 
                 <div class="mb-6 flex flex-wrap gap-2 p-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl w-fit border border-gray-100 dark:border-gray-700">
@@ -387,9 +390,9 @@ const breadcrumbItems = [
                     </button>
                 </div>
 
-                             <div class="flex flex-row items-end justify-between mb-6">
+                                          <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
-              <div class="flex flex-wrap  items-center gap-2">
+              <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
             <button @click="exportData(0)" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
                 <i class="fas fa-file-pdf"></i> PDF
             </button>
@@ -400,7 +403,7 @@ const breadcrumbItems = [
                 <i class="fas fa-print"></i> Print
             </button>
         </div>
-            <div class="flex flex-row gap-3">
+            <div class="flex flex-wrap gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto  font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
                 <input @keyup="handleSearch" type="text" 
@@ -408,10 +411,10 @@ const breadcrumbItems = [
                     placeholder="Ketik...">
             </div>
 
-            <<div class="flex items-center gap-2">
+            <div class="flex items-center gap-2">
     <label class="text-xs font-semibold text-gray-500 uppercase">Jadwal:</label>
     <select v-model="selectedJadwalFilter"
-        class="border border-gray-200 rounded-lg px-2 py-1.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+        class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white text-black dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
         <option value="">Semua Jadwal</option>
         <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
             {{ j.tanggal_setoran }}
@@ -431,9 +434,8 @@ const breadcrumbItems = [
             </div>
            
         </div>
-
-                <div class="overflow-x-auto">
-    <DataTable 
+</div>
+                <DataTable 
 :key="activeCategory + selectedJadwalFilter"
         ref="dtInstance"
         :data="nasabahList" 
@@ -441,58 +443,8 @@ const breadcrumbItems = [
         class="w-full display stripe hover cell-border dark:text-gray-200"
     >
         </DataTable>
-</div>
             </div>
-        </div>
-             </div>
 
+        </div>
     </AuthenticatedLayout>
 </template>
-
-<style>
-.dark td{
-    color:white;
-}
-    
-/* CSS yang diperbarui */
-.accordion-enter-active,
-.accordion-leave-active {
-    transition: all 0.3s ease-in-out;
-    max-height: 500px; /* Sesuaikan dengan perkiraan tinggi maksimal form Anda */
-    overflow: hidden;
-}
-
-.accordion-enter-from,
-.accordion-leave-to {
-    max-height: 0;
-    opacity: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: #10b981 !important;
-    border: none !important;
-    color: white !important;
-    border-radius: 8px;
-}
-.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate {
-    font-size: 0.8rem;
-    color: #ffffff !important;
-    margin-top: 1rem;
-}
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
-.dark .datatable  .dt-paging {
-    color: #ffffff !important;
-}
-.dataTables_filter { display: none; } /* Kita pakai custom search di atas */
-
-.slide-fade-enter-active { transition: all 0.3s ease-out; }
-.slide-fade-leave-active { transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1); }
-.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-10px); opacity: 0; }
-</style>

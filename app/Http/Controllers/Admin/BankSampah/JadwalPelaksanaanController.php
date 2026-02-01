@@ -8,6 +8,7 @@ use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
 use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Services\BankSampah\JadwalServices;
+use App\Services\KetuaRW\KelolaBankSampahServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -17,7 +18,7 @@ class JadwalPelaksanaanController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function __construct(protected JadwalServices $jadwalServices) {}
+    public function __construct(protected JadwalServices $jadwalServices, protected KelolaBankSampahServices $kelolaBankSampahServices) {}
     public function index()
     {
 
@@ -75,7 +76,33 @@ class JadwalPelaksanaanController extends Controller
      */
     public function show(JadwalPelaksanaan $jadwalPelaksanaan)
     {
-        //
+        $menu = (new DataResources(null))->toArray(request());
+
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+
+        $bankSampah = $this->kelolaBankSampahServices->getAllBankSampah();
+
+        $bankSampahLog = $this->kelolaBankSampahServices->getBankSampahlog();
+
+        $jadwal = JadwalPelaksanaan::with('user_detail')->get();
+        return Inertia::render('KetuaRW/JadwalBankSampah', [
+            'jadwal' => $jadwal,
+            'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
+            'sidebardata' => $menu,
+            'bankSampah' =>  $bankSampah,
+            'bankSampahLog' => $bankSampahLog,
+
+
+        ]);
     }
 
     /**

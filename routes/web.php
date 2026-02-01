@@ -7,9 +7,12 @@ use App\Http\Controllers\Admin\BankSampah\DataNasabahController;
 use App\Http\Controllers\Admin\BankSampah\DataSampahController;
 use App\Http\Controllers\Admin\BankSampah\DataTransaksiController;
 use App\Http\Controllers\Admin\BankSampah\JadwalPelaksanaanController;
+use App\Http\Controllers\Admin\BankSampah\KepengurusanController;
 use App\Http\Controllers\Admin\BankSampah\PencatatanController;
 use App\Http\Controllers\Admin\BankSampah\TrackingSetoranController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\KetuaRW\JadwalController;
+use App\Http\Controllers\Admin\KetuaRW\KelolaBankSampahController;
 use App\Http\Controllers\Admin\PreferenceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\System\InternetConnController;
@@ -49,11 +52,23 @@ Route::middleware(['conn'])->group(function () {
 
             Route::middleware(['roles:Ketua RW'])->group(function () {
                 Route::get('/KetuaRW/dashboard', [DashboardController::class, 'index'])->name('rw.dashboard');
-                Route::get('/KetuaRW/Sampah', [DataSampahController::class, 'index'])->name('rw.data-sampah');
+
+                Route::get('/KetuaRW/Kelola-Bank-Sampah', [KelolaBankSampahController::class, 'index'])->name('rw.data-kelola');
+                Route::get('/KetuaRW/bank-sampah/detail/{id}', [KelolaBankSampahController::class, 'show'])->name('rw.show-banksampah');
+                Route::post('/KetuaRW/bank-sampah/create', [KelolaBankSampahController::class, 'store'])->name('rw.add-banksampah');
+                Route::put('/KetuaRW/bank-sampah/update/{id}', [KelolaBankSampahController::class, 'update'])->name('rw.update-banksampah');
+                Route::delete('/KetuaRW/bank-sampah/delete/{id}', [KelolaBankSampahController::class, 'destroy'])->name('rw.delete-banksampah');
+
+                Route::get('/KetuaRW/Jadwal', [JadwalPelaksanaanController::class, 'show'])->name('rw.jadwal-pelaksanaan');
+                Route::get('/KetuaRW/jadwal-bankSampah/detail/{id}', [JadwalController::class, 'show'])->name('rw.show-jadwalBankSampah');
+
+
                 Route::get('/KetuaRW/nasabah', [DataNasabahController::class, 'index'])->name('rw.data-nasabah');
                 Route::get('/KetuaRW/tracking', [TrackingSetoranController::class, 'index'])->name('rw.data-tracking');
                 Route::get('/KetuaRW/transaksi', [DataTransaksiController::class, 'index'])->name('rw.data-transaksi');
                 Route::get('/KetuaRW/pencatatan', [PencatatanController::class, 'index'])->name('rw.pencatatan-setoran');
+
+                Route::post('/bank-sampah/{id}/send-reminder', action: [KelolaBankSampahController::class, 'sendReminder'])->name('banksampah.send-reminder');
             });
 
             Route::middleware(['roles:Bank Sampah'])->group(function () {
@@ -76,15 +91,22 @@ Route::middleware(['conn'])->group(function () {
                 Route::put('/bank-sampah/nasabah/update/{id}', [DataNasabahController::class, 'update'])->name('update-nasabah');
                 Route::delete('/bank-sampah/nasabah/delete/{id}', [DataNasabahController::class, 'destroy'])->name('delete-nasabah');
 
+
+                Route::get('/bank-sampah/kepengurusan', [KepengurusanController::class, 'index'])->name('data-kepengurusan');
+                Route::get('/bank-sampah/kepengurusan/detail/{id}', [KepengurusanController::class, 'show'])->name('show-kepengurusan');
+                Route::post('/bank-sampah/kepengurusan/create', [KepengurusanController::class, 'store'])->name('add-kepengurusan');
+                Route::put('/bank-sampah/kepengurusan/update/{id}', [KepengurusanController::class, 'update'])->name('update-kepengurusan');
+                Route::delete('/bank-sampah/kepengurusan/delete/{id}', [KepengurusanController::class, 'destroy'])->name('delete-kepengurusan');
+
+
                 Route::post('/nasabah/{id}/send-reminder', action: [DataNasabahController::class, 'sendReminder'])->name('nasabah.send-reminder');
 
                 Route::get('/bank-sampah/tracking', [TrackingSetoranController::class, 'index'])->name('data-tracking');
                 Route::get('/bank-sampah/transaksi', [DataTransaksiController::class, 'index'])->name('data-transaksi');
-                
-                Route::get('/bank-sampah/pencatatan', [PencatatanController::class, 'index'])->name('pencatatan-setoran');
-                            Route::post('/bank-sampah/pencatatan/create', [PencatatanController::class, 'store'])->name('add-setoran');
 
-                });
+                Route::get('/bank-sampah/pencatatan', [PencatatanController::class, 'index'])->name('pencatatan-setoran');
+                Route::post('/bank-sampah/pencatatan/create', [PencatatanController::class, 'store'])->name('add-setoran');
+            });
 
             Route::middleware(['roles:Warga'])->group(function () {
                 Route::get('/Warga/dashboard', [DashboardController::class, 'index'])->name('warga.dashboard');

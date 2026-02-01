@@ -22,6 +22,12 @@ class DataResources extends JsonResource
             return [
                 'Data' => 'RW',
                 'sub-data' => [
+                    [
+                        'nama'  => 'Dashboard',
+                        'route' => route('rw.dashboard'),
+                        'uri' => 'rw.dashboard',
+                        'icon'  => 'fas fa-tachometer-alt',
+                    ],
 
                     [
                         'nama' => 'Bank Sampah',
@@ -31,38 +37,40 @@ class DataResources extends JsonResource
                                 'nama'  => 'Pelaporan',
                                 'icon'  => 'fa fa-file-text',
                                 'route' => '#',
+                                'uri' => '#',
                             ],
                             [
                                 'nama'  => 'Jadwal Pelaksanaan',
                                 'icon'  => 'fa fa-calendar',
-                                'route' => '#',
+                                'route' => route('rw.jadwal-pelaksanaan'),
+                                'uri' => 'rw.jadwal-pelaksanaan',
                             ],
                             [
                                 'nama'  => 'Kelola Bank Sampah',
                                 'icon'  => 'fa fa-cogs',
-                                'route' => '#',
+                                'route' => route('rw.data-kelola'),
+                                'uri' => 'rw.data-kelola',
                             ],
                         ],
                     ],
-                    [
-                        'nama'  => 'Transaksi Setoran',
-                        'icon'  => 'fa fa-exchange',
-                        'route' => route('warga.data-transaksi'),
-                    ],
+                   
                     [
                         'nama'  => 'Penjadwalan',
-                        'icon'  => 'fa fa-clock-o',
-                        'route' => route('warga.penjadwalan'),
+                        'icon'  => 'fa fa-calendar',
+                        'route' => route('rw.jadwal-pelaksanaan'),
+                        'uri' => 'rw.jadwal-pelaksanaan',
                     ],
                     [
                         'nama'  => 'Pengaturan',
-                        'icon'  => 'fa fa-cog',
-                        'route' => '#',
+                        'route' => route('preference'),
+                        'uri' => 'preference',
+                        'icon'  => 'fas fa-cog',
                     ],
                     [
                         'nama'  => 'Profile',
                         'icon'  => 'fa fa-user',
                         'route' => '#',
+                        'uri' => '#',
                     ],
 
 
@@ -90,6 +98,12 @@ class DataResources extends JsonResource
                                 'nama'  => 'Data Sampah',
                                 'route' => route('data-sampah'),
                                 'uri' => 'data-sampah',
+                                'icon'  => 'fas fa-trash',
+                            ],
+                            [
+                                'nama'  => 'Kepengurusan',
+                                'route' => route('data-kepengurusan'),
+                                'uri' => 'data-kepengurusan',
                                 'icon'  => 'fas fa-trash',
                             ],
                             [
@@ -148,7 +162,7 @@ class DataResources extends JsonResource
 
                     [
                         'nama'  => 'Pengaturan',
-                             'route' => route('preference'),
+                        'route' => route('preference'),
                         'uri' => 'preference',
                         'icon'  => 'fas fa-cog',
                     ],
@@ -177,12 +191,12 @@ class DataResources extends JsonResource
             'Data' => 'Warga',
             'sub-data' => [
 
-            [
-                        'nama'  => 'Tracking Setoran',
-                        'route' => route('data-tracking'),
-                        'uri' => 'data-tracking',
-                        'icon'  => 'fas fa-route',
-                    ],
+                [
+                    'nama'  => 'Tracking Setoran',
+                    'route' => route('data-tracking'),
+                    'uri' => 'data-tracking',
+                    'icon'  => 'fas fa-route',
+                ],
                 [
                     'nama' => 'Transaksi Setoran',
                     'route' => route('warga.data-transaksi'),
@@ -196,26 +210,26 @@ class DataResources extends JsonResource
                     'icon'  => 'fas fa-sign-out-alt text-danger',
                 ],
 
-                  [
-                        'nama'  => 'Pengaturan',
-                        'route' => route('preference'),
-                        'uri' => 'preference',
-                        'icon'  => 'fas fa-cog',
-                    ],
+                [
+                    'nama'  => 'Pengaturan',
+                    'route' => route('preference'),
+                    'uri' => 'preference',
+                    'icon'  => 'fas fa-cog',
+                ],
 
-                    [
-                        'nama'  => 'Profile',
-                        'route' => '#',
-                        'uri' => '#',
-                        'icon'  => 'fas fa-user-circle',
-                    ],
+                [
+                    'nama'  => 'Profile',
+                    'route' => '#',
+                    'uri' => '#',
+                    'icon'  => 'fas fa-user-circle',
+                ],
 
-                    [
-                        'nama'  => 'LogOut',
-                        'route' => '#',
-                        'uri' => '#',
-                        'icon'  => 'fas fa-sign-out-alt text-danger',
-                    ],
+                [
+                    'nama'  => 'LogOut',
+                    'route' => '#',
+                    'uri' => '#',
+                    'icon'  => 'fas fa-sign-out-alt text-danger',
+                ],
             ],
         ];
     }

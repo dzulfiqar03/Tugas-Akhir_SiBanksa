@@ -39,7 +39,6 @@ class NasabahServices
 
     public function getNasabah($id)
     {
-        // Mengambil user beserta detailnya, jika ID tidak ada maka otomatis 404
         $findNasabah = $this->user::with('user_detail')->findOrFail($id);
 
         return $findNasabah;

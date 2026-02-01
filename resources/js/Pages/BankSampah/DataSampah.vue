@@ -6,17 +6,29 @@ import Swal from 'sweetalert2';
 import FormWrapper from '@/Components/FormWrapper.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 
-import DataTable from 'datatables.net-vue3';
-import DataTablesLib from 'datatables.net-dt';
-import 'datatables.net-dt/css/dataTables.dataTables.css';
-import 'datatables.net-buttons-dt';
-import 'datatables.net-buttons/js/buttons.html5';
-import 'datatables.net-buttons/js/buttons.print';
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 
-DataTable.use(DataTablesLib);
+
+// ================= DATATABLES =================
+import DataTable from 'datatables.net-vue3'
+import DataTablesCore from 'datatables.net'
+import Buttons from 'datatables.net-buttons'
+import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
+import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
+import Responsive from 'datatables.net-responsive-dt'
+
+// CSS (WAJIB)
+import 'datatables.net-dt/css/dataTables.dataTables.css'
+import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
+
+// Register
+DataTable.use(DataTablesCore)
+DataTable.use(Buttons)
+DataTable.use(ButtonsHtml5)
+DataTable.use(ButtonsPrint)
+DataTable.use(Responsive)
 window.JSZip = jszip;
 pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
@@ -334,7 +346,7 @@ const breadcrumbItems = [
                 </button>
             </div>
 
-            <transition name="accordion">
+            <Transition name="accordion">
                 <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
                     
@@ -401,12 +413,12 @@ const breadcrumbItems = [
                         </div>
                    </FormWrapper>
                 </div>
-            </transition>
+            </Transition>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                   <div class="flex flex-row items-end justify-between mb-6">
+                                <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
-              <div class="flex flex-wrap  items-center gap-2">
+              <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
             <button @click="exportData(0)" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
                 <i class="fas fa-file-pdf"></i> PDF
             </button>
@@ -417,7 +429,7 @@ const breadcrumbItems = [
                 <i class="fas fa-print"></i> Print
             </button>
         </div>
-            <div class="flex flex-row gap-3">
+               <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto  font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
                 <input @keyup="handleSearch" type="text" 
@@ -470,7 +482,7 @@ class="w-full display stripe hover cell-border">
                     </template>
 
                     <template v-for="i in [1,2, 4]" :key="i" #[`column-${i}`]="data">
-                        <span class="font-medium  capitalize dark:text-white">{{ data.cellData }}</span>
+                        <span class="font-medium text-black  capitalize dark:text-white">{{ data.cellData }}</span>
                     </template>
 
                     <template #column-5="data"> 
@@ -500,7 +512,7 @@ class="w-full display stripe hover cell-border">
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; /* Sesuaikan dengan perkiraan tinggi maksimal form Anda */
+    max-height: 500px; 
     overflow: hidden;
 }
 
@@ -513,6 +525,11 @@ class="w-full display stripe hover cell-border">
     padding-top: 0;
     padding-bottom: 0;
 }
+
+.accordion-wrapper > * {
+    transition: opacity 0.2s;
+}
+
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background: #10b981 !important;
     border: none !important;

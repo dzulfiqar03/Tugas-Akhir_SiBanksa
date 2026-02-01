@@ -2,17 +2,29 @@
 import { ref } from 'vue';
 import { useForm, router, Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import DataTable from 'datatables.net-vue3';
-import DataTablesLib from 'datatables.net-dt';
-import 'datatables.net-buttons-dt';
-import 'datatables.net-buttons/js/buttons.html5';
-import 'datatables.net-buttons/js/buttons.print';
+
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-import 'datatables.net-dt/css/dataTables.dataTables.css';
 
-DataTable.use(DataTablesLib);
+// ================= DATATABLES =================
+import DataTable from 'datatables.net-vue3'
+import DataTablesCore from 'datatables.net'
+import Buttons from 'datatables.net-buttons'
+import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
+import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
+import Responsive from 'datatables.net-responsive-dt'
+
+// CSS (WAJIB)
+import 'datatables.net-dt/css/dataTables.dataTables.css'
+import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
+
+// Register
+DataTable.use(DataTablesCore)
+DataTable.use(Buttons)
+DataTable.use(ButtonsHtml5)
+DataTable.use(ButtonsPrint)
+DataTable.use(Responsive)
 window.JSZip = jszip;
 pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 const props = defineProps({
@@ -313,9 +325,9 @@ const breadcrumbItems = [
                     <h3 class="mb-4 font-bold dark:text-white text-sm uppercase tracking-wider">Riwayat Transaksi</h3>
                     <div class="overflow-x-auto">
 
-                                                          <div class="flex flex-row items-end justify-between mb-6">
+                                                                     <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
-              <div class="flex flex-wrap items-center gap-2 transform scale-80">
+              <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
             <button @click="exportData(0)" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
                 <i class="fas fa-file-pdf"></i> PDF
             </button>
@@ -326,7 +338,7 @@ const breadcrumbItems = [
                 <i class="fas fa-print"></i> Print
             </button>
         </div>
-            <div class="flex flex-wrap md:flex-nowrap items-end justify-end gap-3">
+            <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
                 <input @keyup="handleSearch" type="text" 

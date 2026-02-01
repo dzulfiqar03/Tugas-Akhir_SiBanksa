@@ -16,16 +16,106 @@ class TrackingSetoranController extends Controller
      */
     public function index()
     {
-        // Data dummy untuk tahapan workflow (bisa diganti dengan data dari DB)
-        $workflowSteps = [
-            ['name' => 'Pemilahan', 'status' => 'completed', 'description' => 'Barang telah dipilah berdasarkan kategori.', 'percentage' => 100],
-            ['name' => 'Penimbangan', 'status' => 'completed', 'description' => 'Berat barang telah diukur dan dicatat.', 'percentage' => 100],
-            ['name' => 'Pencatatan', 'status' => 'in_progress', 'description' => 'Data sedang dicatat ke sistem.', 'percentage' => 50],
-            ['name' => 'Pelaporan', 'status' => 'pending', 'description' => 'Laporan akhir sedang disiapkan.', 'percentage' => 0],
-            ['name' => 'Pencairan', 'status' => 'pending', 'description' => 'Dana akan dicairkan setelah verifikasi.', 'percentage' => 0],
+
+        $stepDivisiMap = [
+            'Pemilahan'   => 'Nasabah',
+            'Penimbangan' => 'Petugas',
+            'Pencatatan'  => 'Sekretaris',
+            'Verifikasi'  => 'Ketua RW',
+            'Pencairan'   => 'Bendahara',
         ];
 
-        $nasabahList = UserDetail::where('id_rt', Auth::user()->user_detail->rt->id)->where('status', 'Disetujui')->where('id_roles', 3)->with(['sampah', 'user_transaction' ,'pencatatan.pencatatan_items'])->get();
+        $nasabahList = UserDetail::where('id_rt', Auth::user()->user_detail->rt->id)
+            ->where('status', 'Disetujui')
+            ->where('id_roles', 3)
+            ->with(['pencatatan', 'pencatatan.pencatatan_items'])
+            ->get();
+
+
+        $petugas = UserDetail::where('id_rt', Auth::user()->user_detail->rt->id)
+            ->where('status', 'Disetujui')
+            ->where('id_roles', 2)
+            ->with('kepengurusan')
+            ->get()
+            ->keyBy('id');
+
+
+        $nasabahList = $nasabahList->map(function ($n) use ($petugas, $stepDivisiMap) {
+
+            $workflow = [];
+
+            foreach ($stepDivisiMap as $step => $divisi) {
+
+                $workflow[$step] = [
+                    'completed' => false,
+                    'petugas'   => [],
+                    'divisi'    => $divisi,
+                ];
+            }
+
+
+            if ($n->pencatatan && $n->pencatatan->count()) {
+
+                $workflow['Pencatatan']['completed'] = true;
+                $workflow['Pemilahan']['completed'] = true;
+                $workflow['Penimbangan']['completed'] = true;
+
+                $sekretaris = $petugas
+                    ->pluck('kepengurusan')
+                    ->flatten()
+                    ->firstWhere('divisi', 'Sekretaris');
+
+                $pemilah = $petugas
+                    ->pluck('kepengurusan')
+                    ->flatten()
+                    ->firstWhere('divisi', 'Pemilah');
+
+                $penimbang = $petugas
+                    ->pluck('kepengurusan')
+                    ->flatten()
+                    ->firstWhere('divisi', 'Penimbang');
+
+
+                $workflow['Pencatatan']['petugas'] = [$sekretaris->fullName];
+                $workflow['Pemilahan']['petugas'] = [$pemilah->fullName];
+                $workflow['Penimbangan']['petugas'] = [$penimbang->fullName];
+            }
+
+            if ($n->pencairan && $n->pencairan->count()) {
+
+                $workflow['Pencairan']['completed'] = true;
+
+                $bendahara = $petugas
+                    ->pluck('kepengurusan')
+                    ->flatten()
+                    ->firstWhere('divisi', 'Bendahara');
+
+                if ($bendahara) {
+                    $workflow['Pencairan']['petugas'] = [$bendahara->fullName];
+                }
+            }
+
+            if ($n->verifikasi_at) {
+
+                $workflow['Verifikasi']['completed'] = true;
+
+                $ketua = $petugas
+                    ->pluck('kepengurusan')
+                    ->flatten()
+                    ->firstWhere('divisi', 'Ketua RW');
+
+                if ($ketua) {
+                    $workflow['Verifikasi']['petugas'] = [$ketua->fullName];
+                }
+            }
+
+            $n->workflow = $workflow;
+
+            return $n;
+        });
+
+
+
 
         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
@@ -42,9 +132,8 @@ class TrackingSetoranController extends Controller
         return Inertia::render('BankSampah/TrackingSetoran', [
             'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
-            'workflowSteps' => $workflowSteps,
             'sidebardata' => $menu,
-            'nasabahList' => $nasabahList
+            'nasabahList' => $nasabahList,
 
         ]);
     }

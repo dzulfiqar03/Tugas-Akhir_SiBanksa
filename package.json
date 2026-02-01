@@ -36,9 +36,12 @@
         "@headlessui/vue": "^1.7.23",
         "@tailwindcss/cli": "^4.1.17",
         "@vueuse/core": "^14.1.0",
+        "datatables.net": "^2.3.6",
         "datatables.net-buttons-dt": "^3.2.6",
         "datatables.net-dt": "^2.3.6",
+        "datatables.net-responsive-dt": "^3.0.7",
         "datatables.net-vue3": "^3.0.4",
+        "jquery": "^4.0.0",
         "jszip": "^3.10.1",
         "pdfmake": "^0.3.3",
         "sweetalert2": "^11.26.17"

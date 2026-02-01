@@ -37,12 +37,12 @@ const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') },
     { label: 'Manajemen Nasabah', url: null },
     { label: 'Data Nasabah', url: route('data-nasabah')  },
-    { label: 'Detail Nasabah'.nasabah.user_detail.fullName, url: route('show-nasabah')  },
+    { label: 'Detail Nasabah'+ " " + props.nasabah.user_detail.fullName, url: route('show-nasabah', props.nasabah.user_detail.id)},
 ];
 </script>
 
 <template>
-    <Head :title="'Detail ' + nasabah.user_detail.fullName" />
+    <Head :title="'Detail ' + props.nasabah.user_detail.fullName" />
 
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
         <div class="space-y-6">
@@ -86,7 +86,7 @@ const breadcrumbItems = [
                         </thead>
                         <tbody class="divide-y dark:divide-gray-700 font-medium">
                             <tr class="dark:text-gray-300">
-                                <td class="px-6 py-4">{{ nasabah.user_detail.fullName }}</td>
+                                <td class="px-6 py-4 capitalize">{{ nasabah.user_detail.fullName }}</td>
                                 
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
@@ -108,16 +108,14 @@ const breadcrumbItems = [
                                         <i class="fas fa-check-circle mr-1"></i> Lengkap
                                     </span>
                                     <span v-else 
-                                        class="px-2.5 py-1 rounded-full text-[10px] bg-red-100 text-red-700 dark:bg-red-900/30">
+                                        class="px-2.5 py-1 rounded-full text-[10px] bg-red-900 text-white dark:bg-red-900">
                                         Belum Lengkap ({{ Math.round(percentageSuccessfullDocument) }}%)
                                     </span>
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center gap-2">
-                                        <button class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+            
 
                                         <button v-if="percentageSuccessProfile < 100 || percentageSuccessfullDocument < 100"
                                             @click="sendReminder"

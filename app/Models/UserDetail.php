@@ -40,6 +40,11 @@ class UserDetail extends Model
         return $this->hasMany(Sampah::class, 'id_userdetail', 'id');
     }
 
+    public function user_log()
+    {
+        return $this->hasMany(UserLog::class, 'id_userdetail', 'id');
+    }
+
     public function pencatatan()
     {
         return $this->hasMany(PencatatanSetoran::class, 'id_userdetail', 'id');

@@ -3,16 +3,9 @@ import { ref, computed } from 'vue';
 import { useForm, router, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Swal from 'sweetalert2';
-import FormWrapper from '@/Components/FormWrapper.vue';
-
-
-import jszip from 'jszip';
-import * as pdfMake from 'pdfmake/build/pdfmake';
-import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+import 'datatables.net-dt/css/dataTables.dataTables.css';
 import InputLabel from '@/Components/InputLabel.vue';
-
-
-// ================= DATATABLES =================
+import FormWrapper from '@/Components/FormWrapper.vue';
 import DataTable from 'datatables.net-vue3'
 import DataTablesCore from 'datatables.net'
 import Buttons from 'datatables.net-buttons'
@@ -20,7 +13,6 @@ import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
 import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
 import Responsive from 'datatables.net-responsive-dt'
 
-// CSS (WAJIB)
 import 'datatables.net-dt/css/dataTables.dataTables.css'
 import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
 
@@ -31,68 +23,214 @@ DataTable.use(ButtonsHtml5)
 DataTable.use(ButtonsPrint)
 DataTable.use(Responsive)
 
-window.JSZip = jszip;
-pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
-
 const props = defineProps({
-    jadwal: Array,
+    allBankSampah: Array,
+    bankSampahLog: Array,
     formdata: Object,
-    sidebardata: Object,
-    idUser: Number,
-    breadcrumbItems: Array,
+    percentageSuccessfullProfile: Number,
+    notNullProfile: Array,
+    countNotNull:Number,
+    sidebardata: Object
 });
-
-// --- STATE ---
 const showForm = ref(false);
+
 const isEdit = ref(false);
-const dtInstance = ref(null); // Ref untuk instance datatable
 
 const form = useForm({
     id: null,
-tanggal_setoran: '',
-id_userdetail: props.idUser,
+    fullName: '',
+    status: '',
+    id_gender: 3,
+    id_rt: '',
+    id_roles: 2,
 });
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
 
+const dtInstance = ref(null);
+
+const sendReminder = ($id) => {
+    Swal.fire({
+        title: 'Kirim Pengingat?',
+        text: "Bank Sampah akan menerima notifikasi mengenai kekurangan data.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Kirim!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(route('banksampah.send-reminder', $id), {
+                message: `Profil dan Dokumen Anda Belum Lengkap, Segera Lengkapi Profil: ${props.notNullProfile}`
+            }, {
+                onSuccess: () => Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success')
+            });
+        }
+    });
+};
+
+
+
+const combinedData = computed(() => {
+    const dataJadwal = props.allBankSampah || [];
+const logs = props.bankSampahLog || []; 
+    return dataJadwal.map(item => {
+
+        
+        const user = item.user_detail;
+        const log = item.user_detail.user_log; // Atau cari di array log lain jika terpisah
+
+        const userId = user?.id;
+        
+        // Cari log yang cocok dengan ID user ini
+        const userLog = logs.find(log => Number(log.id_userdetail) === Number(userId));
+const completion = Array.isArray(item.profile_completion) 
+            ? item.profile_completion[0] 
+            : item.profile_completion;
+
+            const statistik = Array.isArray(item.statistik) 
+            ? item.statistik[0] 
+            : item.statistik;
+        return {
+            ...item,
+            // Mengambil data dari relasi user_detail
+            fullName: user?.fullName || 'Tanpa Nama',
+            id_rt: user?.id_rt || '-',
+            
+            percentage: completion?.percentage || 0,
+            empty_fields: completion?.empty_fields || [],
+            profile_completion_data: completion,
+
+            total_nasabah: statistik?.total_nasabah || 0,
+            countOnline: statistik?.online_saat_ini || 0,
+            statistik_data: statistik,
+            status_online: (userLog?.action === 'LOGIN') ? 'Online' : 'Offline',
+           
+            // Data setoran
+            tanggal_setoran: item.user_detail?.jadwal?.[0]?.tanggal_setoran || '-',
+        };
+    });
+});
+
+// 4. Fungsi Format Sub-Baris
+const formatChildRow = (d) => {
+    return `
+        <div class="p-4 bg-gray-50 dark:bg-gray-900 border-l-4 border-emerald-500 shadow-inner">
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-gray-500 uppercase text-xs font-bold">Detail Aktivitas</p>
+                    <p class="dark:text-white">Waktu Terakhir: <span class="font-mono">${d.tanggal_setoran}</span></p>
+                                        <p class="dark:text-white">Status: ${d.status_online === 'Online' ? '🟢 Aktif' : '⚪ Offline'}</p>
+
+                </div>
+
+                 <div>
+                    <p class="text-gray-500 uppercase text-xs font-bold">Detail Profil</p>
+                    <p class="dark:text-white">Total Nasabah: <span class="font-mono">${d.total_nasabah}</span></p>
+                    <p class="dark:text-white">Status Nasabah: <span class="font-mono">${d.countOnline === 0 ? 'Tidak ada yang online':d.countOnline  }</span></p>
+
+                </div>
+                
+            </div>
+        </div>
+    `;
+};
+
+// 5. Handler Klik Baris
+const onRowClick = (event) => {
+    const tr = event.target.closest('tr');
+    const row = dtInstance.value.dt.row(tr);
+
+    if (row.child.isShown()) {
+        row.child.hide();
+        tr.classList.remove('shown');
+    } else {
+        row.child(formatChildRow(row.data())).show();
+        tr.classList.add('shown');
+    }
+};
+
 const dtOptions = {
+        searching: false,
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
-  
-columns: [
-        { 
-            data: null, 
-            render: (data, type, row, meta) => meta.row + 1 
-        }, 
-        { 
-            // Langsung akses user_detail (tanpa kata 'jadwal')
-            data: 'tanggal_setoran',
-            render: (data, type, row) => {
-                return row.tanggal_setoran || '-';
-            },
-            defaultContent: '-' 
-        },
-       
-        { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
-        } 
-    ],
+
     layout: {
         topStart: null,
         topEnd: null,
         bottomStart: 'info',
         bottomEnd: 'paging'
     },
-     buttons: [
+    data: combinedData.value,
+    columns: [
+          { 
+            data: null, 
+            orderable: false, 
+            className: 'no-print text-center' 
+        },
+     
+        { data: 'user_detail.id_rt' },
+        { data: 'user_detail.fullName' },
+        { data: 'user_detail.status' },
+       {
+    data: 'profile_completion_data',
+    render: (data) => {
+        // Cek jika data null atau undefined agar tidak error
+        if (!data) return '<span class="text-xs text-gray-400 italic">Data tidak tersedia</span>';
+
+        const percentage = Math.round(data.percentage || 0);
+        const colorClass = percentage === 100 ? 'bg-emerald-500' : 'bg-orange-400';
+        
+        // Logika untuk menampilkan pesan "Data kurang"
+        const emptyFieldsMessage = (percentage < 100 && data.empty_fields?.length > 0)
+            ? `<p class="text-[10px] text-red-500 mt-1 italic font-normal">
+                Data kurang: ${data.empty_fields.join(', ')}
+               </p>`
+            : '';
+
+        return `
+            <div class="flex flex-col">
+                <div class="flex items-center gap-3">
+                    <div class="w-32 bg-gray-200 rounded-full h-2 dark:bg-gray-700 overflow-hidden">
+                        <div class="h-2 rounded-full progress-flow transition-all duration-700 ${colorClass}"
+                             style="width: ${percentage}%">
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">${percentage}%</span>
+                </div>
+                ${emptyFieldsMessage}
+            </div>
+        `;
+    }
+},
+            { data: 'status_online',
+
+         render: (data) => {
+                        const colorClass = data === 'Online' ? 'bg-emerald-100 animate-pulse text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
+
+           return `     <span class="px-3 py-1 rounded-full text-xs font-bold ${colorClass}
+            ">
+            <i class="fas fa-circle text-[8px] mr-1"></i>
+            Status: ${ data }
+        </span>`
+    }
+        
+
+        },
+         { 
+            data: null, 
+            orderable: false, 
+            className: 'no-print text-center' 
+        }
+      
+    ],
+         buttons: [
                     {
                         extend: 'pdfHtml5',
                         text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
                         className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: 'Data Jadwal Pelaksanaan RT',
+                        title: 'Data Bank Sampah RW01',
                         exportOptions: {
                             columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
                         },
@@ -111,7 +249,7 @@ columns: [
                                         margin: [0, 20, 0, 0]
                                     },
                                     {
-                                        text: 'Bank Sampah - Data Sampah',
+                                        text: 'RW01 - Data Bank Sampah',
                                         alignment: 'right',
                                         fontSize: 16,
                                         bold: true,
@@ -153,7 +291,7 @@ columns: [
                         extend: 'print',
                         text: '<i class="fa-solid fa-print mr-2"></i> Print',
                         className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: '', // kosongin biar gak dobel namaSampah default
+                        title: '',
                         customize: function (win) {
                             $(win.document.body)
                                 .css('font-family', 'Poppins, sans-serif')
@@ -168,7 +306,7 @@ columns: [
                         
                     </div>
                     <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
+                        <p style="font-size: 14px; margin: 0;">Laporan Data Kepengurusan</p>
                         <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
                     </div>
                 </div>
@@ -235,6 +373,13 @@ const exportData = (index) => {
     dtInstance.value.dt.button(index).trigger();
 };
 
+
+const breadcrumbItems = [
+    { label: 'Dashboard', url: route('rw.dashboard') },
+    { label: 'Manajemen Bank Sampah', url: null },
+    { label: 'Data Kelola Bank Sampah', url: route('rw.data-kelola')  },
+];
+
 const openCreateForm = () => {
     isEdit.value = false;
     form.reset();
@@ -242,27 +387,26 @@ const openCreateForm = () => {
 
 };
 
-const viewDetail = (id) => {
 
-    router.get(route('show-jadwal', id));
-};
-
-const editData = (item) => {
+const editData = (id, fullName, status, id_gender, id_rt) => {
     isEdit.value = true;
-    form.id = item.id;
-    form.tanggal_setoran = item.tanggal_setoran ? item.tanggal_setoran.substring(0, 10) : '';
-    form.id_userdetail = form.id_userdetail;
+    form.id = id;
+    form.fullName= fullName;
+    form.status = status;
+    form.id_gender = id_gender;
+    form.id_rt = id_rt;
+    form.id_roles = 3;
     showForm.value = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 const handleSubmit = () => {
-    const url = isEdit.value ? route('update-jadwalBankSampah', form.id) : route('add-jadwalBankSampah');
+    const url = isEdit.value ? route('rw.update-banksampah', form.id) : route('rw.add-banksampah');
     const method = isEdit.value ? 'put' : 'post';
 
     form[method](url, {
         onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data jadwal telah diproses.', 'success');
+            Swal.fire('Berhasil!', 'Data bank sampahh telah diproses.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -291,52 +435,26 @@ const handleSubmit = () => {
                             Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
                         }
                     },
-                    onFinish: function () {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: result.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
-                    }
+                    
     });
 };
 
-const deleteData = (id) => {
-    Swal.fire({
-        title: 'Hapus data?',
-        text: "Tindakan ini tidak bisa dibatalkan!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Hapus!'
-    }).then((res) => {
-        if (res.isConfirmed) {
-            router.delete(route('delete-jadwalBankSampah', id), {
-                onSuccess: () => Swal.fire('Dihapus!', 'Data berhasil dihapus.', 'success')
-            });
-        }
-    });
+const viewDetail = (id) => {
+    // Navigasi ke halaman detail nasabah
+    router.get(route('rw.show-banksampah', id));
 };
-
-
-
-const breadcrumbItems = [
-    { label: 'Dashboard', url: route('dashboard') },
-    { label: 'Manajemen Bank Sampah', url:  null },
-    { label: 'Data Jadwal', url:  route('jadwal-pelaksanaan') },
-];
 </script>
 
 <template>
-    <Head title="Data Jadwal" />
-    <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumbItems="breadcrumbItems" >
-        <div class="space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <Head :title="'Data Kelola Bank Sampah'" />
+
+    <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
+        <div  class="space-y-6">
+
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data jadwal</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar jadwal Anda.</p>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Kelola Bank Sampah</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola bank sampah di RW anda.</p>
                 </div>
                 <button @click="openCreateForm" 
                     class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
@@ -345,57 +463,63 @@ const breadcrumbItems = [
                 </button>
             </div>
 
+
             <Transition name="accordion">
                 <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
                     
-                              <FormWrapper 
-            formName="formJadwal" 
+            <FormWrapper 
+            formName="formVerifikasi" 
             :errors="form.errors" 
             :processing="form.processing"
-            @submit="handleSubmit"
-        >
-                                                    
+            @submit="handleSubmit">
+            <input v-if="isEdit.value === true" type="hidden" name="id_rt" :value="idUserRT">
+            <input type="hidden" name="id_roles" v-model="form.id_roles">
 
-  <div v-for="field in formdata.bankSampah" :key="field.name">
-    <input type="hidden" name="id_userdetail" v-model="form.id_userdetail">
-                                    <div v-if="field.type === 'date'"  class="col-span-full">
+                        <input type="hidden" name="id_gender" v-model="form.id_gender">
 
+               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <template v-for="field in formdata.nasabah" :key="field.name">
+         <div v-if="!['address', 'phoneNumber', 'userName', 'status', 'rt'].includes(field.name) && !['file', 'select', 'radio'].includes(field.type)" 
+             class="col-span-1">
+            <InputLabel :for="field.name" :value="field.title" />
+            <input :type="field.type" v-model="form[field.name]" :placeholder="field.placeholder"
+                class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
+        </div>
+       
 
-        
-   
-                                                                                <InputLabel :for="field.name" :value="field.title" />                        
+        <div v-else-if="field.name === 'status'" class="col-span-1">
+            <InputLabel :for="field.name" :value="field.title" />
+            <select v-model="form[field.name]"
+                class="w-full h-11 rounded-xl border-gray-200 bg-gray-50 dark:bg-gray-800 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                <option value="">Pilih Status</option>
+                <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+            </select>
+        </div>
 
-                                          <input :type="field.type" :id="field.name"
-                                            :name="field.name" v-model="form[field.name]"
-                                            :placeholder="field.placeholder"
-                                                                                                            :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
+        <div v-else-if="!isEdit && field.name === 'rt'" class="col-span-1">
+            <InputLabel :for="field.name" :value="field.title" />
+            <select v-model="form.id_rt"
+                class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-sm">
+                <option value="">Pilih RT</option>
+                <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+            </select>
+        </div>
 
-                                            class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
-                                    </div>
-                   
-
-
-
-
-                            
-
-                            </div>
-
-                           
-                      
+    </template>
+</div>
                         
                         <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
                             <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
-                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Jadwal' : 'Simpan Jadwal' }}
+                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Status' : 'Simpan Bank Sampah' }}
                             </button>
                         </div>
                    </FormWrapper>
                 </div>
-            </transition>
+            </Transition>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                                <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
+                                 <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
               <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
             <button @click="exportData(0)" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
@@ -408,7 +532,7 @@ const breadcrumbItems = [
                 <i class="fas fa-print"></i> Print
             </button>
         </div>
-            <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
+               <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
                 <input @keyup="handleSearch" type="text" 
@@ -421,10 +545,11 @@ const breadcrumbItems = [
                 <select @change="handleCategoryFilter"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
                     <option value="">Semua</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Pengajuan Verifikasi">Pengajuan Verifikasi</option>
-                    <option value="Ditolak">Ditolak</option>
-                    <option value="Disetujui">Disetujui</option>
+                    <option value="Ketua">Ketua</option>
+                    <option value="Sekretaris">Sekretaris</option>
+                    <option value="Bendahara">Bendahara</option>
+                    <option value="Pemilah">Pemilah</option>
+                    <option value="Penimbang">Penimbang</option>
                 </select>
             </div>
 
@@ -433,54 +558,68 @@ const breadcrumbItems = [
                 <select @change="handleLengthChange"
                     class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
                     <option value="5" selected>5</option>
-                    <option value="10">10</option>
+                    <option value="10" >10</option>
                     <option value="25">25</option>
                 </select>
             </div>
             </div>
            
         </div>
+            <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
+                    <DataTable
+                        ref="dtInstance"
+                        :options="dtOptions" 
+                    class="w-full display stripe hover cell-border dark:text-white">
+                        <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
+                            <tr>
 
-                <DataTable 
-                    ref="dtInstance"
-                    :data="jadwal" 
-                    :options="dtOptions"
-class="w-full display stripe hover cell-border">
-         
-                    <thead>
-                        <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                             <th>No</th>
-                    <th>Jadwal Pelaksanaan</th>
-                            <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    
-                    <template #column-0="data">
-                        <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
+                                <th class="px-6 py-4"></th>
+                                <th class="px-6 py-4">RT</th>
+                                <th class="px-6 py-4">Nama Lengkap</th>
+                                <th class="px-6 py-4">Kelengkapan Profil</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                      
+
+                         <template #column-0="data"> 
+                                <div class="flex justify-center gap-2">
+                                      
+
+                                        <button  @click="onRowClick" class=" text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
+                                 <i  
+                 class="fas fa-plus-circle text-emerald-500 cursor-pointer"></i>
+                            </button>
+    
+                                    </div>
                     </template>
+                        <template #column-6="data"> 
+                                <div class="flex justify-center gap-2">
+                                        <button  @click="viewDetail(data.rowData.id)" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">
+                                            <i class="fas fa-eye"></i>
+                                        </button>                           
 
-                    <template #column-2="data"> 
-                        <div class="flex justify-center gap-1">
-                            <button 
-            @click="viewDetail(data.rowData.id)"
-            class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
-            title="Lihat Profil Lengkap"
-        >
-            <i class="fas fa-eye text-sm"></i>
-        </button>
-                            <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
+                                        <button v-if="data.rowData.profile_completion.percentage < 100 && data.rowData.profile_completion.percentage > 50 || percentageSuccessfullDocument < 100"
+                                            @click="sendReminder(data.rowData.id)"
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-bell"></i> REMINDER
+                                        </button>
+
+                                        <button @click="editData(data.rowData.id,data.rowData.user_detail.fullName, data.rowData.user_detail.status, data.rowData.user_detail.id_gender, data.rowData.user_detail.id_rt)" v-if="data.rowData.profile_completion.percentage > 50" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button @click="deleteData(data.rowData.id)" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+    
+                                    </div>
                     </template>
-                </DataTable>
+               
+                   </DataTable>
+</div>
 
             </div>
 
-            
+       
         </div>
     </AuthenticatedLayout>
 </template>
@@ -488,6 +627,26 @@ class="w-full display stripe hover cell-border">
 <style>
 .dark td{
     color:white;
+}
+.progress-flow {
+  width: 100%;
+  background: linear-gradient(
+    110deg,
+    #3b82f6 25%,
+    #60a5fa 37%,
+    #3b82f6 63%
+  );
+  background-size: 200% 100%;
+  animation: flow 1.2s linear infinite;
+}
+
+@keyframes flow {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
     
 .accordion-enter-active,
@@ -510,7 +669,6 @@ class="w-full display stripe hover cell-border">
 .accordion-wrapper > * {
     transition: opacity 0.2s;
 }
-
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background: #10b981 !important;

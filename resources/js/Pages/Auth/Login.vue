@@ -87,7 +87,7 @@ const submit = () => {
                                 :type="field.name === 'password' ? (showPassword ? 'text' : 'password') : field.type"
                                 v-model="form[field.name]"
                                 :placeholder="field.placeholder"
-                                class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                 :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
                             />
                             

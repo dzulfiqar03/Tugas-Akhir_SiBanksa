@@ -183,7 +183,7 @@ class DataNasabahController extends Controller
     {
         try {
             $this->nasabahServices->updateNasabah($id, $request->validated());
-            return redirect()->back()->with('message', 'Nasabah berhasil ditambahkan');
+            return redirect()->back()->with('message', 'Nasabah berhasil diubah');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal mendaftar: ' . $e->getMessage());
         }

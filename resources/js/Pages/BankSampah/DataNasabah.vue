@@ -4,18 +4,31 @@ import { useForm, router, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Swal from 'sweetalert2';
 import FormWrapper from '@/Components/FormWrapper.vue';
-// DataTables & Plugins
-import DataTable from 'datatables.net-vue3';
-import DataTablesLib from 'datatables.net-dt';
-import 'datatables.net-buttons-dt';
-import 'datatables.net-buttons/js/buttons.html5';
-import 'datatables.net-buttons/js/buttons.print';
+
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import InputLabel from '@/Components/InputLabel.vue';
 import 'datatables.net-dt/css/dataTables.dataTables.css';
-DataTable.use(DataTablesLib);
+
+// ================= DATATABLES =================
+import DataTable from 'datatables.net-vue3'
+import DataTablesCore from 'datatables.net'
+import Buttons from 'datatables.net-buttons'
+import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
+import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
+import Responsive from 'datatables.net-responsive-dt'
+
+// CSS (WAJIB)
+import 'datatables.net-dt/css/dataTables.dataTables.css'
+import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
+
+// Register
+DataTable.use(DataTablesCore)
+DataTable.use(Buttons)
+DataTable.use(ButtonsHtml5)
+DataTable.use(ButtonsPrint)
+DataTable.use(Responsive)
 window.JSZip = jszip;
 pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
@@ -43,7 +56,7 @@ const form = useForm({
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
-// --- DATATABLES CONFIG (Mengadopsi data-sampah.js Anda) ---
+
 const dtOptions = {
     pageLength: 5,
     responsive: true,
@@ -57,6 +70,7 @@ columns: [
         { 
             // Langsung akses user_detail (tanpa kata 'nasabah')
             data: 'user_detail.fullName',
+            className:'capitalize',
             render: (data, type, row) => {
                 return row.user_detail?.fullName || '-';
             },
@@ -66,7 +80,13 @@ columns: [
             // Sesuai kode PHP Anda, status mungkin ada di level atas atau di user_detail
             data: 'user_detail.status', 
             render: (data, type, row) => {
-                return row.user_detail?.status || row.status || '-';
+
+const className = 
+    row.user_detail?.status === 'Disetujui' ? 'bg-emerald-500 w-max px-3 text-white' :  
+    row.user_detail?.status === 'Pengajuan Verifikasi' ? 'w-max px-3 bg-yellow-500 text-white' : 
+    row.user_detail?.status === 'Pending' ? 'w-max px-3 bg-gray-900 text-white' : 
+    'w-max px-3 bg-red-900 text-white';
+                    return `<h1 class="${className} rounded-xl">${row.user_detail?.status}</h1>`;
             },
             defaultContent: '-'
         },
@@ -288,15 +308,7 @@ const handleSubmit = () => {
                             Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
                         }
                     },
-                    onFinish: function () {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Berhasil Diproses',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
-                    }
+                    
     });
 };
 
@@ -426,9 +438,9 @@ const breadcrumbItems = [
             </transition>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                   <div class="flex flex-row items-end justify-between mb-6">
+                                 <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
-              <div class="flex flex-wrap items-center gap-2">
+              <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
             <button @click="exportData(0)" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
                 <i class="fas fa-file-pdf"></i> PDF
             </button>
@@ -439,7 +451,7 @@ const breadcrumbItems = [
                 <i class="fas fa-print"></i> Print
             </button>
         </div>
-            <div class="flex flex-wrap md:flex-nowrap items-end justify-end gap-3">
+               <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
                 <input @keyup="handleSearch" type="text" 
@@ -491,6 +503,8 @@ class="w-full display stripe hover cell-border">
                         <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
                     </template>
 
+                    
+
                     <template #column-3="data"> 
                         <div class="flex justify-center gap-1">
                             <button 
@@ -522,11 +536,10 @@ class="w-full display stripe hover cell-border">
     color:white;
 }
     
-/* CSS yang diperbarui */
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; /* Sesuaikan dengan perkiraan tinggi maksimal form Anda */
+    max-height: 500px; 
     overflow: hidden;
 }
 
@@ -539,6 +552,11 @@ class="w-full display stripe hover cell-border">
     padding-top: 0;
     padding-bottom: 0;
 }
+
+.accordion-wrapper > * {
+    transition: opacity 0.2s;
+}
+
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background: #10b981 !important;

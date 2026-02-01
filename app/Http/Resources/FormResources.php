@@ -33,6 +33,12 @@ class FormResources extends JsonResource
             $optionGender[] = $gen->gender; // kolom
         }
 
+
+
+
+        $optionDivisi = ['Ketua', 'Sekretaris', 'Bendahara', 'Penimbang', 'Pemilah'];
+
+
         $optionJadwal = [];
         if (Auth::check()) {
             $jadwal = JadwalPelaksanaan::where('id_userdetail', Auth::user()->user_detail->id)->get();
@@ -295,6 +301,13 @@ class FormResources extends JsonResource
                     'type' => 'select',
                     'options' => $optionJadwal,
                 ],
+                  [
+                    'title' => 'Divisi',
+                    'name' => 'divisi',
+                    'type' => 'select',
+                    'options' => $optionDivisi,
+                ],
+
             ]
         ];
     }

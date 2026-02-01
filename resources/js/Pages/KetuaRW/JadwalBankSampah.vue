@@ -1,9 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useForm, router, Head, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Swal from 'sweetalert2';
 import FormWrapper from '@/Components/FormWrapper.vue';
+import { useForm, router, Head, usePage } from '@inertiajs/vue3';
 
 
 import jszip from 'jszip';
@@ -36,63 +36,121 @@ pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
 const props = defineProps({
     jadwal: Array,
-    formdata: Object,
+    bankSampah: Array,
     sidebardata: Object,
-    idUser: Number,
-    breadcrumbItems: Array,
+        bankSampahLog: Array,
+
 });
 
-// --- STATE ---
-const showForm = ref(false);
-const isEdit = ref(false);
-const dtInstance = ref(null); // Ref untuk instance datatable
 
-const form = useForm({
-    id: null,
-tanggal_setoran: '',
-id_userdetail: props.idUser,
+
+onMounted(() => {
+    // Tempelkan ke window agar bisa dipanggil oleh onclick string
+    window.viewDetail = (id) => {
+        if (!id) return;
+        
+        // Menggunakan router Inertia agar navigasi halus (SPA mode)
+        router.get(route('rw.show-jadwalBankSampah', id), {}, {
+            preserveState: true,
+            replace: true
+        });
+    };
 });
-const page = usePage();
-const user = computed(() => page.props.auth.user);
-const userDetail = computed(() => user.value?.user_detail || {});
+
+const dtInstance = ref(null);
+
+const combinedData = computed(() => {
+    const dataJadwal = props.bankSampah || [];
+const logs = props.bankSampahLog || []; 
+    return dataJadwal.map(item => {
+
+        
+        const user = item.user_detail;
+        const log = item.user_detail.user_log; // Atau cari di array log lain jika terpisah
+
+        const userId = user?.id;
+        
+        // Cari log yang cocok dengan ID user ini
+        const userLog = logs.find(log => Number(log.id_userdetail) === Number(userId));
+
+        return {
+            ...item,
+            // Mengambil data dari relasi user_detail
+            fullName: user?.fullName || 'Tanpa Nama',
+            id_rt: user?.id_rt || '-',
+            
+            status_online: (userLog?.action === 'LOGIN') ? 'ONLINE' : 'OFFLINE',
+            
+            // Data setoran
+            tanggal_setoran: item.user_detail?.jadwal?.[0]?.tanggal_setoran || '-',
+        };
+    });
+});
+
+// 4. Fungsi Format Sub-Baris
+const formatChildRow = (d) => {
+    return `
+        <div class="p-4 bg-gray-50 dark:bg-gray-900 border-l-4 border-emerald-500 shadow-inner">
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-gray-500 uppercase text-xs font-bold">Detail Aktivitas</p>
+                    <p class="dark:text-white">Waktu Terakhir: <span class="font-mono">${d.tanggal_setoran}</span></p>
+                    <p class="dark:text-white">Status: ${d.status_online === 'ONLINE' ? '🟢 Aktif' : '⚪ Offline'}</p>
+                </div>
+                
+            </div>
+        </div>
+    `;
+};
+
+// 5. Handler Klik Baris
+const onRowClick = (event) => {
+    const tr = event.target.closest('tr');
+    const row = dtInstance.value.dt.row(tr);
+
+    if (row.child.isShown()) {
+        row.child.hide();
+        tr.classList.remove('shown');
+    } else {
+        row.child(formatChildRow(row.data())).show();
+        tr.classList.add('shown');
+    }
+};
 
 const dtOptions = {
+        searching: false,
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
-  
-columns: [
-        { 
-            data: null, 
-            render: (data, type, row, meta) => meta.row + 1 
-        }, 
-        { 
-            // Langsung akses user_detail (tanpa kata 'jadwal')
-            data: 'tanggal_setoran',
-            render: (data, type, row) => {
-                return row.tanggal_setoran || '-';
-            },
-            defaultContent: '-' 
-        },
-       
-        { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
-        } 
-    ],
+
     layout: {
         topStart: null,
         topEnd: null,
         bottomStart: 'info',
         bottomEnd: 'paging'
     },
-     buttons: [
+    data: combinedData.value,
+    columns: [
+         { 
+            data: null, 
+            orderable: false, 
+            className: 'no-print text-center' 
+        },
+        { data: 'user_detail.id_rt' },
+        { data: 'user_detail.fullName' },
+        { 
+            data: 'user_detail.id_user',
+            render: (data) => `
+            <button onclick="viewDetail('${data}')" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">
+                                            <i class="fas fa-eye"></i></button>`
+        }
+    ],
+         buttons: [
                     {
                         extend: 'pdfHtml5',
                         text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
                         className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: 'Data Jadwal Pelaksanaan RT',
+                        title: 'Data Bank Sampah RW01',
                         exportOptions: {
                             columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
                         },
@@ -111,7 +169,7 @@ columns: [
                                         margin: [0, 20, 0, 0]
                                     },
                                     {
-                                        text: 'Bank Sampah - Data Sampah',
+                                        text: 'RW01 - Data Bank Sampah',
                                         alignment: 'right',
                                         fontSize: 16,
                                         bold: true,
@@ -153,7 +211,7 @@ columns: [
                         extend: 'print',
                         text: '<i class="fa-solid fa-print mr-2"></i> Print',
                         className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: '', // kosongin biar gak dobel namaSampah default
+                        title: '',
                         customize: function (win) {
                             $(win.document.body)
                                 .css('font-family', 'Poppins, sans-serif')
@@ -168,7 +226,7 @@ columns: [
                         
                     </div>
                     <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
+                        <p style="font-size: 14px; margin: 0;">Laporan Data Kepengurusan</p>
                         <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
                     </div>
                 </div>
@@ -235,102 +293,17 @@ const exportData = (index) => {
     dtInstance.value.dt.button(index).trigger();
 };
 
-const openCreateForm = () => {
-    isEdit.value = false;
-    form.reset();
-    showForm.value = !showForm.value;
-
-};
-
-const viewDetail = (id) => {
-
-    router.get(route('show-jadwal', id));
-};
-
-const editData = (item) => {
-    isEdit.value = true;
-    form.id = item.id;
-    form.tanggal_setoran = item.tanggal_setoran ? item.tanggal_setoran.substring(0, 10) : '';
-    form.id_userdetail = form.id_userdetail;
-    showForm.value = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-const handleSubmit = () => {
-    const url = isEdit.value ? route('update-jadwalBankSampah', form.id) : route('add-jadwalBankSampah');
-    const method = isEdit.value ? 'put' : 'post';
-
-    form[method](url, {
-        onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data jadwal telah diproses.', 'success');
-            showForm.value = false;
-            form.reset();
-        },
-        onError: function (xhr) {
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON.errors;
-                            let errorHtml = '';
-                            let totalErrorCount = 0;
-                            Object.keys(errors).forEach(key => {
-                                errors[key].forEach(msg => {
-                                    errorHtml += ` <li class="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2">
-                           <span class="w-1 h-1 bg-red-400 rounded-full"></span>
-                           ${msg}
-                       </li>`;
-                                    totalErrorCount++;
-                                });
-                                $(`[name="${key}"]`).addClass('border-red-500 ring-1 ring-red-500');
-
-                            });
-
-                            $('#error-count').text(totalErrorCount);
-                            $('#error-list').html(errorHtml);
-                            $('#error-message').removeClass('hidden').fadeIn();
-                            Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
-                        } else {
-                            Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
-                        }
-                    },
-                    onFinish: function () {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: result.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
-                    }
-    });
-};
-
-const deleteData = (id) => {
-    Swal.fire({
-        title: 'Hapus data?',
-        text: "Tindakan ini tidak bisa dibatalkan!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Hapus!'
-    }).then((res) => {
-        if (res.isConfirmed) {
-            router.delete(route('delete-jadwalBankSampah', id), {
-                onSuccess: () => Swal.fire('Dihapus!', 'Data berhasil dihapus.', 'success')
-            });
-        }
-    });
-};
-
-
 
 const breadcrumbItems = [
-    { label: 'Dashboard', url: route('dashboard') },
-    { label: 'Manajemen Bank Sampah', url:  null },
-    { label: 'Data Jadwal', url:  route('jadwal-pelaksanaan') },
+    { label: 'Dashboard', url: route('rw.dashboard') },
+    { label: 'Manajemen Bank Sampah', url: null },
+    { label: 'Data Jadwal Pelaksanaan Bank Sampah', url: route('rw.jadwal-pelaksanaan')  },
 ];
+
 </script>
 
 <template>
-    <Head title="Data Jadwal" />
+        <Head title="Data Jadwal" />
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumbItems="breadcrumbItems" >
         <div class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -338,61 +311,9 @@ const breadcrumbItems = [
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data jadwal</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar jadwal Anda.</p>
                 </div>
-                <button @click="openCreateForm" 
-                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
-                    <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
-                    {{ showForm ? 'Batal' : 'Tambah Data' }}
-                </button>
+               
             </div>
 
-            <Transition name="accordion">
-                <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
-                    <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
-                    
-                              <FormWrapper 
-            formName="formJadwal" 
-            :errors="form.errors" 
-            :processing="form.processing"
-            @submit="handleSubmit"
-        >
-                                                    
-
-  <div v-for="field in formdata.bankSampah" :key="field.name">
-    <input type="hidden" name="id_userdetail" v-model="form.id_userdetail">
-                                    <div v-if="field.type === 'date'"  class="col-span-full">
-
-
-        
-   
-                                                                                <InputLabel :for="field.name" :value="field.title" />                        
-
-                                          <input :type="field.type" :id="field.name"
-                                            :name="field.name" v-model="form[field.name]"
-                                            :placeholder="field.placeholder"
-                                                                                                            :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
-
-                                            class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
-                                    </div>
-                   
-
-
-
-
-                            
-
-                            </div>
-
-                           
-                      
-                        
-                        <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
-                            <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
-                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Jadwal' : 'Simpan Jadwal' }}
-                            </button>
-                        </div>
-                   </FormWrapper>
-                </div>
-            </transition>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                                 <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
@@ -441,53 +362,66 @@ const breadcrumbItems = [
            
         </div>
 
-                <DataTable 
-                    ref="dtInstance"
-                    :data="jadwal" 
-                    :options="dtOptions"
-class="w-full display stripe hover cell-border">
-         
-                    <thead>
-                        <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                             <th>No</th>
-                    <th>Jadwal Pelaksanaan</th>
-                            <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    
-                    <template #column-0="data">
-                        <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
-                    </template>
-
-                    <template #column-2="data"> 
-                        <div class="flex justify-center gap-1">
-                            <button 
-            @click="viewDetail(data.rowData.id)"
-            class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
-            title="Lihat Profil Lengkap"
+            <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
+        <DataTable
+            ref="dtInstance"
+            :options="dtOptions"
+            class="w-full display stripe hover dark:text-white"
         >
-            <i class="fas fa-eye text-sm"></i>
-        </button>
-                            <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
-                                <i class="fas fa-edit"></i>
+            <thead>
+                <tr>
+                    <th width="5%"></th>
+                    <th>RT</th>
+                    <th>Nama Lengkap</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+
+             <template #column-0="data"> 
+                                <div class="flex justify-center gap-2">
+                                      
+
+                                        <button  @click="onRowClick" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
+                                 <i  
+                 class="fas fa-plus-circle text-emerald-500 cursor-pointer"></i>
                             </button>
-                            <button @click="deleteData(data.rowData.id)" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+    
+                                    </div>
                     </template>
-                </DataTable>
+        </DataTable>
+    </div>
 
             </div>
 
             
         </div>
     </AuthenticatedLayout>
+   
 </template>
 
 <style>
 .dark td{
     color:white;
+}
+.progress-flow {
+  width: 100%;
+  background: linear-gradient(
+    110deg,
+    #3b82f6 25%,
+    #60a5fa 37%,
+    #3b82f6 63%
+  );
+  background-size: 200% 100%;
+  animation: flow 1.2s linear infinite;
+}
+
+@keyframes flow {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
     
 .accordion-enter-active,

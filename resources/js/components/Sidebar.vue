@@ -47,7 +47,7 @@ const sections = computed(() => {
     } else if (role === 'Ketua RW') {
         grouped = { 'MAIN': [], 'MANAJEMEN': [], 'TRANSAKSI': [], 'LAINNYA': [] };
         menus.value.forEach(menu => {
-                        if (['Dashboard'].includes(menu.nama)) grouped['MAIN'].push(menu);
+            if (['Dashboard'].includes(menu.nama)) grouped['MAIN'].push(menu);
             else if (menu.data || ['Bank Sampah', 'Nasabah', 'Tracking Setoran', 'Penjadwalan'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
             else if (menu.data || ['Transaksi', 'Transaksi Setoran'].includes(menu.nama)) grouped['TRANSAKSI'].push(menu);
             else grouped['LAINNYA'].push(menu);
