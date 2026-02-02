@@ -371,7 +371,7 @@ const breadcrumbItems = [
                                             :placeholder="field.placeholder"
                                                                                                             :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
 
-                                            class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
+                                            class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
                                     </div>
                    
 
@@ -416,17 +416,7 @@ const breadcrumbItems = [
                     placeholder="Ketik...">
             </div>
 
-            <div class="flex items-center gap-2">
-                <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                <select @change="handleCategoryFilter"
-                    class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                    <option value="">Semua</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Pengajuan Verifikasi">Pengajuan Verifikasi</option>
-                    <option value="Ditolak">Ditolak</option>
-                    <option value="Disetujui">Disetujui</option>
-                </select>
-            </div>
+            
 
             <div class="flex items-center gap-2  pl-3">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
@@ -461,13 +451,7 @@ class="w-full display stripe hover cell-border">
 
                     <template #column-2="data"> 
                         <div class="flex justify-center gap-1">
-                            <button 
-            @click="viewDetail(data.rowData.id)"
-            class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
-            title="Lihat Profil Lengkap"
-        >
-            <i class="fas fa-eye text-sm"></i>
-        </button>
+                    
                             <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>

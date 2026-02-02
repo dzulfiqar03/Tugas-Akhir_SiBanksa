@@ -21,7 +21,7 @@ class KelolaBankSampahServices
 
     public function getAllBankSampah()
     {
-        $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log'])
+        $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.pencatatan'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 2);
                 $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%');
@@ -35,17 +35,54 @@ class KelolaBankSampahServices
         return $bankSampah;
     }
 
-    public function getBankSampahlog()
+    public function getAllTransaction()
     {
-        return DB::table('user_logs')
-            ->whereIn('id', function ($query) {
-                $query->select(DB::raw('MAX(id)'))
-                    ->from('user_logs')
-                    ->groupBy('id_userdetail');
+
+        $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.image', 'user_detail.document'])
+            ->whereHas('user_detail', function ($query) {
+                $query->where('id_roles', 2);
+                $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%');
             })
-            ->get();
+            ->whereHas('user_detail.document')
+            ->whereHas('user_detail.document')
+            ->get()
+            ->map(function ($user) {
+
+
+                $idRT = $user->user_detail->id_rt;
+
+                
+                $totalSetoranRT = DB::table('pencatatan_setoran')
+                    ->join('user_details', 'id_userdetail', '=', 'user_details.id')
+                    ->where('user_details.id_rt', $idRT)
+                    ->sum('total_setoran');
+
+                $user->total_setoran_rt = $totalSetoranRT;
+
+                return $user;
+            });
+
+        return $bankSampah;
     }
 
+
+    public function getBankSampahlog()
+    {
+        $logs = DB::table('user_logs as ul1')
+            ->whereRaw('ul1.id = (SELECT MAX(ul2.id) FROM user_logs as ul2 WHERE ul2.id_userdetail = ul1.id_userdetail)')
+            ->get();
+
+        return $logs->map(function ($log) {
+            // Logika: Apapun action-nya, yang penting ini adalah record PALING BARU
+            return [
+                'id_userdetail' => $log->id_userdetail,
+                'action'        => $log->action, // Bisa LOGIN atau LOGOUT
+                'time'          => $log->created_at,
+                // Status Online HANYA jika aksi TERAKHIRNYA adalah 'LOGIN'
+                'status'        => ($log->action === 'LOGIN') ? 'Online' : 'Offline',
+            ];
+        });
+    }
     public function getNasabah($id_rt)
     {
 
@@ -66,7 +103,7 @@ class KelolaBankSampahServices
         return $nasabah;
     }
 
-    public function getBankSampahOnline() {}
+
     public function getBankSampah($id)
     {
         $findBankSampah = $this->user::with('user_detail')->findOrFail($id);

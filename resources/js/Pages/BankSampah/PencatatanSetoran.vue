@@ -426,8 +426,8 @@ const breadcrumbItems = [
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
                 <select @change="handleLengthChange"
                     class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
+                    <option value="5" selected>5</option>
+                    <option value="10">10</option>
                     <option value="25">25</option>
                 </select>
             </div>
@@ -448,3 +448,77 @@ const breadcrumbItems = [
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style>
+.dark td{
+    color:white;
+}
+    
+.accordion-enter-active,
+.accordion-leave-active {
+    transition: all 0.3s ease-in-out;
+    max-height: 500px; 
+    overflow: hidden;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.accordion-wrapper > * {
+    transition: opacity 0.2s;
+}
+
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #10b981 !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 8px;
+}
+.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate {
+    font-size: 0.8rem;
+    color: #ffffff !important;
+    margin-top: 1rem;
+}
+.dark .dataTables_wrapper .dataTables_length, 
+.dark .dataTables_wrapper .dataTables_filter, 
+.dark .datatable .dt-info, 
+.dark .dataTables_wrapper .dataTables_processing, 
+.dark .datatable  .dt-paging {
+    color: #ffffff !important;
+}
+.dataTables_filter { display: none; } /* Kita pakai custom search di atas */
+
+.slide-fade-enter-active { transition: all 0.3s ease-out; }
+.slide-fade-leave-active { transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1); }
+.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-10px); opacity: 0; }
+
+.progress-flow {
+  width: 100%;
+  background: linear-gradient(
+    110deg,
+    #3b82f6 25%,
+    #60a5fa 37%,
+    #3b82f6 63%
+  );
+  background-size: 200% 100%;
+  animation: flow 1.2s linear infinite;
+}
+
+@keyframes flow {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+</style>

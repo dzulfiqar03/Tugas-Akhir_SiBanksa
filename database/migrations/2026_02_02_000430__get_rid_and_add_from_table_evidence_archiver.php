@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('evidence_archivers', function (Blueprint $table) {
+                        $table->dropForeign(['id_jadwal']);
+            $table->dropColumn('id_jadwal');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('table_evidence_archiver', function (Blueprint $table) {
+            //
+        });
+    }
+};

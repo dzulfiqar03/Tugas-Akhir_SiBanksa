@@ -3,45 +3,36 @@
 namespace App\Http\Controllers\Admin\BankSampah;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\BankSampah\PencatatanRequest;
 use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
-use App\Models\BankSampah\PencatatanSetoranItems;
-use App\Models\BankSampah\Sampah;
+use App\Models\DocumentArchiver;
+use App\Models\EvidenceArchiver;
 use App\Models\UserDetail;
-use App\Services\BankSampah\PencatatanServices;
+use App\Services\DocumentArchiversServices;
+use App\Services\EvidenceArchiversServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-class PencatatanController extends Controller
+class ArchiverReportController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
 
     public function __construct(
-        protected PencatatanServices $pencatatanServices,
-        protected UserDetail $userDetail,
-        protected Sampah $sampah,
-        protected PencatatanSetoranItems $pencatatanSetoranItems,
+        protected DocumentArchiversServices $documentArchiversServices,
+        protected EvidenceArchiversServices $evidenceArchiversServices,
+        protected UserDetail $userDetail
     ) {}
     public function index()
     {
+        $document = $this->documentArchiversServices->getAllDocument();
+        $image = $this->evidenceArchiversServices->getAllEvidence();
 
         $menu = (new DataResources(null))->toArray(request());
         $form = (new FormResources(null))->toArray(request());
 
-        $jadwalPelaksanaan = $this->userDetail::find(Auth::user()->user_detail->id)->jadwal()->get();
-        $nasabahList = $this->userDetail::where('id_rt', Auth::user()->user_detail->rt->id)->where('status', 'Disetujui')->where('id_roles', 3)->with(['sampah', 'pencatatan.pencatatan_items'])->get();
-        $formName = 'formPencatatan';
-
-        $jenisSampah = $this->sampah::where('id_userdetail', Auth::user()->user_detail->id)->get();
-        $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
-            ->whereHas('setoran', function ($query) {
-                $query->where('id_userdetail', Auth::user()->user_detail->id);
-            })
-            ->get();
         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,
@@ -51,16 +42,25 @@ class PencatatanController extends Controller
                 'is_read' => $n->read_at !== null
             ];
         });
-        return Inertia::render('BankSampah/PencatatanSetoran', [
+        $formName = 'formUpload';
+
+        $userId = Auth::user()->user_detail->id;
+        $userRT = Auth::user()->user_detail->id_rt;
+        $jadwalPelaksanaan = $this->userDetail::find(Auth::user()->user_detail->id)->jadwal()->get();
+
+        $IDRW = $this->userDetail::where('id_roles', 1)->first()->id_user;
+        return Inertia::render('BankSampah/PelaporanKetuaRW', [
             'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,
             'formdata' => $form,
             'formName' => $formName,
+            'IDUser' => $userId,
+            'IDRT' => $userRT,
+            'IDRW' => $IDRW,
+            'document' => $document,
+            'image' => $image,
             'jadwalPelaksanaan' => $jadwalPelaksanaan,
-            'nasabahList' => $nasabahList,
-            'jenisSampah' => $jenisSampah,
-            'pencatatanSetoranItems' => $pencatatanSetoranItems
         ]);
     }
 
@@ -75,17 +75,9 @@ class PencatatanController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PencatatanRequest $request)
+    public function store(Request $request)
     {
-
-        try {
-
-            $this->pencatatanServices->createPencatatanSetoran($request->validated());
-
-            return redirect()->back()->with('message', 'Sampah berhasil ditambahkan');
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
+        //
     }
 
     /**

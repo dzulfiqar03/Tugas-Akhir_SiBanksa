@@ -21,7 +21,6 @@ import Responsive from 'datatables.net-responsive-dt'
 import 'datatables.net-dt/css/dataTables.dataTables.css'
 import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
 
-// Register
 DataTable.use(DataTablesCore)
 DataTable.use(Buttons)
 DataTable.use(ButtonsHtml5)
@@ -70,6 +69,7 @@ columns: [
         }, 
         { 
             data: 'fullName',
+            className: 'capitalize',
             render: (data, type, row) => {
                 return row.fullName || '-';
             },
@@ -476,7 +476,7 @@ const breadcrumbItems = [
             <div class="flex items-center gap-2">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
                 <select @change="handleCategoryFilter"
-                    class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+                    class="border border-gray-200 dark:border-gray-600 text-black  rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
                     <option value="">Semua</option>
                     <option value="Ketua">Ketua</option>
                     <option value="Sekretaris">Sekretaris</option>
@@ -490,8 +490,8 @@ const breadcrumbItems = [
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
                 <select @change="handleLengthChange"
                     class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
+                    <option value="5" selected>5</option>
+                    <option value="10">10</option>
                     <option value="25">25</option>
                 </select>
             </div>

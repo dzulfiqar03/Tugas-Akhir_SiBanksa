@@ -15,11 +15,11 @@ class BankSampahReminder extends Notification implements ShouldQueue
     public $message;
     public $url;
 
-    public function __construct($bankSampahId, $message)
+    public function __construct($bankSampahId, $message, $uri)
     {
         $this->bankSampahId = $bankSampahId;
         $this->message = $message;
-        $this->url = url("/profile");
+        $this->url = url($uri);
     }
 
     // Simpan ke Database & Kirim ke Broadcast (Reverb)

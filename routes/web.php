@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BankSampah\ArchiverReportController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,7 +14,10 @@ use App\Http\Controllers\Admin\BankSampah\TrackingSetoranController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\KetuaRW\JadwalController;
 use App\Http\Controllers\Admin\KetuaRW\KelolaBankSampahController;
+use App\Http\Controllers\Admin\KetuaRW\PelaporanController;
 use App\Http\Controllers\Admin\PreferenceController;
+use App\Http\Controllers\DocumentArchiverController;
+use App\Http\Controllers\EvidenceArchiverController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\System\InternetConnController;
 use Illuminate\Support\Facades\Auth;
@@ -68,6 +72,8 @@ Route::middleware(['conn'])->group(function () {
                 Route::get('/KetuaRW/transaksi', [DataTransaksiController::class, 'index'])->name('rw.data-transaksi');
                 Route::get('/KetuaRW/pencatatan', [PencatatanController::class, 'index'])->name('rw.pencatatan-setoran');
 
+                Route::get('/KetuaRW/pelaporan', [PelaporanController::class, 'index'])->name('data-pelaporanBankSampah');
+
                 Route::post('/bank-sampah/{id}/send-reminder', action: [KelolaBankSampahController::class, 'sendReminder'])->name('banksampah.send-reminder');
             });
 
@@ -106,6 +112,19 @@ Route::middleware(['conn'])->group(function () {
 
                 Route::get('/bank-sampah/pencatatan', [PencatatanController::class, 'index'])->name('pencatatan-setoran');
                 Route::post('/bank-sampah/pencatatan/create', [PencatatanController::class, 'store'])->name('add-setoran');
+
+
+                Route::get('/bank-sampah/pelaporan', [ArchiverReportController::class, 'index'])->name('data-pelaporanRW');
+
+                Route::post('/bank-sampah/document/create', [DocumentArchiverController::class, 'store'])->name('add-document');
+                Route::put('/bank-sampah/document/update/{id}', [DocumentArchiverController::class, 'update'])->name('update-document');
+                Route::delete('/bank-sampah/document/delete/{id}', [DocumentArchiverController::class, 'destroy'])->name('delete-document');
+
+                Route::post('/bank-sampah/evidence/create', [EvidenceArchiverController::class, 'store'])->name('add-evidence');
+                Route::put('/bank-sampah/evidence/update/{id}', [EvidenceArchiverController::class, 'update'])->name('update-evidence');
+                Route::delete('/bank-sampah/evidence/delete/{id}', [EvidenceArchiverController::class, 'destroy'])->name('delete-evidence');
+
+                Route::post('/lapor-setoran/{id}/send-reminder', action: [PelaporanController::class, 'sendReminder'])->name('laporsetoran.send-reminder');
             });
 
             Route::middleware(['roles:Warga'])->group(function () {

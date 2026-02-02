@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class EvidenceArchiver extends Model
 {
-        protected $fillable = ['id_userdetail', 'name','src_image'];
+    protected $fillable = ['id_userdetail', 'name', 'original_photoname', 'encrypted_photoname'];
 
 
     public function user_detail()

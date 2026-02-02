@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { usePage, Link } from '@inertiajs/vue3';
+import { usePage, router,Link } from '@inertiajs/vue3';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue';
 
 const route = window.route; 
@@ -63,6 +63,23 @@ const sections = computed(() => {
     }
     return Object.fromEntries(Object.entries(grouped).filter(([_, v]) => v.length > 0));
 });
+
+const sendLogout= () => {
+    Swal.fire({
+        title: 'Ingin Logout?',
+        text: "Setelah ini akun anda akan logout dan status offline",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Logout!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(route('logout'), {
+                onSuccess: () => Swal.fire('Berhasil!', 'Anda berhasil logout, selamat tinggal.', 'success')
+            });
+        }
+    });
+};
 </script>
 
 <template>
@@ -101,19 +118,29 @@ const sections = computed(() => {
                 <div class="space-y-1">
                     <div v-for="menu in sectionMenus" :key="menu.nama">
                         
-                        <Link v-if="!menu.data"
-                            :href="statusVerifikasi === 'Pengajuan Verifikasi' ? route('warga.dashboard') : menu.route"
-                            class="flex items-center gap-3 p-2 rounded-lg transition group"
-                            :class="isRouteActive(menu.uri) 
-                                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' 
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
-                        >
-                            <span class="w-6 h-6 flex items-center justify-center shrink-0">
-                                <i :class="menu.icon"></i>
-                            </span>
-                            <span v-show="sidebarExpanded || isOpen" class="truncate">{{ menu.nama }}</span>
-                        </Link>
+                        <Link v-if="!menu.data && menu.nama !== 'LogOut'"
+    :href="statusVerifikasi === 'Pengajuan Verifikasi' ? route('warga.dashboard') : menu.route"
+    class="flex items-center gap-3 p-2 rounded-lg transition group"
+    :class="isRouteActive(menu.uri) 
+        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' 
+        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
+>
+    <span class="w-6 h-6 flex items-center justify-center shrink-0">
+        <i :class="menu.icon"></i>
+    </span>
+    <span v-show="sidebarExpanded || isOpen" class="truncate">{{ menu.nama }}</span>
+</Link>
 
+<button v-else-if="menu.nama === 'LogOut'"
+    type="button"
+    @click="sendLogout"
+    class="w-full flex items-center gap-3 p-2 rounded-lg transition group text-white font-bold bg-red-500 hover:bg-red-600 shadow-sm mt-4"
+>
+    <span class="w-6 h-6 flex items-center justify-center shrink-0">
+        <i :class="menu.icon"></i>
+    </span>
+    <span v-show="sidebarExpanded || isOpen" class="truncate">{{ menu.nama }}</span>
+</button>
                         <Disclosure v-else v-slot="{ open }" :default-open="menu.data.some(sub => isRouteActive(sub.uri))">
                             <DisclosureButton class="flex justify-between w-full p-2 rounded-lg transition"
                                 :class="menu.data.some(sub => isRouteActive(sub.uri)) 

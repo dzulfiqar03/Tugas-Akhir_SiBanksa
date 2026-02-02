@@ -78,6 +78,7 @@ class KelolaBankSampahController extends Controller
 
                 return $user;
             });
+            
 
 
         $bankSampahLog = $this->kelolaBankSampahServices->getBankSampahlog();
@@ -290,7 +291,7 @@ class KelolaBankSampahController extends Controller
         try {
             $user = User::findOrFail($id);
 
-            $user->notify(new BankSampahReminder($user->id, $request->message));
+            $user->notify(new BankSampahReminder($user->id, $request->message, '/profile'));
 
             return back()->with('success', 'Pengingat verifikasi berhasil dikirim ke nasabah!');
         } catch (\Exception $e) {

@@ -25,11 +25,9 @@ DataTable.use(Responsive)
 
 const props = defineProps({
     allBankSampah: Array,
+    bankSampah: Array,
     bankSampahLog: Array,
     formdata: Object,
-    percentageSuccessfullProfile: Number,
-    notNullProfile: Array,
-    countNotNull:Number,
     sidebardata: Object
 });
 const showForm = ref(false);
@@ -70,172 +68,259 @@ const sendReminder = ($id) => {
 };
 
 
+const viewDetail = (id) => {
+    router.get(route('rw.show-banksampah', id));
+};
 
 const combinedData = computed(() => {
-    const dataJadwal = props.allBankSampah || [];
-const logs = props.bankSampahLog || []; 
-    return dataJadwal.map(item => {
+    const dataAwal = props.bankSampah || [];
+     const dataBankSampah = props.allBankSampah || [];
 
-        
+    return dataAwal.map(item => {
         const user = item.user_detail;
-        const log = item.user_detail.user_log;
-
         const userId = user?.id;
         
-        const userLog = logs.find(log => Number(log.id_userdetail) === Number(userId));
-const completion = Array.isArray(item.profile_completion) 
-            ? item.profile_completion[0] 
-            : item.profile_completion;
+        const allDocs = (user?.document || []).filter(doc => 
+            Number(doc.id_userdetail) === Number(userId)
+        );
 
-            const statistik = Array.isArray(item.statistik) 
-            ? item.statistik[0] 
-            : item.statistik;
+        const allImgs = (user?.image || []).filter(img => 
+            Number(img.id_userdetail) === Number(userId)
+        );
+
+
+       const dataStat = dataBankSampah.find(stat => stat.id === item.id);
+        const stats = dataStat?.statistik || {};
+
+          
+
         return {
             ...item,
-            // Mengambil data dari relasi user_detail
             fullName: user?.fullName || 'Tanpa Nama',
             id_rt: user?.id_rt || '-',
-            
-            percentage: completion?.percentage || 0,
-            empty_fields: completion?.empty_fields || [],
-            profile_completion_data: completion,
 
-            total_nasabah: statistik?.total_nasabah || 0,
-            countOnline: statistik?.online_saat_ini || 0,
-            statistik_data: statistik,
-            status_online: (userLog?.action === 'LOGIN') ? 'Online' : 'Offline',
-           
-            // Data setoran
-            tanggal_setoran: item.user_detail?.jadwal?.[0]?.tanggal_setoran || '-',
+            filtered_documents: allDocs,
+            filtered_images: allImgs,
+            tanggal_setoran: user?.jadwal?.[0]?.tanggal_setoran || '-',
+
+            total_nasabah: stats?.total_nasabah || 0,
+            countOnline: stats?.online_saat_ini || 0,
+
+            statsData : stats,
+                                nasabah_terverifikasi: stats?.nasabah_terverifikasi,
+                    nasabah_ditolak: stats?.nasabah_ditolak || 0,
+                    nasabah_pengajuan: stats?.nasabah_pengajuan,
+                    nasabah_pending: stats?.nasabah_pending,
+
         };
     });
 });
 
-// 4. Fungsi Format Sub-Baris
+const isPreviewOpen = ref(false);
+const selectedImageUrl = ref('');
+const docType = ref('Document');
+
+const openPreview = (fileName, IDRT, type) => {
+    selectedImageUrl.value = type === 'Dokumen'?
+    `/storage/files/documentUser/BankSampah/RT0${IDRT}/${fileName}`:
+        `/storage/photo/evidenceUser/BankSampah/RT0${IDRT}/${fileName}`;
+    docType.value = type;
+    isPreviewOpen.value = true;
+};
+
+const closePreview = () => {
+    isPreviewOpen.value = false;
+};
+
+window.handleOpenPreview = openPreview;
 const formatChildRow = (d) => {
+
+    const renderRows = (files, type) => {
+        if (!files || files.length === 0) {
+            return `<tr><td colspan="3" class="text-center py-4 text-gray-400 italic bg-gray-50/50">Tidak ada ${type} untuk jadwal ini</td></tr>`;
+        }
+
+        return files.map((f, index) => `
+            <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                <td class="py-3 px-4">
+                    <div class="flex items-center dark:text-white text-black gap-3">
+                       ${d.tanggal_setoran}
+                    </div>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="flex items-center gap-3">
+                        ${type === 'Dokumen' 
+                            ? '<i class="fas fa-file-pdf text-red-500 text-lg"></i>' 
+                            : `<img src="/storage/photo/evidenceUser/BankSampah/RT0${d.id_rt}/${f.original_photoname}" class="w-8 h-8 rounded object-cover border">`
+                        }
+                        <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                            ${type === 'Dokumen' ? f.original_filesname : f.original_photoname}
+                        </span>
+                    </div>
+                </td>
+                <td class="py-3 px-4 text-right">
+                    <div class="flex justify-end gap-2">
+                        <button onclick="window.handleOpenPreview('${type === 'Dokumen' ? f.original_filesname : f.original_photoname}', '${d.id_rt}', '${type === 'Dokumen' ? 'Dokumen' : 'Evidence'}')" 
+                                class="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-md text-xs font-bold transition">
+                            <i class="fas fa-eye mr-1"></i> LIHAT
+                        </button>
+                        
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    };
+
     return `
-        <div class="p-4 bg-gray-50 dark:bg-gray-900 border-l-4 border-emerald-500 shadow-inner">
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <p class="dark:text-gray-500 text-black uppercase text-xs font-bold">Detail Aktivitas</p>
-                    <p class="dark:text-white text-black">Waktu Terakhir: <span class="font-mono dark:text-white text-black">${d.tanggal_setoran}</span></p>
-                                        <p class="dark:text-white text-black">Status: ${d.status_online === 'Online' ? '🟢 Aktif' : '⚪ Offline'}</p>
-
-                </div>
-
-                 <div>
-                    <p class="text-gray-500 uppercase text-xs font-bold">Detail Profil</p>
-                    <p class="dark:text-white text-black">Total Nasabah: <span class="font-mono">${d.total_nasabah}</span></p>
-                    <p class="dark:text-white text-black">Status Nasabah: <span class="font-mono">${d.countOnline === 0 ? 'Tidak ada yang online':d.countOnline  }</span></p>
-
-                </div>
+        <div class="p-6 bg-white accordion-wrapper dark:bg-gray-900 border-l-4 border-emerald-500 shadow-inner">
+            
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 
+                <div class="overflow-hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <h5 class="text-sm font-black text-gray-700 dark:text-gray-200 uppercase tracking-wide">
+                            <i class="fas fa-file-invoice-dollar mr-2 text-emerald-500"></i> Lampiran Dokumen
+                        </h5>
+                        <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full">
+                            ${d.filtered_documents.length} FILE
+                        </span>
+                    </div>
+                    <table class="w-full text-left border-collapse border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase">Jadwal</th>
+                                <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase">Nama Berkas</th>
+                                <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${renderRows(d.filtered_documents, 'Dokumen')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="overflow-hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <h5 class="text-sm font-black text-gray-700 dark:text-gray-200 uppercase tracking-wide">
+                            <i class="fas fa-images mr-2 text-blue-500"></i> Foto Bukti Setoran
+                        </h5>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full">
+                            ${d.filtered_images.length} FOTO
+                        </span>
+                    </div>
+                    <table class="w-full text-left border-collapse border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                                                <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase">Jadwal</th>
+                                <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase">Preview & Nama</th>
+                                <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${renderRows(d.filtered_images, 'Foto')}
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
+
     `;
 };
 
 const onRowClick = (event) => {
     const tr = event.target.closest('tr');
+    const icon = tr.querySelector('.fa-chevron-right');
     const row = dtInstance.value.dt.row(tr);
 
     if (row.child.isShown()) {
         row.child.hide();
         tr.classList.remove('shown');
+        if(icon) icon.style.backgroundColor = 'red';
     } else {
         row.child(formatChildRow(row.data())).show();
         tr.classList.add('shown');
+        if(icon) icon.style.backgroundColor = 'black';
     }
 };
 
 const dtOptions = {
-        searching: false,
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
+  
+columns: [
+        { 
+            data: null, 
+            orderable: false, 
+            className: 'no-print text-center' 
+        } ,
+         { 
+            data: 'user_detail.fullName',
+            className:'capitalize dark:text-white text-black',
+            render: (data, type, row) => {
+                return row.user_detail?.fullName || '-';
+            },
+            defaultContent: '-' 
+        },
+       
+        { 
+            data: 'user_detail.id_rt',
+            className:'capitalize dark:text-white text-black',
+            render: (data, type, row) => {
+                return row.user_detail?.id_rt || '-';
+            },
+            defaultContent: '-' 
+        },
+         { 
+            data: 'stats',
+            className:'capitalize',
+            render: (data, type, row) => {
+                return `
+                <div class="grid gap-2">
+                      <span class="w-full dark:text-white text-black px-4 rounded-xl text-sm">Total: ${row.total_nasabah}</span>
 
+                <div class="grid grid-cols-2 gap-2">
+                    <span class="bg-yellow-500 w-full px-4 rounded-xl text-sm">Pengajuan: ${row.nasabah_pengajuan}</span>
+                     <span class="bg-emerald-500 w-full px-4 rounded-xl text-sm">Disetujui: ${row.nasabah_terverifikasi}</span>
+                    <span class="bg-red-500 w-full px-4 rounded-xl text-sm">Ditolak: ${row.nasabah_ditolak}</span>
+                    <span class="bg-gray-500 w-full px-4 rounded-xl text-sm">Pending: ${row.nasabah_pending}</span>
+                   
+                    </div>
+                    </div>
+                                  
+                `;
+            },
+            defaultContent: '-' 
+        },
+{
+    data: 'total_setoran_rt',
+    defaultContent: 0, // Solusi utama menghilangkan warning
+    render: (data) => {
+        const total = parseFloat(data || 0);
+        return `<strong class="text-emerald-600">Rp ${new Intl.NumberFormat('id-ID').format(total)}</strong>`;
+    }
+},
+        { 
+            data: null, 
+            orderable: false, 
+            className: 'no-print text-center' 
+        } ,
+       
+      
+    ],
     layout: {
         topStart: null,
         topEnd: null,
         bottomStart: 'info',
         bottomEnd: 'paging'
     },
-    data: combinedData.value,
-    columns: [
-          { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
-        },
-     
-        { data: 'user_detail.id_rt',
-        className: 'text-black dark:text-white'
-         },
-        { data: 'user_detail.fullName',
-        className: 'text-black dark:text-white' },
-        { data: 'user_detail.status',
-        className: 'text-black dark:text-white' },
-       {
-    data: 'profile_completion_data',
-    render: (data) => {
-        // Cek jika data null atau undefined agar tidak error
-        if (!data) return '<span class="text-xs text-gray-400 italic">Data tidak tersedia</span>';
-
-        const percentage = Math.round(data.percentage || 0);
-        const colorClass = percentage === 100 ? 'bg-emerald-500' : 'bg-orange-400';
-        
-        // Logika untuk menampilkan pesan "Data kurang"
-        const emptyFieldsMessage = (percentage < 100 && data.empty_fields?.length > 0)
-            ? `<p class="text-[10px] text-red-500 mt-1 italic font-normal">
-                Data kurang: ${data.empty_fields.join(', ')}
-               </p>`
-            : '';
-
-        return `
-            <div class="flex flex-col">
-                <div class="flex items-center gap-3">
-                    <div class="w-32 bg-gray-200 rounded-full h-2 dark:bg-gray-700 overflow-hidden">
-                        <div class="h-2 rounded-full progress-flow transition-all duration-700 ${colorClass}"
-                             style="width: ${percentage}%">
-                        </div>
-                    </div>
-                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">${percentage}%</span>
-                </div>
-                ${emptyFieldsMessage}
-            </div>
-        `;
-    }
-},
-           { 
-    data: 'status_online',
-    render: (data, type, row) => {
-        const color = data === 'Online' ? 'bg-emerald-500' : 'bg-gray-300';
-        const textColor = data === 'Online' ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500';
-        
-        return `
-            <div class="flex items-center gap-2">
-                <span class="relative flex h-2 w-2">
-                    ${data === 'Online' ? '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>' : ''}
-                    <span class="relative inline-flex rounded-full h-2 w-2 ${color}"></span>
-                </span>
-                <span class="text-xs font-bold ${textColor}">${data}</span>
-            </div>
-        `;
-    }
-},
-         { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
-        }
-      
-    ],
-         buttons: [
+     buttons: [
                     {
                         extend: 'pdfHtml5',
                         text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
                         className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: 'Data Bank Sampah RW01',
+                        title: 'Data Pelaporan',
                         exportOptions: {
                             columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
                         },
@@ -254,7 +339,7 @@ const dtOptions = {
                                         margin: [0, 20, 0, 0]
                                     },
                                     {
-                                        text: 'RW01 - Data Bank Sampah',
+                                        text: 'Bank Sampah - Data Pelaporan',
                                         alignment: 'right',
                                         fontSize: 16,
                                         bold: true,
@@ -296,7 +381,7 @@ const dtOptions = {
                         extend: 'print',
                         text: '<i class="fa-solid fa-print mr-2"></i> Print',
                         className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: '',
+                        title: '', // kosongin biar gak dobel namaSampah default
                         customize: function (win) {
                             $(win.document.body)
                                 .css('font-family', 'Poppins, sans-serif')
@@ -311,7 +396,7 @@ const dtOptions = {
                         
                     </div>
                     <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Kepengurusan</p>
+                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
                         <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
                     </div>
                 </div>
@@ -354,17 +439,20 @@ const dtOptions = {
         }
 };
 
+const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
+const nextPage = () => dtInstance.value.dt.page('next').draw('page');
 const handleSearch = (e) => {
     dtInstance.value.dt.search(e.target.value).draw();
 };
 
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
+    // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
     const regex = val ? `^${val}$` : ''; 
     
     dtInstance.value.dt
         .column(2)
-        .search(regex, true, false)
+        .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
         .draw();
 };
 const handleLengthChange = (e) => {
@@ -377,78 +465,17 @@ const exportData = (index) => {
 
 
 const breadcrumbItems = [
-    { label: 'Dashboard', url: route('rw.dashboard') },
+    { label: 'Dashboard', url: route('dashboard') },
     { label: 'Manajemen Bank Sampah', url: null },
-    { label: 'Data Kelola Bank Sampah', url: route('rw.data-kelola')  },
+    { label: 'Data Pelaporan Bank Sampah', url: route('data-pelaporanBankSampah')  },
 ];
 
-const openCreateForm = () => {
-    isEdit.value = false;
-    form.reset();
-    showForm.value = !showForm.value;
-
-};
 
 
-const editData = (id, fullName, status, id_gender, id_rt) => {
-    isEdit.value = true;
-    form.id = id;
-    form.fullName= fullName;
-    form.status = status;
-    form.id_gender = id_gender;
-    form.id_rt = id_rt;
-    form.id_roles = 3;
-    showForm.value = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-const handleSubmit = () => {
-    const url = isEdit.value ? route('rw.update-banksampah', form.id) : route('rw.add-banksampah');
-    const method = isEdit.value ? 'put' : 'post';
-
-    form[method](url, {
-        onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data bank sampahh telah diproses.', 'success');
-            showForm.value = false;
-            form.reset();
-        },
-        onError: function (xhr) {
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON.errors;
-                            let errorHtml = '';
-                            let totalErrorCount = 0;
-                            Object.keys(errors).forEach(key => {
-                                errors[key].forEach(msg => {
-                                    errorHtml += ` <li class="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2">
-                           <span class="w-1 h-1 bg-red-400 rounded-full"></span>
-                           ${msg}
-                       </li>`;
-                                    totalErrorCount++;
-                                });
-                                $(`[name="${key}"]`).addClass('border-red-500 ring-1 ring-red-500');
-
-                            });
-
-                            $('#error-count').text(totalErrorCount);
-                            $('#error-list').html(errorHtml);
-                            $('#error-message').removeClass('hidden').fadeIn();
-                            Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
-                        } else {
-                            Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
-                        }
-                    },
-                    
-    });
-};
-
-const viewDetail = (id) => {
-    // Navigasi ke halaman detail nasabah
-    router.get(route('rw.show-banksampah', id));
-};
 </script>
 
 <template>
-    <Head :title="'Data Kelola Bank Sampah'" />
+    <Head :title="'Data Pelaporan Bank Sampah'" />
 
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
         <div  class="space-y-6">
@@ -458,67 +485,9 @@ const viewDetail = (id) => {
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Kelola Bank Sampah</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola bank sampah di RW anda.</p>
                 </div>
-                <button @click="openCreateForm" 
-                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
-                    <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
-                    {{ showForm ? 'Batal' : 'Tambah Data' }}
-                </button>
+               
             </div>
 
-
-            <Transition name="accordion">
-                <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
-                    <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
-                    
-            <FormWrapper 
-            formName="formVerifikasi" 
-            :errors="form.errors" 
-            :processing="form.processing"
-            @submit="handleSubmit">
-            <input v-if="isEdit.value === true" type="hidden" name="id_rt" :value="idUserRT">
-            <input type="hidden" name="id_roles" v-model="form.id_roles">
-
-                        <input type="hidden" name="id_gender" v-model="form.id_gender">
-
-               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <template v-for="field in formdata.nasabah" :key="field.name">
-         <div v-if="!['address', 'phoneNumber', 'userName', 'status', 'rt'].includes(field.name) && !['file', 'select', 'radio'].includes(field.type)" 
-             class="col-span-1">
-            <InputLabel :for="field.name" :value="field.title" />
-            <input :type="field.type" v-model="form[field.name]" :placeholder="field.placeholder"
-                class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
-        </div>
-       
-
-        <div v-else-if="field.name === 'status'" class="col-span-1">
-            <InputLabel :for="field.name" :value="field.title" />
-            <select v-model="form[field.name]"
-                class="w-full h-11 rounded-xl border-gray-200 bg-gray-50 dark:bg-gray-800 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
-                <option value="">Pilih Status</option>
-                <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
-            </select>
-        </div>
-
-        <div v-else-if="!isEdit && field.name === 'rt'" class="col-span-1">
-            <InputLabel :for="field.name" :value="field.title" />
-            <select v-model="form.id_rt"
-                class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-sm">
-                <option value="">Pilih RT</option>
-                <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
-            </select>
-        </div>
-
-    </template>
-</div>
-                        
-                        <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
-                            <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
-                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Status' : 'Simpan Bank Sampah' }}
-                            </button>
-                        </div>
-                   </FormWrapper>
-                </div>
-            </Transition>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                                  <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
@@ -545,13 +514,14 @@ const viewDetail = (id) => {
             <div class="flex items-center gap-2">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
                 <select @change="handleCategoryFilter"
-                    class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                    <option value="">Semua</option>
-                    <option value="Ketua">Ketua</option>
-                    <option value="Sekretaris">Sekretaris</option>
-                    <option value="Bendahara">Bendahara</option>
-                    <option value="Pemilah">Pemilah</option>
-                    <option value="Penimbang">Penimbang</option>
+                    class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
+    <template v-for="field in formdata.nasabah" :key="field.name">
+                    <div v-if="field.name === 'rt'" class="col-span-1">
+                <option value="">Pilih RT</option>
+                <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+        </div>
+    </template>
+                   
                 </select>
             </div>
 
@@ -569,6 +539,7 @@ const viewDetail = (id) => {
         </div>
             <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
                     <DataTable
+                    :data="combinedData"
                         ref="dtInstance"
                         :options="dtOptions" 
                     class="w-full display stripe hover cell-border dark:text-white">
@@ -576,45 +547,49 @@ const viewDetail = (id) => {
                             <tr>
 
                                 <th class="px-6 py-4"></th>
-                                <th class="px-6 py-4">RT</th>
                                 <th class="px-6 py-4">Nama Lengkap</th>
-                                <th class="px-6 py-4">Kelengkapan Profil</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4 text-center">Aksi</th>
+                                <th class="px-6 py-4">RT</th>
+                                <th class="px-6 py-4">Data Nasabah</th>
+                                <th class="px-6 py-4">Total</th>
+                                <th class="px-6 py-4">Aksi</th>
                             </tr>
                         </thead>
-                      
 
-                         <template #column-0="data"> 
+
+                           <template #column-0="data"> 
                                 <div class="flex justify-center gap-2">
                                       
 
-                                        <button  @click="onRowClick" class=" text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
+                                        <button  @click="onRowClick" 
+     class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
                                  <i  
                  class="fas fa-plus-circle text-emerald-500 cursor-pointer"></i>
                             </button>
     
                                     </div>
                     </template>
-                        <template #column-6="data"> 
-                                <div class="flex justify-center gap-2">
-                                        <button  @click="viewDetail(data.rowData.id)" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">
-                                            <i class="fas fa-eye"></i>
-                                        </button>                           
+ 
+                      
 
-                                        <button v-if="data.rowData.profile_completion.percentage < 100 && data.rowData.profile_completion.percentage > 50 || percentageSuccessfullDocument < 100"
-                                            @click="sendReminder(data.rowData.id)"
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-bell"></i> REMINDER
-                                        </button>
-
-                                        <button @click="editData(data.rowData.id,data.rowData.user_detail.fullName, data.rowData.user_detail.status, data.rowData.user_detail.id_gender, data.rowData.user_detail.id_rt)" v-if="data.rowData.profile_completion.percentage > 50" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
+                        <template #column-5="data"> 
+                        <div class="flex justify-center gap-1">
+                            <button 
+            @click="viewDetail(data.rowData.id)"
+            class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
+            title="Lihat Profil Lengkap"
+        >
+            <i class="fas fa-eye text-sm"></i>
+        </button>
+                            <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-    
-                                    </div>
+                            <button @click="deleteData(data.rowData.id)" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </template>
+
+                    
                
                    </DataTable>
 </div>
@@ -624,6 +599,38 @@ const viewDetail = (id) => {
        
         </div>
     </AuthenticatedLayout>
+
+       <div v-if="isPreviewOpen" 
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+     @click.self="closePreview">
+    
+    <div class="relative max-w-4xl w-full flex flex-col items-center">
+        <button @click="closePreview" 
+                class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+       <template v-if="docType === 'Dokumen'">
+               <div class="w-full h-[80vh] md:h-[85vh]"> 
+        <embed 
+            :src="selectedImageUrl" 
+            type="application/pdf" 
+            class="w-full h-full rounded-lg shadow-inner"
+        />
+    </div>
+            </template>
+
+            <template v-else>
+                <div class="w-full h-full flex items-center justify-center p-4">
+                    <img :src="selectedImageUrl" class="max-w-full max-h-full object-contain" alt="Preview Image">
+                </div>
+            </template>
+             
+        <p class="mt-4 text-white text-sm font-medium">Klik di mana saja untuk menutup</p>
+    </div>
+</div>
 </template>
 
 <style>

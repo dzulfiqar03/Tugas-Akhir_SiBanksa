@@ -95,7 +95,7 @@ const submit = () => {
                                 v-if="field.name === 'password'"
                                 type="button" 
                                 @click="showPassword = !showPassword"
-                                class="absolute top-1/2 -translate-y-1/2 dark:text-gray-400 text-black"
+                                class="absolute  -translate-y-1/2 dark:text-gray-400 text-black"
                             >
                                 <span v-if="showPassword"
                                 class="absolute z-30 text-gray-500 -translate-y-1/2 top-8 cursor-pointer right-3  dark:text-gray-400">

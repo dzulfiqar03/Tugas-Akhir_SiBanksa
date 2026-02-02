@@ -49,7 +49,7 @@ const workflowSteps = [
 const statusColumns = workflowSteps.map(step => ({
   title: step,
   data: null,
-  className: 'text-center min-w-[120px]',
+  className: 'text-center min-w-[120px] text-black dark:text-white',
   render: (d, t, row) => {
     const wf = row.workflow?.[step]
 
@@ -96,7 +96,7 @@ const dtOptions = {
                         extend: 'pdfHtml5',
                         text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
                         className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: 'Data Nasabah RT',
+                        title: 'Data Tracking RT',
                         exportOptions: {
                             columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
                         },
@@ -218,12 +218,12 @@ const dtOptions = {
             data: null, 
             render: (d, t, r, meta) => meta.row + 1,
             title: 'No',
-            className: 'text-center w-10'
+            className: 'text-center w-10 text-black dark:text-white'
         },
         { 
             data: 'fullName', 
             title: 'Nama Nasabah',
-            className: 'font-bold capitalize min-w-[150px]'
+            className: 'font-bold capitalize min-w-[150px] text-black dark:text-white'
         },
         ...statusColumns, 
         {
@@ -471,17 +471,7 @@ const breadcrumbItems = [
                     placeholder="Ketik...">
             </div>
 
-            <div class="flex items-center gap-2">
-                <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                <select @change="handleCategoryFilter"
-                    class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                    <option value="">Semua</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Pengajuan Verifikasi">Pengajuan Verifikasi</option>
-                    <option value="Ditolak">Ditolak</option>
-                    <option value="Disetujui">Disetujui</option>
-                </select>
-            </div>
+           
 
             <div class="flex items-center gap-2  pl-3">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>

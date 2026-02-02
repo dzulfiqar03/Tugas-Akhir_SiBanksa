@@ -5,7 +5,7 @@ import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import FormWrapper from '@/Components/FormWrapper.vue';
 const props = defineProps({
-    formdata: Object, // nasabah & userAuth
+    formdata: Object,
 });
 
 const showForm = ref('BankSampah'); // Toggle: 'BankSampah' atau 'Nasabah'
@@ -67,16 +67,12 @@ const submit = () => {
 
 
 
-                                <a href="{{ route('register') }}"
-                                    class="group relative flex items-center justify-start gap-0 hover:gap-3 overflow-hidden rounded-full bg-gray-100 px-4 py-3 text-sm font-medium text-gray-700 w-max transition-all duration-300 hover:bg-gray-200 hover:pl-6 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                        stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                    </svg>
+                                <a 
+                                    class="group relative flex items-center justify-start gap-0 hover:gap-3 overflow-hidden rounded-full bg-emerald-500 px-4 py-3 text-sm font-medium text-gray-700 w-max transition-all duration-300 hover:bg-gray-200 hover:pl-6 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
+                                
 
-                                    <span @click="showUsername = !showUsername" class="overflow-hidden pl-3">
-                                        Register
+                                    <span @click="showUsername = !showUsername" class="overflow-hidden text-white font-bold hover:text-emerald-500 dark:text-emerald-500">
+                                        Join Us
                                     </span>
                                 </a>
                             </div>
@@ -136,12 +132,12 @@ const submit = () => {
 
     <select  
         v-model="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'].id_rt"
-        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
+        class="w-full h-11 rounded-xl bg-gray-50 text-black  dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
          :class="{ 
     'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`] 
 }"
         >
-        <option value="" class="text-gray-400">Pilih RT</option>
+        <option value="" class="text-black dark:text-white">Pilih RT</option>
         
         <option 
             v-for="opt in field.options" 
@@ -168,7 +164,7 @@ const submit = () => {
                                     v-model="form.nasabah[field.name]" 
                                     :value="idx + 1" 
                                     class="peer sr-only">
-                                <div class="py-2 px-4 dark:text-white rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
+                                <div class="py-2 px-4 text-gray-600  dark:text-white rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
                                     {{ opt }}
                                 </div>
                             </label>
@@ -186,7 +182,7 @@ const submit = () => {
 
                                         :name="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'][field.name]"
                                         :placeholder="field.placeholder"
-                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                        class="w-full text-black  h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                         :class="{ 
     'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`] 
 }"
@@ -212,7 +208,7 @@ const submit = () => {
             :type="field.type === 'password' ? (showPassword[field.name] ? 'text' : 'password') : field.type"
             v-model="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'][field.name]"
             :placeholder="field.placeholder"
-            class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+            class="w-full h-11 text-sm rounded-xl text-black  bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
             :class="{ 
                 'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`] 
             }"

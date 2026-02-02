@@ -28,7 +28,7 @@ class NasabahServices
         $userRT = Auth::user()->user_detail->id_rt; // Ambil nilai RT user yang login
 
 
-        $nasabah = $this->user::with('user_detail')
+        $nasabah = $this->user::with(['user_detail', 'user_detail.image', 'user_detail.document', 'user_detail.pencatatan'])
             ->whereHas('user_detail', function ($query) use ($userRT) {
                 $query->where('id_rt', $userRT)->where('id_roles', 3);
             })

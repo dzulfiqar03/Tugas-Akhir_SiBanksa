@@ -147,7 +147,7 @@ class FormResources extends JsonResource
                         'type' => 'number',
                         'placeholder' => 'Masukkan Harga Pengepul',
                     ],
-                     [
+                    [
                         'title' => 'Harga',
                         'name' => 'harga',
                         'type' => 'number',
@@ -301,13 +301,36 @@ class FormResources extends JsonResource
                     'type' => 'select',
                     'options' => $optionJadwal,
                 ],
-                  [
+                [
                     'title' => 'Divisi',
                     'name' => 'divisi',
                     'type' => 'select',
                     'options' => $optionDivisi,
                 ],
 
+            ],
+
+            'Dokumen' => [
+                [
+                    'title' => 'Dokumen',
+                    'name' => 'fileDoc',
+                    'type' => 'file',
+                    'placeholder' => 'Masukkan Dokumen Anda Disini',
+                ],
+
+                [
+                    'title' => 'Evidence',
+                    'name' => 'imgEvidence',
+                    'type' => 'file',
+                    'placeholder' => 'Masukkan Evidence Anda Disini',
+                ],
+
+                [
+                    'title' => 'Nama Dokumen',
+                    'name' => 'name',
+                    'type' => 'select',
+                    'options' => ['Hasil Setoran'],
+                ],
             ]
         ];
     }

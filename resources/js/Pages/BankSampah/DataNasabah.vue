@@ -352,7 +352,7 @@ const breadcrumbItems = [
                 </button>
             </div>
 
-            <transition name="accordion">
+            <Transition name="accordion">
                 <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
                     
@@ -435,7 +435,7 @@ const breadcrumbItems = [
                         </div>
                    </FormWrapper>
                 </div>
-            </transition>
+            </Transition>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                                  <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
@@ -556,7 +556,6 @@ class="w-full display stripe hover cell-border">
 .accordion-wrapper > * {
     transition: opacity 0.2s;
 }
-
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background: #10b981 !important;

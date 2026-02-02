@@ -36,8 +36,8 @@ class DataResources extends JsonResource
                             [
                                 'nama'  => 'Pelaporan',
                                 'icon'  => 'fa fa-file-text',
-                                'route' => '#',
-                                'uri' => '#',
+                                'route' => route('data-pelaporanBankSampah'),
+                                'uri' => 'data-pelaporanBankSampah',
                             ],
                             [
                                 'nama'  => 'Jadwal Pelaksanaan',
@@ -53,7 +53,7 @@ class DataResources extends JsonResource
                             ],
                         ],
                     ],
-                   
+
                     [
                         'nama'  => 'Penjadwalan',
                         'icon'  => 'fa fa-calendar',
@@ -71,6 +71,12 @@ class DataResources extends JsonResource
                         'icon'  => 'fa fa-user',
                         'route' => '#',
                         'uri' => '#',
+                    ],
+                    [
+                        'nama'  => 'LogOut',
+                        'route' => '#',
+                        'uri' => '#',
+                        'icon'  => 'fas fa-sign-out-alt text-danger',
                     ],
 
 
@@ -114,8 +120,8 @@ class DataResources extends JsonResource
                             ],
                             [
                                 'nama'  => 'Pelaporan',
-                                'route' => '#',
-                                'uri' => '#',
+                                'route' => route('data-pelaporanRW'),
+                                'uri' => 'data-pelaporanRW',
                                 'icon'  => 'fas fa-file-alt',
                             ],
                             [

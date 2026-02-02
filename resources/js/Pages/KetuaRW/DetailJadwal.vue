@@ -180,28 +180,28 @@ const breadcrumbItems = [
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
         <div class="space-y-6">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                <h2 class="text-2xl font-bold mb-6 dark:text-white">Detail jadwal</h2>
+                <h2 class="text-2xl font-bold mb-6 dark:text-white text-black">Detail jadwal</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Email</p>
-                        <p class="dark:text-gray-300">{{ jadwal.email }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ jadwal.email }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Nama Lengkap</p>
-                        <p class="dark:text-gray-300">{{ jadwal.user_detail.fullName }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ jadwal.user_detail.fullName }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">RT</p>
-                        <p class="dark:text-gray-300">{{ jadwal.user_detail.id_rt || '-' }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ jadwal.user_detail.id_rt || '-' }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">No. Telepon</p>
-                        <p class="dark:text-gray-300">{{ jadwal.user_detail.telephone_number || 'Belum diisi' }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ jadwal.user_detail.telephone_number || 'Belum diisi' }}</p>
                     </div>
                     <div class="space-y-1 md:col-span-2">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Alamat</p>
-                        <p class="dark:text-gray-300">{{ jadwal.user_detail.address || 'Alamat belum lengkap' }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ jadwal.user_detail.address || 'Alamat belum lengkap' }}</p>
                     </div>
                 </div>
             </div>

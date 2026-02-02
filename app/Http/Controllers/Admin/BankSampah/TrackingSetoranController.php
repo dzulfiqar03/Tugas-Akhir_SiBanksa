@@ -114,9 +114,6 @@ class TrackingSetoranController extends Controller
             return $n;
         });
 
-
-
-
         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,

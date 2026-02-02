@@ -364,7 +364,7 @@ const breadcrumbItems = [
                                                                         <InputLabel :for="field.name" :value="field.title" />                        
                             
                             <select v-if="field.type === 'select'" v-model="form[field.name]" 
-                                class="w-full border-gray-200 dark:border-gray-600 rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500">
+                                class="w-full border-gray-200 dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500">
                                 <option value="">Pilih {{ field.title }}</option>
                                 <option v-for="opt in field.options" :key="opt.value || opt" :value="opt.value || opt">{{ opt.label || opt }}</option>
                             </select>

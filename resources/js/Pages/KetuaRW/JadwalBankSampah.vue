@@ -134,10 +134,12 @@ const dtOptions = {
          { 
             data: null, 
             orderable: false, 
-            className: 'no-print text-center' 
+            className: 'no-print text-center ' 
         },
-        { data: 'user_detail.id_rt' },
-        { data: 'user_detail.fullName' },
+        { data: 'user_detail.id_rt', 
+            className: 'dark:text-white text-black' },
+        { data: 'user_detail.fullName', 
+            className: 'dark:text-white text-black' },
         { 
             data: 'user_detail.id_user',
             render: (data) => `

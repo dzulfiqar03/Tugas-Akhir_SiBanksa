@@ -52,23 +52,23 @@ const breadcrumbItems = [
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Email</p>
-                        <p class="dark:text-gray-300">{{ nasabah.email }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ nasabah.email }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Nama Lengkap</p>
-                        <p class="dark:text-gray-300">{{ nasabah.user_detail.fullName }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ nasabah.user_detail.fullName }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">RT</p>
-                        <p class="dark:text-gray-300">{{ nasabah.user_detail.rt?.RT || '-' }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ nasabah.user_detail.rt?.RT || '-' }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">No. Telepon</p>
-                        <p class="dark:text-gray-300">{{ nasabah.user_detail.telephone_number || 'Belum diisi' }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ nasabah.user_detail.telephone_number || 'Belum diisi' }}</p>
                     </div>
                     <div class="space-y-1 md:col-span-2">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Alamat</p>
-                        <p class="dark:text-gray-300">{{ nasabah.user_detail.address || 'Alamat belum lengkap' }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ nasabah.user_detail.address || 'Alamat belum lengkap' }}</p>
                     </div>
                 </div>
             </div>
@@ -86,7 +86,7 @@ const breadcrumbItems = [
                         </thead>
                         <tbody class="divide-y dark:divide-gray-700 font-medium">
                             <tr class="dark:text-gray-300">
-                                <td class="px-6 py-4 capitalize">{{ nasabah.user_detail.fullName }}</td>
+                                <td class="px-6 py-4 capitalize text-black dark:text-gray-400">{{ nasabah.user_detail.fullName }}</td>
                                 
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
@@ -95,7 +95,7 @@ const breadcrumbItems = [
                                                 :class="percentageSuccessProfile === 100 ? 'bg-emerald-500' : 'bg-orange-400'"
                                                 :style="{ width: percentageSuccessProfile + '%' }"></div>
                                         </div>
-                                        <span class="text-xs font-bold">{{ Math.round(percentageSuccessProfile) }}%</span>
+                                        <span class="text-xs font-bold text-black dark:text-gray-400">{{ Math.round(percentageSuccessProfile) }}%</span>
                                     </div>
                                     <p v-if="percentageSuccessProfile < 100" class="text-[10px] text-red-500 mt-1 italic font-normal">
                                         Data kurang: {{ nullForm.join(', ') }}

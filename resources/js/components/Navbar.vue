@@ -222,7 +222,7 @@ const readNotifhandle = (id, url) => {
                         leave-to-class="transform scale-95 opacity-0">
                         <MenuItems class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-700 rounded-xl shadow-lg border dark:border-gray-600 overflow-hidden z-50">
                             <div class="px-4 py-3 border-b dark:border-gray-600">
-                                <p class="text-sm font-semibold dark:text-white">{{ userDetail.fullName }}</p>
+                                <p class="text-sm font-semibold text-black dark:text-white">{{ userDetail.fullName }}</p>
                             </div>
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
@@ -312,7 +312,7 @@ const readNotifhandle = (id, url) => {
 
 
     <button @click="mobileMenuOpen = !mobileMenuOpen"
-        class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition dark:text-white">
+        class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-black dark:hover:bg-gray-700 transition dark:text-white">
         <i class="fas" :class="mobileMenuOpen ? 'fa-times' : 'fa-bars'"></i>
     </button>
     </div>
@@ -331,7 +331,7 @@ const readNotifhandle = (id, url) => {
             
             <nav class="p-3 space-y-4">
                 <div v-for="(sectionMenus, sectionName) in sections" :key="sectionName">
-                    <p class="px-2 mb-2 text-[10px] font-semibold tracking-widest text-gray-400 uppercase">
+                    <p class="px-2 mb-2 text-[10px]  font-semibold tracking-widest text-gray-400 uppercase">
                         {{ sectionName }}
                     </p>
 

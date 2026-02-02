@@ -37,6 +37,12 @@ const formAction = computed(() => {
         return route('add-kepengurusan');
     }else if (currentRoute === 'pencatatan-setoran') {
         return route('add-setoran');
+    }else if (currentRoute === 'data-pelaporanRW') {
+        if (props.formName === 'formDocument') {
+            return route('add-document');
+        } else{
+            return route('add-evidence');
+        }
     }else if (currentRoute === 'data-kelola') {
         return route('add-setoran');
     }else if (currentRoute === 'tracking-setoran') {
@@ -105,7 +111,7 @@ const hasErrors = computed(() => props.errors && Object.keys(props.errors).lengt
 
             <slot /> 
 
-            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah'  && currentRoute != 'data-kepengurusan' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'" class="flex justify-end gap-3 mt-4">
+            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'data-pelaporanRW'  && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah'  && currentRoute != 'data-kepengurusan' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'" class="flex justify-end gap-3 mt-4">
                 <button 
                     type="submit" 
                     :disabled="processing"
