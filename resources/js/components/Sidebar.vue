@@ -25,12 +25,21 @@ const sidebarExpanded = ref(true);
 const user = computed(() => page.props.auth?.user);
 const userDetail = computed(() => user.value?.user_detail || {});
 const statusVerifikasi = computed(() => userDetail.value?.status);
+
+const countChat = computed(() => {
+  if (!userDetail.value.user_chat) return 0;
+
+  return userDetail.value.user_chat.filter(msg => 
+    msg.is_read === false || msg.is_read === 0
+  ).length;
+});
 const menus = computed(() => props.sidebardata?.['sub-data'] || []);
 
 const isRouteActive = (uri) => {
     try { return route && route().current(uri); } 
     catch (e) { return false; }
 };
+
 
 const sections = computed(() => {
     const role = userDetail.value?.roles?.role || 'Warga';
@@ -120,15 +129,22 @@ const sendLogout= () => {
                         
                         <Link v-if="!menu.data && menu.nama !== 'LogOut'"
     :href="statusVerifikasi === 'Pengajuan Verifikasi' ? route('warga.dashboard') : menu.route"
-    class="flex items-center gap-3 p-2 rounded-lg transition group"
+    class="flex items-center justify-between  p-2 rounded-lg transition group"
     :class="isRouteActive(menu.uri) 
         ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' 
         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
 >
+<div class="flex gap-3">
     <span class="w-6 h-6 flex items-center justify-center shrink-0">
         <i :class="menu.icon"></i>
     </span>
     <span v-show="sidebarExpanded || isOpen" class="truncate">{{ menu.nama }}</span>
+
+</div>
+
+    <div>
+            <span v-if="menu.nama === 'Chat'" v-show="sidebarExpanded || isOpen" class=" items-end text-end animate-pulse bg-red-500 flex justify-end right-0 text-white px-3 rounded-full">{{ countChat }}</span>
+    </div>
 </Link>
 
 <button v-else-if="menu.nama === 'LogOut'"

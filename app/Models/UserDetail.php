@@ -13,7 +13,7 @@ class UserDetail extends Model
 {
 
     protected $table = 'user_details';
-    protected $fillable = ['id_user', 'userName', 'fullName', 'id_rt', 'address', 'telephone_number', 'id_gender', 'id_roles', 'status'];
+    protected $fillable = ['id_user', 'userName', 'fullName', 'id_rt', 'address', 'telephone_number', 'id_gender', 'id_roles', 'status', 'status_transaction'];
 
 
     public function user()
@@ -78,5 +78,10 @@ class UserDetail extends Model
     public function user_transaction()
     {
         return $this->hasMany(UserTransaction::class, 'id_userdetail', 'id');
+    }
+
+     public function user_chat()
+    {
+        return $this->hasMany(UserChat::class, 'id_userdetail', 'id');
     }
 }

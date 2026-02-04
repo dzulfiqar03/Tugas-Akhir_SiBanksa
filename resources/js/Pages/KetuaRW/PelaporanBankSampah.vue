@@ -470,7 +470,25 @@ const breadcrumbItems = [
     { label: 'Data Pelaporan Bank Sampah', url: route('data-pelaporanBankSampah')  },
 ];
 
+const updateVerification = (item) => {
+    Swal.fire({
+        title: 'Lakukan Pembukaan Transaksi?',
+        text: "Bank sampah RT0" + item.user_detail.id_rt +  " akan dapat melakukan transaksi dan notifikasi mengenai pelaporan anda",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Kirim!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(route('rw.open-transaction', item.user_detail.id), {
 
+                message: `Pembukaan Transaksi berhasil dibuka dan notifikasi berhasil dikirim ke Bank Sampah RT0${item.user_detail.id_rt}`
+            }, {
+                onSuccess: () => {Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload()}
+            });
+        }
+    });
+};
 
 </script>
 
@@ -572,20 +590,20 @@ const breadcrumbItems = [
                       
 
                         <template #column-5="data"> 
-                        <div class="flex justify-center gap-1">
-                            <button 
-            @click="viewDetail(data.rowData.id)"
-            class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
-            title="Lihat Profil Lengkap"
-        >
-            <i class="fas fa-eye text-sm"></i>
-        </button>
-                            <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button @click="deleteData(data.rowData.id)" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div v-if="data.rowData.user_detail.status_transaction === 'Belum Disetujui'" class="flex justify-center gap-1">
+                      <button
+                                            @click="updateVerification(data.rowData)"
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-bell"></i> Buka Transaksi
+                                        </button>
+                        </div>
+
+                          <div v-else class="flex justify-center gap-1">
+                      <button
+                                        
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 hover:bg-gray-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-bell"></i> Transaksi sudah dibuka
+                                        </button>
                         </div>
                     </template>
 

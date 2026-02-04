@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Admin\BankSampah;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
+use App\Models\BankSampah\PencatatanSetoran;
+use App\Models\BankSampah\PencatatanSetoranItems;
+use App\Models\UserBank;
+use App\Models\UserDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DataTransaksiController extends Controller
@@ -14,6 +19,8 @@ class DataTransaksiController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    public function __construct(protected UserDetail $userDetail, protected PencatatanSetoranItems $pencatatanSetoranItems) {}
     public function index()
     {
         $items2 = [
@@ -127,13 +134,55 @@ class DataTransaksiController extends Controller
                 'is_read' => $n->read_at !== null
             ];
         });
+        $user = Auth::user();
+
+        $transaction = $this->userDetail->where('id_rt', $user->user_detail->id_rt)->where('id_roles', 3)->whereHas('pencatatan')
+            ->get();
+
+        $reporting = $this->userDetail->where('id_rt', $user->user_detail->id_rt)->where('id_roles', 2)->whereHas('document')->whereHas('image')
+            ->get();
+
+        $countTransaction = count($transaction);
+        $IDRW = $this->userDetail::where('id_roles', 1)->first()->id_user;
+        $userRT = Auth::user()->user_detail->id_rt;
+
+
+        $nasabahList =  PencatatanSetoran::with(['user_detail', 'pencatatan_items'])
+            ->whereHas('user_detail', function ($query) {
+                $query->where('id_rt', Auth::user()->user_detail->id_rt);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+
+        $nasabah = $nasabahList
+            ->map(function ($user) {
+
+                $detail = $user->user_detail;
+
+                $userBank = UserBank::where('id_userdetail', $detail->id)->get();
+                // Tambahkan ke object user
+                $user->user_bank= $userBank;
+                
+
+                return $user;
+            });
+            
         return Inertia::render('BankSampah/DataTransaksi', [
             'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'items' => $items,
             'sidebardata' => $menu,
             'formdata' => $form,
-            'formName' => $formName
+            'formName' => $formName,
+            'user' => $user,
+            'transaction' => $transaction,
+            'countTransaction' => $countTransaction,
+            'reporting' => $reporting,
+            'IDRW' => $IDRW,
+            'IDRT' => $userRT,
+            'nasabah' => $nasabah
+
 
         ]);
     }

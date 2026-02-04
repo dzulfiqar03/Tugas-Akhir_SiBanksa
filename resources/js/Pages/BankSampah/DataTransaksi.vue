@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, render } from 'vue';
 import { useForm, router, Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
@@ -31,9 +31,18 @@ const props = defineProps({
     formdata: Object,
     items: Array,
     sidebardata: Object,
-    breadcrumbItems: Array
+    breadcrumbItems: Array,
+        user: Object,
+        transaction:Array,
+        nasabah:Array,
+                reporting:Array,
+        countTransaction:Number,
+                IDRW:Number,
+                        IDRT:Number
+
 });
 
+console.log(props.nasabah)
 // State
 const showForm = ref(false);
 const showDetail = ref(false);
@@ -56,6 +65,42 @@ const viewDetail = (nasabah) => {
     }
 };
 
+const kirimWA = (base64)=>{
+    const row = JSON.parse(decodeURIComponent(escape(atob(base64))));
+    Swal.fire({
+        title: 'Lakukan Pembukaan Transaksi?',
+        text: "Bank sampah RT0" + props.IDRT +  " akan dapat melakukan transaksi dan notifikasi mengenai pelaporan anda",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Kirim!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(route('bs.chat-transaction', row.user_detail.id_user), {
+
+                message: `Anda Belum mengisi rekening dan tidak bisa dicairkan, Isi dan lengkapi rekening terlebih dahulu!!`
+            }, {
+                onSuccess: () => {Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload()}
+            });
+        }
+    });
+}
+
+const kirimWA2 = (row) => {
+  const nomorWA = "6281216299698"; // Ganti dengan nomor admin/bank sampah
+  const nama = row;
+  
+  // Template pesan
+  const pesan = `Halo Admin, saya ${nama}. Saya ingin mengonfirmasi setoran sampah saya sebesar Rp. Mohon segera diproses ya!`;
+  
+  // Encode pesan agar aman di URL
+  const link = `https://wa.me/${nomorWA}?text=${encodeURIComponent(pesan)}`;
+  
+  // Buka tab baru
+  window.open(link, '_blank');
+};
+window.handleWA = kirimWA;
+
 const dtOptions = {
     pageLength: 5,
     responsive: true,
@@ -67,28 +112,41 @@ const dtOptions = {
         }, 
         { 
             // Langsung akses user_detail (tanpa kata 'jadwal')
-            data: 'namaSampah',
+            data: 'user_detail.fullName',
+            className: 'text-black dark:text-white capitalize',
             render: (data, type, row) => {
-                return row.namaSampah || '-';
+                return row.user_detail.fullName || '-';
             },
             defaultContent: '-' 
         },
 
 
         { 
-            data: 'harga',
-            render: (data, type, row) => {
-                return row.harga || '-';
-            },
-            defaultContent: '-' 
-        },
+    data: 'pencatatan_items',
+                className: 'text-black dark:text-white capitalize',
 
+    render: (data, type, row) => {
+
+        const total = data.reduce((acc, item) => acc + parseFloat(item.subtotal), 0);
+        
+        const formatted = new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0
+        }).format(total);
+
+        return `<div class="font-bold text-blue-600">${formatted}</div>`;
+    },
+    defaultContent: 'Rp 0' 
+},
       { 
             // Kolom 3: Status (Penting untuk filter kategori)
-            data: 'status', 
-            render: (data) => {
+            data: 'user_bank', 
+                        className: 'text-black dark:text-white capitalize',
+
+            render: (data, type, row) => {
                 // Menyesuaikan dengan badge di template
-                const status = data || 'Selesai';
+                const status = row.user_bank.length === 0 ? 'Belum' : 'Selesai';
                 return `<span class="px-2 py-1 rounded-full text-[10px] bg-green-100 text-green-700">${status}</span>`;
             },
             className: 'text-center'
@@ -98,9 +156,18 @@ const dtOptions = {
             data: null, 
             orderable: false, 
             className: 'no-print text-center',
-            render: (data, type, row) => {
-                return `<button class="bg-blue-600 text-white px-3 py-1 rounded text-[10px]">Kirim Bukti Pembayaran</button>`;
+            render:(data, type,row)=>{
+const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(row))));                return !row.user_bank || row.user_bank.length === 0 ? ` <button 
+                                            onclick="window.handleWA('${base64Data}')"
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-bell"></i> Hubungi WA
+                                        </button>`:` <button
+                                            @click=""
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-bell"></i> Bukti Pemabayaran
+                                        </button>`
             }
+            
         }
     ],
 
@@ -234,6 +301,8 @@ const dtOptions = {
         }
 };
 
+
+
 const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
 const nextPage = () => dtInstance.value.dt.page('next').draw('page');
 const handleSearch = (e) => {
@@ -267,12 +336,139 @@ const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') },
     { label: 'Transaksi', url:  route('data-transaksi') },
 ];
+
+const sendReminder = ($id) => {
+    Swal.fire({
+        title: 'Kirim Pengingat?',
+        text: "Ketua RW akan menerima notifikasi mengenai pelaporan anda",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Kirim!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(route('laporsetoran.send-reminder', $id), {
+
+                message: `Bank Sampah RT0${props.IDRT} menyelesaikan pelaporan dan mengajukan pembukaan rekening pencairan setoran`
+            }, {
+                onSuccess: () => Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success')
+            });
+        }
+    });
+};
+
+
+const initials = (fullName) => {
+  if (!fullName) return '??';
+
+  const name = fullName;
+  const words = name.split(' ');
+  
+  const firstInitial = words[0]?.substring(0, 1) || '';
+  const secondInitial = words[1]?.substring(0, 1) || '';
+  
+  return (firstInitial + secondInitial).toUpperCase();
+};
+
+const updateVerification = (item) => {
+    Swal.fire({
+        title: 'Lakukan Pembukaan Transaksi?',
+        text: "Bank sampah RT0" + item.user_detail.id_rt +  " akan dapat melakukan transaksi dan notifikasi mengenai pelaporan anda",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Kirim!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(route('rw.open-transaction', item.user_detail.id), {
+
+                message: `Pembukaan Transaksi berhasil dibuka dan notifikasi berhasil dikirim ke Bank Sampah RT0${item.user_detail.id_rt}`
+            }, {
+                onSuccess: () => {Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload()}
+            });
+        }
+    });
+};
+
+
 </script>
 
 <template>
         <Head title="Data Transaksi" />
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
-        <div class="grid gap-4">
+
+        <template v-if="user.user_detail.status_transaction === 'Belum Disetujui'">
+                <div class="card w-full shadow-sm border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+                    
+                    <div class="p-6 flex flex-col gap-5 bg-gray-200 dark:bg-gray-800 transition-colors">
+                       
+                                       <template v-if="props.transaction.length === 0">
+
+                                                                <h3 class="border-b capitalize border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
+                            Anda belum melakukan pencatatan setoran nasabah !!!
+                        </h3>
+
+                        <span class="w-full font-medium capitalize text-gray-700 dark:text-gray-300">
+                            Lakukan pencatatan pada menu manajemen nasabah -> Pencatatan Setoran
+                        </span>
+                                       </template>
+
+
+                    
+
+                                         <template v-else-if="props.reporting.length > 0">
+                                                                       <h3 class="border-b capitalize border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
+                            Anda belum melakukan pelaporan setoran ke RW !!!
+                        </h3>
+
+                        <span v-if="props.reporting.length > 0" class="w-full font-medium capitalize text-gray-700 dark:text-gray-300">
+                            Lakukan pengajuan pelaporan ke RW dengan menekan tombol reminder dibawah ini
+                        </span>
+
+                        <span v-else class="w-full font-medium capitalize text-gray-700 dark:text-gray-300">
+                            Lakukan pelaporan dengan upload dokumen hasil setoran atau foto bukti pelaksanaan kegiatan melalui menu manajemen nasabah -> Pelaporan setoran
+                        </span>
+                                       </template>
+
+                                             <template v-else>
+                                                                <h3 class="border-b border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
+                            Anda belum melakukan verifikasi akun !!!
+                        </h3>
+
+                        <span class="w-full font-medium text-gray-700 dark:text-gray-300">
+                            Isi Biodata anda dan keperluan dokumen (Opsional)
+                        </span>
+                                       </template>
+
+                <template v-if="props.transaction.length === 0">
+                        <button
+                                            @click=""
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-bell"></i> Anda Belum Melakukan Pencatatan Setoran
+                                        </button>
+
+                                         
+                </template>
+
+                 <template v-else-if="props.reporting.length > 0">
+                        <button
+                                            @click="sendReminder(props.IDRW)"
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-bell"></i> Lakukan Pengajuan Persetujuan Buka Rekening Ke RW
+                                        </button>
+
+                                         
+                </template>
+
+                    
+                    </div>
+
+                </div>
+
+
+        </template>
+        <template v-else>
+            <div class="grid gap-4">
             
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
                 <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
@@ -370,31 +566,18 @@ const breadcrumbItems = [
         </div>
                         <DataTable 
                         ref="dtInstance"
-                        :data="items" :options="dtOptions" class="w-full stripe hover">
+                        :data="nasabah" :options="dtOptions" class="w-full stripe hover">
                             <thead>
                                 <tr>
-                                    <th>No</th>
-                                    <th>Nasabah</th>
-                                    <th>Total Saldo</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
+                                    <th             class="text-black dark:text-white capitalize">No</th>
+                                    <th class="text-black dark:text-white capitalize">Nasabah</th>
+                                    <th class="text-black dark:text-white capitalize">Total Saldo</th>
+                                    <th class="text-black dark:text-white capitalize">Status</th>
+                                    <th class="text-black dark:text-white capitalize">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr v-for="(item, index) in items" :key="item.id">
-                                    <td>{{ index + 1 }}</td>
-                                    <td>{{ item.namaSampah }}</td>
-                                    <td>Rp {{ item.total_saldo?.toLocaleString() }}</td>
-                                    <td>
-                                        <span class="px-2 py-1 rounded-full text-[10px] bg-green-100 text-green-700">Selesai</span>
-                                    </td>
-                                    <td>
-                                        <button @click="kirimBukti(item.id)" class="bg-blue-600 text-white px-3 py-1 rounded text-[10px]">
-                                            Kirim WA
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
+     
+                      
                         </DataTable>
                     </div>
                 </div>
@@ -411,14 +594,28 @@ const breadcrumbItems = [
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="rek in items" :key="rek.id" 
+                                <tr v-for="user in nasabah"
                                     @click="viewDetail(rek)"
                                     class="cursor-pointer hover:bg-emerald-50 dark:hover:bg-gray-600 transition border-b dark:border-gray-600 last:border-0"
                                 >
                                     <td class="py-2">
-                                        <img src="https://ui-avatars.com/api/?name=User" class="w-8 h-8 rounded-full">
+   
+
+    <div class="border-gray-100 w-max dark:border-gray-800">
+      <div v-if="user" class="profile-circle py-1 px-2 rounded-full border border-gray-600 text-gray-800 dark:text-white">
+        {{ initials(user.user_detail?.fullName) }}
+      </div>
+
+      <div v-else class="profile-circle">
+        <img 
+          class="w-8 h-8 rounded-full" 
+          src="https://ui-avatars.com/api/?name=Guest&background=random" 
+          alt="Guest"
+        >
+      </div>
+    </div>
                                     </td>
-                                    <td class="py-2 font-medium dark:text-gray-200">{{ rek.namaSampah }}</td>
+                                    <td class="py-2 font-medium dark:text-gray-200">{{ user.user_detail.fullName }}</td>
                                     <td class="py-2 text-right">
                                         <i class="fas fa-chevron-right text-gray-400"></i>
                                     </td>
@@ -429,11 +626,64 @@ const breadcrumbItems = [
                 </div>
 
             </div>
-        </div>
+        </div> 
+        </template>
+       
     </AuthenticatedLayout>
 </template>
 
 <style scoped>
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+</style>
+
+<style>
+.dark td{
+    color:white;
+}
+
+.accordion-enter-active,
+.accordion-leave-active {
+    transition: all 0.3s ease-in-out;
+    max-height: 500px; 
+    overflow: hidden;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.accordion-wrapper > * {
+    transition: opacity 0.2s;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #10b981 !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 8px;
+}
+.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate {
+    font-size: 0.8rem;
+    color: #6b7280 !important;
+    margin-top: 1rem;
+}
+.dark .dataTables_wrapper .dataTables_length, 
+.dark .dataTables_wrapper .dataTables_filter, 
+.dark .datatable .dt-info, 
+.dark .dataTables_wrapper .dataTables_processing, 
+.dark .datatable  .dt-paging {
+    color: #ffffff !important;
+}
+.dataTables_filter { display: none; } /* Kita pakai custom search di atas */
+
+.slide-fade-enter-active { transition: all 0.3s ease-out; }
+.slide-fade-leave-active { transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1); }
+.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-10px); opacity: 0; }
 </style>

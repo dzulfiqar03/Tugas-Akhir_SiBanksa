@@ -4,7 +4,9 @@ namespace App\Services\KetuaRW;
 
 use App\Models\User;
 use App\Models\UserDetail;
+use App\Notifications\Admin\BankSampahReminder;
 use App\Notifications\Admin\UserVerification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -35,6 +37,21 @@ class KelolaBankSampahServices
         return $bankSampah;
     }
 
+    public function getAllNasabah()
+    {
+        $nasabah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.pencatatan'])
+            ->whereHas('user_detail', function ($query) {
+                $query->where('id_roles', 3);
+            })->whereHas('pencatatan.pencatatan_items')->orderBy(
+                $this->userDetail::select('id_rt')
+                    ->whereColumn('user_details.id_user', 'users.id'),
+                'ASC'
+            )
+            ->get();
+
+        return $nasabah;
+    }
+
     public function getAllTransaction()
     {
 
@@ -51,7 +68,7 @@ class KelolaBankSampahServices
 
                 $idRT = $user->user_detail->id_rt;
 
-                
+
                 $totalSetoranRT = DB::table('pencatatan_setoran')
                     ->join('user_details', 'id_userdetail', '=', 'user_details.id')
                     ->where('user_details.id_rt', $idRT)
@@ -104,11 +121,20 @@ class KelolaBankSampahServices
     }
 
 
+
+
     public function getBankSampah($id)
     {
         $findBankSampah = $this->user::with('user_detail')->findOrFail($id);
 
         return $findBankSampah;
+    }
+
+    public function getNasabahById($id)
+    {
+        $findNasabah = $this->userDetail::findOrFail($id);
+
+        return $findNasabah;
     }
 
 
@@ -166,5 +192,35 @@ class KelolaBankSampahServices
 
         $user->notify(new UserVerification($user->id));
         return $user;
+    }
+
+    public function updateVerification(Request $request, $id)
+    {
+        $user = DB::transaction(function () use ($id, $request) {
+
+
+            $updateNasabah = $this->getNasabahById($id);
+
+            $updateNasabah->update([
+                'status_transaction' => 'Disetujui'
+            ]);
+
+
+
+        $userAccount = $this->user::find($updateNasabah->id_user);
+
+        if ($userAccount) {
+            // Kirim notifikasi ke AKUN USER, bukan ke DETAIL
+            $userAccount->notify(new BankSampahReminder(
+                $userAccount->id, 
+                $request->message, 
+                '/bank-sampah/transaksi'
+            ));
+        }
+            return $updateNasabah;
+
+
+        });
+
     }
 }

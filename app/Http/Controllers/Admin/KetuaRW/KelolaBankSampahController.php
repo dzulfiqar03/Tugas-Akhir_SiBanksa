@@ -70,6 +70,7 @@ class KelolaBankSampahController extends Controller
                     'filled'       => $filledCount,
                     'total'        => count($fields),
                 ];
+                
 
                 $user->statistik = [
                     'total_nasabah' => count($nasabahList),
@@ -268,11 +269,11 @@ class KelolaBankSampahController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(KelolaBankSampahRequest $request,  $id)
+    public function update(Request $request,  $id)
     {
         try {
-            $this->kelolaBankSampahServices->updateBankSampah($id, $request->validated());
-            return redirect()->back()->with('message', 'Bank Sampah berhasil diubah');
+            $this->kelolaBankSampahServices->updateVerification($request,$id);
+            return redirect()->back()->with('message', 'Transaksi Bank Sampah berhasil dibuka');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal mendaftar: ' . $e->getMessage());
         }

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserDetail;
 use App\Notifications\Admin\BankSampahReminder;
 use App\Services\BankSampah\NasabahServices;
+use App\Services\ChatServices;
 use App\Services\KetuaRW\KelolaBankSampahServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +26,8 @@ class PelaporanController extends Controller
         protected NasabahServices $nasabahServices,
         protected PencatatanSetoranItems $pencatatanSetoranItems,
         protected KelolaBankSampahServices $kelolaBankSampahServices,
-        protected User $user
+        protected User $user,
+        protected ChatServices $chatServices
     ) {}
     public function index()
     {
@@ -172,9 +174,14 @@ class PelaporanController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        try {
+            $this->kelolaBankSampahServices->updateVerification($request, $id);
+            return redirect()->back()->with('message', 'Transaksi Setoran Bank Sampah berhasil dibuka');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mendaftar: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -191,6 +198,32 @@ class PelaporanController extends Controller
             $user = $this->user::findOrFail($id);
 
             $user->notify(new BankSampahReminder($user->id, $request->message, '/KetuaRW/pelaporan'));
+
+            return back()->with('success', 'Pengingat verifikasi berhasil dikirim ke nasabah!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mengirim pengingat: ' . $e->getMessage());
+        }
+    }
+
+    public function sendChat(Request $request, $id)
+    {
+
+
+        try {
+            $user = $this->user::findOrFail($id);
+
+            $user->notify(new BankSampahReminder($user->id, $request->message, '/Profile'));
+
+            $users = Auth::user();
+
+
+            $recipientDetailId = $user->user_detail->id;
+            $this->chatServices->createChat([
+                'id_userdetail' => $recipientDetailId,
+                'sender_id'     => $users->id,
+                'message'       => "Rekening Anda belum dibuat, transaksi belum dapat dicairkan",
+                'time'          => now()->format('H:i'),
+            ]);
 
             return back()->with('success', 'Pengingat verifikasi berhasil dikirim ke nasabah!');
         } catch (\Exception $e) {

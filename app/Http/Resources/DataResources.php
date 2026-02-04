@@ -60,6 +60,7 @@ class DataResources extends JsonResource
                         'route' => route('rw.jadwal-pelaksanaan'),
                         'uri' => 'rw.jadwal-pelaksanaan',
                     ],
+                   
                     [
                         'nama'  => 'Pengaturan',
                         'route' => route('preference'),
@@ -166,6 +167,13 @@ class DataResources extends JsonResource
                         'icon'  => 'fas fa-route',
                     ],
 
+                       [
+                        'nama'  => 'Chat',
+                        'icon'  => 'fa fa-user',
+                        'route' => route('banksampah.chat'),
+                        'uri' => 'banksampah.chat',
+                    ],
+
                     [
                         'nama'  => 'Pengaturan',
                         'route' => route('preference'),
@@ -215,6 +223,13 @@ class DataResources extends JsonResource
                     'uri' => '#',
                     'icon'  => 'fas fa-sign-out-alt text-danger',
                 ],
+
+                   [
+                        'nama'  => 'Chat',
+                        'icon'  => 'fa fa-user',
+                        'route' => route(name: 'warga.chat'),
+                        'uri' => 'warga.chat',
+                    ],
 
                 [
                     'nama'  => 'Pengaturan',

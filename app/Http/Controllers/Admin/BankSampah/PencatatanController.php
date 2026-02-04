@@ -37,6 +37,7 @@ class PencatatanController extends Controller
         $formName = 'formPencatatan';
 
         $jenisSampah = $this->sampah::where('id_userdetail', Auth::user()->user_detail->id)->get();
+
         $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
             ->whereHas('setoran', function ($query) {
                 $query->where('id_userdetail', Auth::user()->user_detail->id);
@@ -51,6 +52,7 @@ class PencatatanController extends Controller
                 'is_read' => $n->read_at !== null
             ];
         });
+
         return Inertia::render('BankSampah/PencatatanSetoran', [
             'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
@@ -79,9 +81,7 @@ class PencatatanController extends Controller
     {
 
         try {
-
             $this->pencatatanServices->createPencatatanSetoran($request->validated());
-
             return redirect()->back()->with('message', 'Sampah berhasil ditambahkan');
         } catch (\Throwable $th) {
             //throw $th;

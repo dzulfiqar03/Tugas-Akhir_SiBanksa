@@ -17,7 +17,6 @@ class DashboardController extends Controller
     {
         $menu = (new DataResources(null))->toArray(request());
 
-
         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,

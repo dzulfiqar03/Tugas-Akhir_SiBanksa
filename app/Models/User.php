@@ -53,6 +53,11 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserDetail::class, 'id_user', 'id');
     }
+
+     public function sender()
+    {
+        return $this->hasMany(UserDetail::class, 'sender_id', 'id');
+    }
     public function sendPasswordResetNotification($token)
 {
     // gunakan nama user untuk dynamic FROM NAME

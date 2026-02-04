@@ -24,7 +24,6 @@ class DataNasabahController extends Controller
     public function index()
     {
 
-
         $menu = (new DataResources(null))->toArray(request());
         $form = (new FormResources(null))->toArray(request());
 
@@ -37,6 +36,7 @@ class DataNasabahController extends Controller
                 'is_read' => $n->read_at !== null
             ];
         });
+        
         $formName = 'formNasabah';
         $nasabah = $this->nasabahServices->getAllNasabah();
         $idUserRT = Auth::user()->user_detail->id_rt;

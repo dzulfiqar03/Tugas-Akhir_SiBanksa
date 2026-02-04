@@ -4,6 +4,7 @@ namespace App\Services\BankSampah;
 
 use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\User;
+use App\Services\ChatServices;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +14,7 @@ class JadwalServices
     /**
      * Create a new class instance.
      */
-    public function __construct(protected JadwalPelaksanaan $jadwal)
+    public function __construct(protected JadwalPelaksanaan $jadwal, protected ChatServices $chatServices)
     {
         //
     }
@@ -46,7 +47,6 @@ class JadwalServices
             return $newJadwal;
         });
 
-
         try {
             $admins = User::whereHas('user_detail', function ($query) use ($data) {
                 $query->where('id_rt', Auth::user()->user_detail->id_rt)
@@ -57,7 +57,17 @@ class JadwalServices
                 $adminUser->notify(new \App\Notifications\Admin\JadwalBlasting(
                     $data['id_userdetail'],
                     "Jadwal Pelaksanaan Bank Sampah Baru pada tanggal " . $data['tanggal_setoran']
-                ));
+                ));   
+                $user = Auth::user();
+
+
+                $recipientDetailId = $adminUser->user_detail->id;
+                $this->chatServices->createChat([
+                    'id_userdetail' => $recipientDetailId,
+                    'sender_id'     => $user->id,
+                    'message'       => "Jadwal Pelaksanaan Bank Sampah Baru pada tanggal " . $data['tanggal_setoran'],
+                    'time'          => now()->format('H:i'),
+                ]);
             }
         } catch (\Exception $e) {
 

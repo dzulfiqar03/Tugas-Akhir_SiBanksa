@@ -11,11 +11,13 @@ use App\Http\Controllers\Admin\BankSampah\JadwalPelaksanaanController;
 use App\Http\Controllers\Admin\BankSampah\KepengurusanController;
 use App\Http\Controllers\Admin\BankSampah\PencatatanController;
 use App\Http\Controllers\Admin\BankSampah\TrackingSetoranController;
+use App\Http\Controllers\Admin\BankSampah\UserChatController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\KetuaRW\JadwalController;
 use App\Http\Controllers\Admin\KetuaRW\KelolaBankSampahController;
 use App\Http\Controllers\Admin\KetuaRW\PelaporanController;
 use App\Http\Controllers\Admin\PreferenceController;
+use App\Http\Controllers\Admin\Warga\WargaChatController;
 use App\Http\Controllers\DocumentArchiverController;
 use App\Http\Controllers\EvidenceArchiverController;
 use App\Http\Controllers\NotificationController;
@@ -74,8 +76,10 @@ Route::middleware(['conn'])->group(function () {
 
                 Route::get('/KetuaRW/pelaporan', [PelaporanController::class, 'index'])->name('data-pelaporanBankSampah');
 
-                Route::post('/bank-sampah/{id}/send-reminder', action: [KelolaBankSampahController::class, 'sendReminder'])->name('banksampah.send-reminder');
-            });
+                Route::post('/KetuaRW/{id}/send-reminder', action: [KelolaBankSampahController::class, 'sendReminder'])->name('banksampah.send-reminder');
+                Route::post('/KetuaRW/{id}/update-transaction', action: [PelaporanController::class, 'update'])->name('rw.open-transaction');
+
+                });
 
             Route::middleware(['roles:Bank Sampah'])->group(function () {
                 Route::get('/bank-sampah/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -108,7 +112,9 @@ Route::middleware(['conn'])->group(function () {
                 Route::post('/nasabah/{id}/send-reminder', action: [DataNasabahController::class, 'sendReminder'])->name('nasabah.send-reminder');
 
                 Route::get('/bank-sampah/tracking', [TrackingSetoranController::class, 'index'])->name('data-tracking');
+                
                 Route::get('/bank-sampah/transaksi', [DataTransaksiController::class, 'index'])->name('data-transaksi');
+                Route::post('/bank-sampah/{id}/chat-transaction', action: [PelaporanController::class, 'sendChat'])->name('bs.chat-transaction');
 
                 Route::get('/bank-sampah/pencatatan', [PencatatanController::class, 'index'])->name('pencatatan-setoran');
                 Route::post('/bank-sampah/pencatatan/create', [PencatatanController::class, 'store'])->name('add-setoran');
@@ -125,6 +131,14 @@ Route::middleware(['conn'])->group(function () {
                 Route::delete('/bank-sampah/evidence/delete/{id}', [EvidenceArchiverController::class, 'destroy'])->name('delete-evidence');
 
                 Route::post('/lapor-setoran/{id}/send-reminder', action: [PelaporanController::class, 'sendReminder'])->name('laporsetoran.send-reminder');
+
+                Route::get('/bank-sampah/chat', [UserChatController::class, 'index'])->name('banksampah.chat');
+                Route::post('/bank-sampah/chat/create{id}', [UserChatController::class, 'store'])->name('bs.add-chat');
+                Route::put('/bank-sampah/chat/update/{id}', [UserChatController::class, 'update'])->name('bs.update-chat');
+                Route::delete('/bank-sampah/chat/delete/{id}', [UserChatController::class, 'destroy'])->name('bs.delete-chat');
+                Route::delete('/bank-sampah/chat/deleteChat/{id}', [UserChatController::class, 'deleteRoomChat'])->name('bs.delete-roomChat');
+
+                Route::put('/bank-sampah/chat/read{id}', [UserChatController::class, 'readChat'])->name('bs.read-chat');
             });
 
             Route::middleware(['roles:Warga'])->group(function () {
@@ -132,6 +146,14 @@ Route::middleware(['conn'])->group(function () {
                 Route::get('/Warga/transaksi', [DataTransaksiController::class, 'index'])->name('warga.data-transaksi');
                 Route::get('/Warga/penjadwalan', [DataNasabahController::class, 'index'])->name('warga.penjadwalan');
                 Route::get('/Warga/tracking', [TrackingSetoranController::class, 'index'])->name('warga.tracking-setoran');
+
+                Route::get('/Warga/chat', [WargaChatController::class, 'index'])->name('warga.chat');
+                Route::post('/Warga/chat/create{id}', [WargaChatController::class, 'store'])->name('warga.add-chat');
+                Route::put('/Warga/chat/update/{id}', [WargaChatController::class, 'update'])->name('warga.update-chat');
+                Route::delete('/Warga/chat/delete/{id}', [WargaChatController::class, 'destroy'])->name('warga.delete-chat');
+                Route::delete('/Warga/chat/deleteChat/{id}', [WargaChatController::class, 'deleteRoomChat'])->name('warga.delete-roomChat');
+
+                Route::put('/Warga/chat/read{id}', [WargaChatController::class, 'readChat'])->name('warga.read-chat');
             });
         });
     });

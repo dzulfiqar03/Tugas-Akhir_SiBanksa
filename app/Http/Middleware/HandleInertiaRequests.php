@@ -32,14 +32,14 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
-    $userData = $user ? $user->load('user_detail.roles') : null;
+    $userData = $user ? $user->load(['user_detail.roles', 'user_detail.user_chat', 'user_detail.user_log']) : null;
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
             ],
-            // Data menu otomatis dikirim ke SEMUA komponen Vue
-        'sidebardata' => $userData ? (new DataResources([]))->toArray($request) : null,
+
+            'sidebardata' => $userData ? (new DataResources([]))->toArray($request) : null,
         
         // Data notifikasi global
         'notifications' => [

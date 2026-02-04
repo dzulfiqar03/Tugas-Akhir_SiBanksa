@@ -1,7 +1,6 @@
 <template>
 
   <div :class="{ 'dark': isDark }">
-    <Preloader />
     <div class="bg-gray-100 dark:bg-gray-900 flex min-h-screen transition-colors duration-300 overflow-hidden">
       
       <Sidebar 
