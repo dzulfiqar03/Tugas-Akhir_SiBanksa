@@ -32,7 +32,7 @@ const formAction = computed(() => {
     }else if (currentRoute === 'jadwal-pelaksanaan') {
         return route('add-jadwalBankSampah');
     }else if (currentRoute === 'data-transaksi') {
-        return route('');
+        return route('bs.add-transaction');
     }else if (currentRoute === 'data-kepengurusan') {
         return route('add-kepengurusan');
     }else if (currentRoute === 'pencatatan-setoran') {
@@ -111,7 +111,7 @@ const hasErrors = computed(() => props.errors && Object.keys(props.errors).lengt
 
             <slot /> 
 
-            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'data-pelaporanRW'  && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah'  && currentRoute != 'data-kepengurusan' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'" class="flex justify-end gap-3 mt-4">
+            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'profile.edit' && currentRoute != 'data-transaksi' && currentRoute != 'data-pelaporanRW'  && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah'  && currentRoute != 'data-kepengurusan' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'" class="flex justify-end gap-3 mt-4">
                 <button 
                     type="submit" 
                     :disabled="processing"

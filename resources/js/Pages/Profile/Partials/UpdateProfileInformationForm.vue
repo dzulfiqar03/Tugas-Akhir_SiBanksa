@@ -9,6 +9,9 @@ defineProps({
     mustVerifyEmail: {
         type: Boolean,
     },
+    isEdit: {
+        type: Boolean,
+    },
     status: {
         type: String,
     },
@@ -17,7 +20,7 @@ defineProps({
 const user = usePage().props.auth.user;
 
 const form = useForm({
-    name: user.name,
+    name: user.user_detail.fullName,
     email: user.email,
 });
 </script>
@@ -42,12 +45,12 @@ const form = useForm({
                 <InputLabel for="name" value="Name" />
 
                 <TextInput
+                :is-edit="isEdit"
                     id="name"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="mt-1 dark:text-white text-black block w-full"
                     v-model="form.name"
                     required
-                    autofocus
                     autocomplete="name"
                 />
 
@@ -58,9 +61,10 @@ const form = useForm({
                 <InputLabel for="email" value="Email" />
 
                 <TextInput
+                 :is-edit="isEdit"
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="mt-1 block dark:text-white text-black w-full"
                     v-model="form.email"
                     required
                     autocomplete="username"
@@ -90,7 +94,7 @@ const form = useForm({
                 </div>
             </div>
 
-            <div class="flex items-center gap-4">
+            <div v-if="isEdit === false" class="flex items-center gap-4">
                 <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
 
                 <Transition

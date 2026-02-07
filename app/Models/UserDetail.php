@@ -44,6 +44,10 @@ class UserDetail extends Model
     {
         return $this->hasMany(UserLog::class, 'id_userdetail', 'id');
     }
+    public function user_bot()
+    {
+        return $this->hasMany(UserBot::class, 'id_userdetail', 'id');
+    }
 
     public function pencatatan()
     {
@@ -52,7 +56,7 @@ class UserDetail extends Model
 
     public function userbank()
     {
-        return $this->hasMany(UserBank::class, 'id_userdetail', 'id');
+        return $this->hasOne(UserBank::class, 'id_userdetail', 'id');
     }
 
     public function document()
@@ -77,7 +81,7 @@ class UserDetail extends Model
 
     public function user_transaction()
     {
-        return $this->hasMany(UserTransaction::class, 'id_userdetail', 'id');
+        return $this->hasOne(UserTransaction::class, 'id_userdetail', 'id');
     }
 
      public function user_chat()

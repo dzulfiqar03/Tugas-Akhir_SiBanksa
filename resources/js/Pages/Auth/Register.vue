@@ -87,7 +87,7 @@ const submit = () => {
             </div>
 
     <div class="flex flex-col w-full lg:w-[32rem]">
-        <div class="flex p-1.5 mb-5 bg-gray-100 dark:bg-gray-800/50 rounded-2xl">
+        <div class="flex flex-wrap  p-1.5 mb-5 bg-gray-100 dark:bg-gray-800/50 rounded-2xl">
             <button @click="changeTab('BankSampah')"
                 :class="showForm === 'BankSampah' ? 'bg-white shadow-md text-emerald-600' : 'text-gray-500'"
                 class="flex-1 py-3 rounded-xl transition-all font-semibold text-sm">
@@ -106,7 +106,7 @@ const submit = () => {
             :processing="form.processing"
             @submit="submit"
         >
-               <div class="flex items-center gap-4 mb-8">
+               <div class="flex flex-wrap  items-center gap-4 mb-8">
                 <div class="flex items-center gap-2 cursor-pointer" @click="step = 1">
                     <span :class="step >= 1 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'" class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">1</span>
                     <span :class="step >= 1 ? 'text-emerald-700' : 'text-gray-400'" class="text-[10px] font-bold uppercase tracking-widest">Data Diri</span>

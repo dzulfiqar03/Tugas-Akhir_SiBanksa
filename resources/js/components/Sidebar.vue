@@ -64,7 +64,7 @@ const sections = computed(() => {
     } else {
         grouped = { 'MAIN': [],'MANAJEMEN': [], 'LAINNYA': [] };
         menus.value.forEach(menu => {
-                                    if (['Tracking Setoran'].includes(menu.nama)) grouped['MAIN'].push(menu);
+                                    if (['Profile','Tracking Setoran'].includes(menu.nama)) grouped['MAIN'].push(menu);
 
             else if (menu.data || ['Bank Sampah', 'Nasabah', 'Transaksi Setoran', 'Penjadwalan'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
             else grouped['LAINNYA'].push(menu);

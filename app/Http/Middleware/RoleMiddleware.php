@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
+use function Laravel\Prompts\alert;
+
 class RoleMiddleware
 {
     /**
@@ -22,7 +24,7 @@ class RoleMiddleware
     $userRole = optional(optional($user->user_detail)->roles)->role;
 
     if ($userRole !== $role) {
-        abort(403, 'Unauthorized');
+        redirect()->back()->with(alert('Login Anda Salah'));
     }
 
     return $next($request);

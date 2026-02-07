@@ -104,7 +104,7 @@
           </div>
         </div>
 
-       <div  ref="chatBody" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+           <div  ref="chatBody" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
   <template v-if="detectChat === 'AI Banksa'" v-for="(msg, i) in activeChat.user_chat" :key="i">
     
     <template v-if="activeChat.id === 'AI_BOT'">
@@ -158,8 +158,6 @@
           </div>
   </template>
 </div>
-
-
 
         <div class="p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-300 dark:border-gray-800">
           <div class="flex gap-2 items-center bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-1">
@@ -334,7 +332,7 @@ const pilihChat = chat => (
   detectChat.value = chat.fullName,
   isMobileChatOpen.value = true,
     router.put(
-    route('warga.read-chat', activeChat.value.id), 
+    route('rw.read-chat', activeChat.value.id), 
     { message: newMessage.value },
     {
       preserveScroll: true,
@@ -351,13 +349,15 @@ const pilihChat = chat => (
 
 )
 
+onClickOutside(chatBody, () => idBtn.value = null);
+
 
 const sendMessage = () => {
   if (!newMessage.value.trim() || !activeChat.value?.id) return
 
   isEdit.value === false?
 
-  router.post(route('warga.add-chat', activeChat.value.id), 
+  router.post(route('rw.add-chat', activeChat.value.id), 
     { message: newMessage.value, name: activeChat.value.fullName },
     {
       preserveScroll: true,
@@ -372,7 +372,7 @@ const sendMessage = () => {
       }
     }
   ):router.put(
-    route('warga.update-chat', activeChat.value.id), 
+    route('rw.update-chat', activeChat.value.id), 
     { message: newMessage.value, id: chatID.value },
     {
       preserveScroll: true,
@@ -392,8 +392,6 @@ const sendMessage = () => {
 
 }
 
-onClickOutside(chatBody, () => idBtn.value = null);
-
 const updateMessage = (item) => {
     isEdit.value = true;
     newMessage.value = item.message;
@@ -410,7 +408,7 @@ const deleteMessage = (id) => {
 console.log(chatID.value)
 isDelete.value === false ?
   router.delete(
-    route('warga.delete-chat', id), 
+    route('rw.delete-chat', id), 
     {
       preserveScroll: true,
       onSuccess: () => {
@@ -423,7 +421,7 @@ isDelete.value === false ?
       }
     }
   ):router.delete(
-    route('warga.delete-roomChat', chatID.value), 
+    route('rw.delete-roomChat', chatID.value), 
     {
       preserveScroll: true,
       onSuccess: () => {
@@ -443,13 +441,7 @@ const tambahOrang = () => {
 
   const generateListHtml = (searchTerm = '') => {
     const filtered = props.nasabahList.filter(u => 
-  {
-    const sudahAdaDiChat = chatTersedia.value.some(chat => String(chat.id) === String(u.id));
-  
-  const cocokPencarian = u.fullName.toLowerCase().includes(searchTerm.toLowerCase());
-
-  return !sudahAdaDiChat && cocokPencarian;
-  }
+      u.fullName.toLowerCase().includes(searchTerm.toLowerCase())
     )
     
     if (filtered.length === 0) return '<p class="text-center py-4 text-gray-400 text-xs">Nasabah tidak ditemukan</p>'
@@ -484,7 +476,7 @@ const tambahOrang = () => {
            class="p-3 flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-emerald-50 dark:hover:bg-gray-800 transition-all">
         <div class="relative">
           <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold uppercase shadow-sm text-sm">
-           <i class="fas fa-robot"></i>
+            <i class="fas fa-robot"></i>
           </div>
         </div>
  <div class="text-left">
@@ -498,7 +490,7 @@ const tambahOrang = () => {
     width: '400px',
     padding: '1.5em',
     customClass: {
-      popup: 'rounded-3xl dark:bg-gray-900 bg-white border dark:border-gray-800 scroll-smooth'
+      popup: 'rounded-3xl dark:bg-gray-900 bg-white border dark:border-gray-800'
     },
     didRender: () => {
       const searchInput = document.getElementById('swal-search')

@@ -3,6 +3,7 @@
   <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
     <div class="flex h-full bg-gray-100 dark:bg-gray-950 overflow-hidden relative">
       
+      <div v-if="idBtn" @click="idBtn = null" class="fixed inset-0 z-30 bg-transparent"></div>
 
       <div :class="[
         'w-full md:w-1/3 bg-white dark:bg-gray-900 border-r border-gray-300 dark:border-gray-800 flex flex-col transition-all duration-300 z-30',
@@ -28,13 +29,14 @@
           </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto custom-scrollbar">
+        <div v-if="filteredChatList.length > 0" class="flex-1 overflow-y-auto custom-scrollbar">
           <div v-for="chat in filteredChatList" :key="chat.id" 
           @contextmenu.prevent="deleteRoom(chat)"
-               @click="pilihChat(chat)"
+               @click.stop="pilihChat(chat)"
                
                :class="['p-4 flex gap-3 cursor-pointer border-b border-white dark:border-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all relative', 
                         activeChat?.id === chat.id ? 'bg-emerald-50 dark:bg-emerald-900/30 border-r-4 border-r-emerald-500' : '']">
+            
             
             <div class="relative">
               <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded-full flex items-center justify-center font-bold uppercase shadow-sm">
@@ -58,13 +60,28 @@
               </div>
             </div>
 
-            <div v-if="idBtn === chat.id" class="absolute right-4 top-12 w-48 bg-white dark:bg-gray-800 shadow-2xl rounded-xl border dark:border-gray-700 -z-0 py-2">
+            <div v-if="idBtn === chat.id" class="absolute right-4 top-12 w-48 bg-white dark:bg-gray-800 shadow-2xl rounded-xl border dark:border-gray-700 z-50 overflow-hidden py-2">
               <button @click.stop="deleteMessage(chat.id)" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold">
                 <i class="fas fa-trash mr-2"></i> Hapus Percakapan
               </button>
+               <div @click.stop="idBtn = null" class="w-full text-left px-4 py-2 text-xs text-black hover:bg-red-50 dark:hover:bg-red-900/20 font-bold">
+                Batal
+              </div>
             </div>
           </div>
         </div>
+
+            <div v-else class="hidden md:flex flex-1 items-center justify-center bg-gray-50 dark:bg-gray-950">
+        <div class="text-center">
+          <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 p-2  rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-500">
+            <div class="bg-white w-20 h-20 flex items-center justify-center  rounded-full"> <i class="fas fa-user text-3xl animate-bounce"></i></div>
+          </div>
+          <h2 class="text-lg font-bold text-gray-700 dark:text-gray-200">Data Tidak Ditemukan</h2>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">Klik pada icon <i class="fas fa-user-plus text-black"></i> untuk memulai obrolan</p>
+        </div>
+      </div>
+
+
       </div>
 
       <div v-if="activeChat?.id" :class="[
@@ -87,16 +104,40 @@
           </div>
         </div>
 
-        <div ref="chatBody" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-          <div v-for="(msg, i) in activeChat.user_chat" :key="i"
+           <div  ref="chatBody" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+  <template v-if="detectChat === 'AI Banksa'" v-for="(msg, i) in activeChat.user_chat" :key="i">
+    
+    <template v-if="activeChat.id === 'AI_BOT'">
+      <div class="flex w-full justify-end">
+        <div class="max-w-[75%] hover:-translate-x-3 duration-75 p-3 rounded-2xl bg-[#dcf8c6] dark:bg-emerald-800 rounded-tr-none shadow-sm">
+          <p class="text-sm text-black dark:text-white">{{ msg.user_msg }}</p>
+          <div class="text-[9px] text-right opacity-50 mt-1 uppercase">{{ msg.time }}</div>
+        </div>
+      </div>
+      <div class="flex w-full justify-start">
+        <div class="max-w-[75%] p-3 hover:translate-x-3 duration-75 rounded-2xl bg-white dark:bg-gray-800 rounded-tl-none border border-gray-100 dark:border-gray-700 shadow-sm">
+          <p class="text-[10px] font-bold text-emerald-600 mb-1">AI Banksa</p>
+          <p class="text-sm text-black dark:text-white">{{ msg.message }}</p>
+          <div class="text-[9px] text-right opacity-50 text-black dark:text-white mt-1 uppercase">{{ msg.time }}</div>
+        </div>
+      </div>
+    </template>
+
+    <div v-else :class="['flex w-full', msg.sender_id === currentUserId ? 'justify-end' : 'justify-start']">
+       </div>
+
+  </template>
+
+  <template v-else>
+         <div v-for="(msg, i) in activeChat.user_chat" :key="i"
                :class="['flex w-full', msg.sender_id === currentUserId ? 'justify-end' : 'justify-start']">
             
             <div @contextmenu.prevent="idBtn = msg.id"
                  :class="[
-                   'max-w-[75%] p-3 rounded-2xl shadow-sm cursor-pointer relative transition-all',
+                   'max-w-[75%] p-3 rounded-2xl  shadow-sm cursor-pointer relative',
                    msg.sender_id === currentUserId 
-                    ? 'bg-[#dcf8c6] dark:bg-emerald-800 text-black dark:text-emerald-50 rounded-tr-none' 
-                    : 'bg-white dark:bg-gray-800 text-black dark:text-gray-100  dark:border-gray-700 rounded-tl-none border border-gray-100',
+                    ? 'bg-[#dcf8c6] dark:bg-emerald-800  text-black dark:text-emerald-50 rounded-tr-none' 
+                    : 'bg-white dark:bg-gray-800  text-black dark:text-gray-100  dark:border-gray-700 rounded-tl-none border border-gray-100',
                    idBtn === msg.id ? 'ring-4 ring-emerald-200 dark:ring-emerald-900 shadow-md' : ''
                  ]">
               <p class="text-sm leading-relaxed">{{ msg.message }}</p>
@@ -106,16 +147,17 @@
                 'absolute top-full mt-2 w-40 bg-white dark:bg-gray-800 shadow-2xl rounded-xl border dark:border-gray-700 z-50 overflow-hidden',
                 msg.sender_id === currentUserId ? 'right-0' : 'left-0'
               ]">
-                <button @click.stop="updateMessage(msg)" class="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-emerald-600 font-bold border-b border-white dark:border-gray-700">
+                <button v-if="msg.sender_id === currentUserId" @click.stop="updateMessage(msg)" class="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 text-emerald-600 font-bold border-b border-white dark:border-gray-700">
                   <i class="fas fa-edit mr-2"></i> Edit
                 </button>
-                <button @click.stop="deleteMessage(msg.id)" class="w-full text-left px-4 py-2 text-xs hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 font-bold">
+                <button v-if="msg.sender_id === currentUserId" @click.stop="deleteMessage(msg.id)" class="w-full text-left px-4 py-2 text-xs hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 font-bold">
                   <i class="fas fa-trash mr-2"></i> Hapus
                 </button>
               </div>
             </div>
           </div>
-        </div>
+  </template>
+</div>
 
         <div class="p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-300 dark:border-gray-800">
           <div class="flex gap-2 items-center bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-1">
@@ -244,10 +286,12 @@ const countChat = computed(() => {
 
 const currentUserId = computed(() => page.props.auth.user.id)
 
-const chatTersedia = ref([...props.allNasabah])
-const activeChat = ref(chatTersedia.value[0] || null)
+const chatTersedia = computed(() => props.allNasabah);
+const nasabah = ref([...props.nasabahList])
+const activeChat = ref(null)
 const newMessage = ref('')
 const searchQuery = ref('')
+
 const chatBody = ref(null)
 const notifContainer = ref(null);
 const showNotif = ref(false);
@@ -257,6 +301,7 @@ const isDelete = ref(false);
 const chatID = ref(null);
 const isMobileChatOpen = ref(false);
 const isProfileChatOpen = ref(false);
+const detectChat = ref('');
 
 
 
@@ -273,6 +318,7 @@ const filteredChatList = computed(() => {
   )
 })
 
+
 const scrollToBottom = async () => {
   await nextTick()
   chatBody.value && (chatBody.value.scrollTop = chatBody.value.scrollHeight)
@@ -283,6 +329,7 @@ watch(() => activeChat.value?.user_chat?.length, scrollToBottom)
 
 const pilihChat = chat => (
   activeChat.value = chat,
+  detectChat.value = chat.fullName,
   isMobileChatOpen.value = true,
     router.put(
     route('bs.read-chat', activeChat.value.id), 
@@ -302,28 +349,26 @@ const pilihChat = chat => (
 
 )
 
-const kembaliKeDaftar = () => {
-  isMobileChatOpen.value = false
-  isProfileChatOpen.value = true
-}
+onClickOutside(chatBody, () => idBtn.value = null);
+
 
 const sendMessage = () => {
   if (!newMessage.value.trim() || !activeChat.value?.id) return
 
   isEdit.value === false?
-  // Pastikan route sesuai dengan name di web.php (bs.add-chat)
-  router.post(
-    route('bs.add-chat', activeChat.value.id), 
-    { message: newMessage.value },
+
+  router.post(route('bs.add-chat', activeChat.value.id), 
+    { message: newMessage.value, name: activeChat.value.fullName },
     {
       preserveScroll: true,
-      onSuccess: () => {
-        newMessage.value = ''
-        scrollToBottom()
-      },
-      onError: (errors) => {
-        console.error("Gagal mengirim pesan:", errors)
-        Swal.fire('Error', 'Gagal mengirim pesan ke database', 'error')
+      onSuccess: (page) => {
+        newMessage.value = '';
+
+        const updatedChat = props.allNasabah.find(c => c.id === activeChat.value.id);
+        if (updatedChat) {
+          activeChat.value = updatedChat;
+        }
+        scrollToBottom();
       }
     }
   ):router.put(
@@ -332,9 +377,10 @@ const sendMessage = () => {
     {
       preserveScroll: true,
       onSuccess: () => {
-        newMessage.value = ''
+                newMessage.value = ''
         isEdit.value = false
         chatID.value = ''
+
         scrollToBottom()
       },
       onError: (errors) => {
@@ -349,10 +395,11 @@ const sendMessage = () => {
 const updateMessage = (item) => {
     isEdit.value = true;
     newMessage.value = item.message;
+    chatID.value=item.id;
 };
 
 const deleteRoom = (item) => {
-  idBtn.value = item.id
+  idBtn.value = idBtn.value === item.id ? null : item.id
     isDelete.value = true;
     chatID.value=item.id;
 };
@@ -391,48 +438,71 @@ isDelete.value === false ?
 
 
 const tambahOrang = () => {
-  const html = props.nasabahList
-    .map(
-      u => `
-         <div
-                onclick="window.selectUser('${u.id}','${u.fullName}')"
-               @contextmenu.prevent="idBtn = chat.id"
-               :class="['p-4 flex dark:hover:text-black gap-3 border-b border-gray-200 dark:border-black cursor-pointer border-b border-white hover:rounded-lg  hover:bg-emerald-50 transition-all relative']">
-            
-            <div class="relative dark:hover:text-black">
-              <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold uppercase shadow-sm">
-                ${ u.fullName.charAt(0) }
-              </div>
-              
-<div class="${u.online === 'Online' ? 'absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full' : ''}"></div>
-            </div>
 
-            <div class="flex-1 min-w-0">
-              <div class="flex justify-between items-baseline mb-1">
-                <span class="font-bold dark:text-white text-black  capitalize text-gray-900 truncate">${ u.fullName }</span>
-              </div>
-             
-            </div>
-
-          
-          </div>
-`
+  const generateListHtml = (searchTerm = '') => {
+    const filtered = props.nasabahList.filter(u => 
+      u.fullName.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    .join('')
-
-  Swal.fire({ 
     
-    title: '<span class="text-sm dark:text-white font-bold">Mulai Chat</span>', 
-    html: `<div class="max-h-[500px] dark:bg-gray-900 overflow-y-auto pr-2 custom-scrollbar">${html}</div>`, 
+    if (filtered.length === 0) return '<p class="text-center py-4 text-gray-400 text-xs">Nasabah tidak ditemukan</p>'
+
+    return filtered.map(u => `
+      <div onclick="window.selectUser('${u.id}','${u.fullName}')"
+           class="p-3 flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-emerald-50 dark:hover:bg-gray-800 transition-all">
+        <div class="relative">
+          <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold uppercase shadow-sm text-sm">
+            ${u.fullName.charAt(0)}
+          </div>
+          <div class="${u.online === 'Online' ? 'absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-gray-900 rounded-full' : ''}"></div>
+        </div>
+        <div class="text-left">
+          <p class="text-sm font-bold text-black dark:text-white capitalize leading-none">${u.fullName}</p>
+          <p class="text-[10px] text-gray-400 mt-1">${u.online === 'Online' ? 'Online' : 'Offline'}</p>
+        </div>
+      </div>
+    `).join('')
+  }
+
+  Swal.fire({
+    title: '<span class="text-sm dark:text-gray-100 text-black font-bold">Mulai Chat</span>',
+    html: `
+      <div class="mb-4 relative">
+        <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
+        <input id="swal-search" type="text" placeholder="Cari nasabah..." 
+               class="w-full bg-gray-50 dark:bg-gray-800 text-black dark:text-white border-none p-2 pl-9 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500">
+      </div>
+      <div id="nasabah-container" class="max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+        <div onclick="window.selectUser('0','AI Banksa')"
+           class="p-3 flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-emerald-50 dark:hover:bg-gray-800 transition-all">
+        <div class="relative">
+          <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold uppercase shadow-sm text-sm">
+            <i class="fas fa-robot"></i>
+          </div>
+        </div>
+ <div class="text-left">
+          <p class="text-sm font-bold capitalize  dark:text-white text-black leading-none">AI Banksa</p>
+          <p class="text-[10px] text-gray-400 mt-1">Online</p>
+        </div>
+      </div>
+        ${generateListHtml()}
+      </div>`,
     showConfirmButton: false,
-    width: '500px', // Memperkecil lebar popup Swal
-    padding: '1em',
+    width: '400px',
+    padding: '1.5em',
     customClass: {
-      popup: 'rounded-2xl dark:bg-gray-900 '
+      popup: 'rounded-3xl dark:bg-gray-900 bg-white border dark:border-gray-800'
+    },
+    didRender: () => {
+      const searchInput = document.getElementById('swal-search')
+      const container = document.getElementById('nasabah-container')
+
+      // Listener pencarian manual
+      searchInput.addEventListener('input', (e) => {
+        container.innerHTML = generateListHtml(e.target.value)
+      })
     }
   })
 }
-
 window.selectUser = (id, name) => {
   Swal.close()
 

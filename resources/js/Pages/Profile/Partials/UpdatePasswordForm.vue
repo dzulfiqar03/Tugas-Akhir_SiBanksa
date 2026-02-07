@@ -9,6 +9,14 @@ import { ref } from 'vue';
 const passwordInput = ref(null);
 const currentPasswordInput = ref(null);
 
+defineProps({
+
+    isEdit: {
+        type: Boolean,
+    },
+
+});
+
 const form = useForm({
     current_password: '',
     password: '',
@@ -51,6 +59,8 @@ const updatePassword = () => {
                 <InputLabel for="current_password" value="Current Password" />
 
                 <TextInput
+                                 :is-edit="isEdit"
+
                     id="current_password"
                     ref="currentPasswordInput"
                     v-model="form.current_password"
@@ -69,6 +79,8 @@ const updatePassword = () => {
                 <InputLabel for="password" value="New Password" />
 
                 <TextInput
+                                 :is-edit="isEdit"
+
                     id="password"
                     ref="passwordInput"
                     v-model="form.password"
@@ -86,7 +98,9 @@ const updatePassword = () => {
                     value="Confirm Password"
                 />
 
-                <TextInput
+                <TextInput 
+                                 :is-edit="isEdit"
+
                     id="password_confirmation"
                     v-model="form.password_confirmation"
                     type="password"
@@ -100,7 +114,7 @@ const updatePassword = () => {
                 />
             </div>
 
-            <div class="flex items-center gap-4">
+            <div v-if="isEdit === false" class="flex items-center gap-4">
                 <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
 
                 <Transition

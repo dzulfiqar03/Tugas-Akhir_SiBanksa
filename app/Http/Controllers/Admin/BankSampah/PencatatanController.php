@@ -82,7 +82,7 @@ class PencatatanController extends Controller
 
         try {
             $this->pencatatanServices->createPencatatanSetoran($request->validated());
-            return redirect()->back()->with('message', 'Sampah berhasil ditambahkan');
+            return redirect()->back()->with('message', 'Pencatatan berhasil ditambahkan');
         } catch (\Throwable $th) {
             //throw $th;
         }

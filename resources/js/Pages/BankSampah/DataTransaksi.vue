@@ -6,6 +6,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+import FormWrapper from '@/Components/FormWrapper.vue';
+import InputLabel from '@/Components/InputLabel.vue';
 
 // ================= DATATABLES =================
 import DataTable from 'datatables.net-vue3'
@@ -31,6 +33,8 @@ const props = defineProps({
     formdata: Object,
     items: Array,
     sidebardata: Object,
+        document:Array,
+
     breadcrumbItems: Array,
         user: Object,
         transaction:Array,
@@ -42,28 +46,84 @@ const props = defineProps({
 
 });
 
+
 console.log(props.nasabah)
 // State
 const showForm = ref(false);
 const showDetail = ref(false);
 const selectedNasabah = ref(null);
+const isEdit = ref(false);
 
 const form = useForm({
-    id_nasabah: '',
-    jumlah_pencairan: '',
-    metode: '',
-    keterangan: ''
+    id: props.user.id,
+    id_userdetail: props.user.user_detail.id,
+     id_userbank: '',
+     id_jadwal:'',
+     fullName:'',
+    pencatatan_setoran_id:'', 
+    bukti_pembayaran: '',
+    fileDoc: []
+
+
 });
 
-// Fungsi untuk melihat detail saat baris tabel kanan diklik
-const viewDetail = (nasabah) => {
-    selectedNasabah.value = nasabah;
-    showDetail.value = true;
-    // Scroll otomatis ke detail jika di mobile
-    if (window.innerWidth < 768) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+const viewDetail = (id) => {
+    // Navigasi ke halaman detail nasabah
+    router.get(route('show-nasabah', id));
 };
+
+const renamedFileList = computed(() => { 
+    form.fileDoc.map((file, index) => {
+        const extension = file.name.split('.').pop();
+        return {
+            original: file.name,
+            dynamic: `Dokumen${form.name || 'Dokumen'}_BankSampahRT0${props.IDRT}_${index + 1}.${extension}`,
+            size: file.size,
+            
+        };
+    })
+    
+});
+
+
+const editData = (item) => {
+        const row = JSON.parse(decodeURIComponent(escape(atob(item))));
+
+        console.log(row)
+    isEdit.value = true;
+    form.id = row.user_detail.id_user;
+    form.fullName= row.user_detail.fullName;
+    form.id_userdetail= row.id_userdetail;
+    form.id_jadwal= row.id_jadwal;
+    form.id_userbank = row.user_bank[0].id;
+    form.pencatatan_setoran_id = 
+  row.pencatatan_items.find(i => i.pencatatan_setoran_id)?.pencatatan_setoran_id ?? null;
+    form.bukti_pembayaran = '';
+    showForm.value = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.uploadBukti = editData
+
+const deleteData = (base64) => {
+        const row = JSON.parse(decodeURIComponent(escape(atob(base64))));
+    Swal.fire({
+        title: 'Hapus data?',
+        text: "Tindakan ini tidak bisa dibatalkan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Hapus!'
+    }).then((res) => {
+        if (res.isConfirmed) {
+            router.delete(route('bs.delete-transaction', row.id), {
+                onSuccess: () => Swal.fire('Dihapus!', 'Data berhasil dihapus.', 'success')
+            });
+        }
+    });
+};
+
+window.handleDelete = deleteData
 
 const kirimWA = (base64)=>{
     const row = JSON.parse(decodeURIComponent(escape(atob(base64))));
@@ -157,15 +217,30 @@ const dtOptions = {
             orderable: false, 
             className: 'no-print text-center',
             render:(data, type,row)=>{
-const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(row))));                return !row.user_bank || row.user_bank.length === 0 ? ` <button 
+const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(row))));                
+return row.user_transaction.length === 0? !row.user_bank || row.user_bank.length === 0 ? ` <button 
                                             onclick="window.handleWA('${base64Data}')"
                                             class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
                                             <i class="fas fa-bell"></i> Hubungi WA
                                         </button>`:` <button
-                                            @click=""
+                                            onclick="window.uploadBukti('${base64Data}')"
                                             class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-bell"></i> Bukti Pemabayaran
-                                        </button>`
+                                            <i class="fas fa-bell"></i> Kirim Bukti Pembayaran
+                                        </button>`:` 
+                                        
+                                        <div class="flex space-x-3">
+                                            <button
+                                            onclick=""
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-check"></i> Transaksi Telah Dilakukan
+                                        </button>
+
+                                        <button
+                                            onclick="window.handleDelete('${base64Data}')"
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-trash"></i> Hapus Transaksi
+                                        </button>
+                                            </div>`
             }
             
         }
@@ -391,6 +466,46 @@ const updateVerification = (item) => {
 };
 
 
+const handleSubmit = () => {
+    
+const url = route('bs.add-transaction');
+    const method = 'post';
+
+    form[method](url, {
+        forceFormData: true,
+        onSuccess: () => {
+            Swal.fire('Berhasil!', 'Data transaksi telah diproses.', 'success');
+            showForm.value = false;
+            form.reset();
+        },
+        onError: function (xhr) {
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON.errors;
+                            let errorHtml = '';
+                            let totalErrorCount = 0;
+                            Object.keys(errors).forEach(key => {
+                                errors[key].forEach(msg => {
+                                    errorHtml += ` <li class="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2">
+                           <span class="w-1 h-1 bg-red-400 rounded-full"></span>
+                           ${msg}
+                       </li>`;
+                                    totalErrorCount++;
+                                });
+                                $(`[name="${key}"]`).addClass('border-red-500 ring-1 ring-red-500');
+
+                            });
+
+                            $('#error-count').text(totalErrorCount);
+                            $('#error-list').html(errorHtml);
+                            $('#error-message').removeClass('hidden').fadeIn();
+                            Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
+                        } else {
+                            Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+                        }
+                    },
+                    
+    });
+};
 </script>
 
 <template>
@@ -400,7 +515,7 @@ const updateVerification = (item) => {
         <template v-if="user.user_detail.status_transaction === 'Belum Disetujui'">
                 <div class="card w-full shadow-sm border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
                     
-                    <div class="p-6 flex flex-col gap-5 bg-gray-200 dark:bg-gray-800 transition-colors">
+                    <div class="flex flex-col gap-5 bg-gray-200 dark:bg-gray-800 transition-colors">
                        
                                        <template v-if="props.transaction.length === 0">
 
@@ -473,46 +588,77 @@ const updateVerification = (item) => {
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
                 <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
                     <h3 class="text-lg font-bold dark:text-white">Pencairan Dana Nasabah</h3>
-                    <button @click="showForm = !showForm" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                    <button v-if="showForm" @click="showForm = !showForm" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm transition">
                         <i class="fas mr-2" :class="showForm ? 'fa-minus' : 'fa-plus'"></i>
                         {{ showForm ? 'Tutup Form' : 'Tambah Transaksi' }}
                     </button>
                 </div>
 
-                <Transition name="fade">
-                    <div v-if="showDetail && selectedNasabah" class="mb-6 p-5 bg-gray-100 dark:bg-gray-700 rounded-2xl">
-                        <h4 class="border-b border-gray-500 pb-2 mb-4 text-sm font-bold uppercase dark:text-gray-300">Detail Nasabah</h4>
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-                            <div v-for="(val, label) in {
-                                'Nama': selectedNasabah.namaSampah,
-                                'RT': selectedNasabah.rt || '-',
-                                'Telepon': selectedNasabah.telepon || '-',
-                                'Rekening': selectedNasabah.no_rek || '-',
-                                'Bank': selectedNasabah.bank || '-'
-                            }" :key="label">
-                                <span class="block text-gray-500 dark:text-gray-400 text-xs">{{ label }}</span>
-                                <span class="font-semibold dark:text-white">{{ val }}</span>
-                            </div>
+                    <Transition name="accordion">
+                <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
+                    
+       
+
+          <FormWrapper
+            :errors="form.errors" 
+            :processing="form.processing"
+            @submit="handleSubmit"
+        >
+    
+            <input type="hidden" name="id_userdetail" v-model="form.id_userdetail">
+            
+            <div class="grid grid-cols-1 gap-4">
+
+
+
+    <template v-for="field in formdata.Dokumen" :key="field.name">
+
+
+
+        <div v-if="field.type === 'file' && field.name === 'fileDoc'" class="flex flex-col"> 
+            <InputLabel :for="field.name" :value="field.title" />                        
+            <input 
+                :type="field.type" 
+                :id="field.name"
+                multiple
+            @input="(e) => {
+    const newFiles = Array.from(e.target.files);
+    form.fileDoc = [...form.fileDoc, ...newFiles];
+}"
+                :placeholder="field.placeholder"
+                class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm border-gray-200"
+                :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
+            >
+            <p v-if="form[field.name]?.length" class="text-xs text-emerald-600 mt-2 font-medium">
+            {{ form[field.name].length }} file terpilih
+        </p>
+
+        <ul v-if="form.fileDoc.length > 0" class="mt-2 space-y-1">
+    <li v-for="(file, index) in renamedFileList" :key="index" class="text-xs text-gray-500 flex items-center">
+        <svg class="w-3 h-3 mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+        </svg>
+        {{ file.dynamic }} ({{ (file.size / 1024).toFixed(1) }} KB)
+    </li>
+</ul>
+            <div v-if="form.errors[field.name]" class="text-red-500 text-xs mt-1">{{ form.errors[field.name] }}</div>
+        </div>
+
+    </template>
+</div>
+
+ <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
+                            <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
+                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Dokumen' : 'Simpan Dokumen' }}
+                            </button>
                         </div>
-                    </div>
+
+             </FormWrapper>
+
+             </div>
                 </Transition>
 
-                <div v-if="showForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-xl bg-gray-50 dark:bg-gray-900">
-                    <div v-for="field in formdata.sampah.formSampah" :key="field.name">
-                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">{{ field.title }}</label>
-                        
-                        <select v-if="field.type === 'select'" v-model="form[field.name]" class="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:text-white">
-                            <option value="">-- Pilih --</option>
-                            <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
-                        </select>
-
-                        <input v-else :type="field.type" v-model="form[field.name]" :placeholder="field.placeholder"
-                            class="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:text-white">
-                    </div>
-                    <div class="md:col-span-2 flex justify-end">
-                        <button class="bg-blue-600 text-white px-6 py-2 rounded-lg">Simpan Transaksi</button>
-                    </div>
-                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-7 gap-4">
@@ -595,7 +741,7 @@ const updateVerification = (item) => {
                             </thead>
                             <tbody>
                                 <tr v-for="user in nasabah"
-                                    @click="viewDetail(rek)"
+                                    @click="viewDetail(user.user_detail.id_user)"
                                     class="cursor-pointer hover:bg-emerald-50 dark:hover:bg-gray-600 transition border-b dark:border-gray-600 last:border-0"
                                 >
                                     <td class="py-2">

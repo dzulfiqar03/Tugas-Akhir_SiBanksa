@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Admin\BankSampah;
+namespace App\Http\Controllers\Admin\KetuaRW;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
-use App\Models\BankSampah\PencatatanSetoran;
+use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\BankSampah\PencatatanSetoranItems;
 use App\Models\BankSampah\Sampah;
 use App\Models\User;
@@ -13,19 +13,23 @@ use App\Models\UserChat;
 use App\Models\UserDetail;
 use App\Notifications\Admin\ChatSendNotif;
 use App\Services\ChatServices;
+use App\Services\KetuaRW\JadwalPelaksanaanServices;
 use App\Services\KetuaRW\KelolaBankSampahServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 
-class UserChatController extends Controller
+class KetuaRWChatController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
 
-    public function __construct(protected KelolaBankSampahServices $kelolaBankSampahServices, protected ChatServices $chatServices) {}
+    public function __construct(
+        protected KelolaBankSampahServices $kelolaBankSampahServices,
+        protected ChatServices $chatServices,
+        protected JadwalPelaksanaanServices $jadwalPelaksanaanServices
+    ) {}
     public function index()
     {
         $menu = (new DataResources(null))->toArray(request());
@@ -57,7 +61,7 @@ class UserChatController extends Controller
         array_unshift($finalChatList, $aiRoom);
 
         // Di Controller Index
-        return Inertia::render('BankSampah/Chat', [
+        return Inertia::render('KetuaRW/Chat', [
             'sidebardata' => $menu,
             'allNasabah'  => $finalChatList,
             'nasabahList' => UserDetail::with(['user_log'])->orderByRaw('fullName')->get()->map(function ($u) {
@@ -75,7 +79,6 @@ class UserChatController extends Controller
 
         ]);
     }
-
     /**
      * Show the form for creating a new resource.
      */
@@ -100,7 +103,7 @@ class UserChatController extends Controller
             $botResponse = '';
 
             if ($fullName === 'AI Banksa') {
-                $text = ['Rekening', 'Total', 'Setoran', 'Bulan', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW'];
+                $text = ['Tambahkan', 'Ubah', 'Hapus', 'Rekening', 'Total', 'Setoran', 'Bulan', 'Jadwal', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW', 'data', 'belum'];
 
                 $wordsInMessage = preg_split('/\s+/', $message, -1, PREG_SPLIT_NO_EMPTY);
 
@@ -123,7 +126,7 @@ class UserChatController extends Controller
                             ->latest() // Mengurutkan dari yang terbaru
                             ->get();
 
-                        $total = $pencatatanSetoranItems->sum('total_setoran');
+                        $total = $pencatatanSetoranItems->sum('setoran.total_setoran');
 
                         $botResponse = "Total setoran Anda sampai saat ini adalah: Rp " . number_format($total, 0, ',', '.');
                     } elseif (
@@ -133,11 +136,17 @@ class UserChatController extends Controller
                         in_array('bulan', $matches) &&
                         in_array('sekarang', $matches)
                     ) {
+                        dd('setoran bulan ini');
+                    } elseif (in_array('jadwal', $matches)) {
 
+                        $jadwalTerbaru = $this->jadwalPelaksanaanServices->getJadwalTerbaru();
+
+                        $botResponse = "Jadwal Terbaru RT mu yakni " . $jadwalTerbaru->tanggal_setoran;
                     } elseif (in_array('jumlah', $matches)) {
                         if (in_array(needle: 'rw', haystack: $matches)) {
                             dd('rw');
                         } elseif (in_array(needle: 'sampah', haystack: $matches)) {
+
                             $jumlahSampah = Sampah::where('id_userdetail', Auth::user()->user_detail->id)->count();
 
                             $botResponse = "Jumlah Jenis Sampah di RT anda ada " . number_format($jumlahSampah, 0, ',', '.');
@@ -172,13 +181,9 @@ class UserChatController extends Controller
                 $targetUser->notify(new ChatSendNotif(
                     $myDetail->id,
                     'Pesan baru dari ' . $myDetail->fullName,
-                    '/Warga/chat'
+                    '/bank-sampah/chat'
                 ));
             }
-
-
-
-
 
 
             return redirect()->back();

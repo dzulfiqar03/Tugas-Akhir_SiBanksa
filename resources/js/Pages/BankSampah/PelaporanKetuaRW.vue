@@ -47,7 +47,6 @@ const step = ref(1);
 const isEdit = ref(false);
 const dtInstance = ref(null);
 
-console.log(props.IDRW)
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});

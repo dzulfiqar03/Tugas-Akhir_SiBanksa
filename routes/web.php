@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\BankSampah\UserChatController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\KetuaRW\JadwalController;
 use App\Http\Controllers\Admin\KetuaRW\KelolaBankSampahController;
+use App\Http\Controllers\Admin\KetuaRW\KetuaRWChatController;
 use App\Http\Controllers\Admin\KetuaRW\PelaporanController;
 use App\Http\Controllers\Admin\PreferenceController;
 use App\Http\Controllers\Admin\Warga\WargaChatController;
@@ -51,6 +52,7 @@ Route::middleware(['conn'])->group(function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::post('/profile/edit', [ProfileController::class, 'editAll'])->name('profile-edit');
 
         Route::middleware(['verified'])->group(function () {
 
@@ -79,7 +81,15 @@ Route::middleware(['conn'])->group(function () {
                 Route::post('/KetuaRW/{id}/send-reminder', action: [KelolaBankSampahController::class, 'sendReminder'])->name('banksampah.send-reminder');
                 Route::post('/KetuaRW/{id}/update-transaction', action: [PelaporanController::class, 'update'])->name('rw.open-transaction');
 
-                });
+                Route::get('/KetuaRW/chat', [KetuaRWChatController::class, 'index'])->name('rw.chat');
+                Route::post('/KetuaRW/chat/create{id}', [KetuaRWChatController::class, 'store'])->name('rw.add-chat');
+                Route::put('/KetuaRW/chat/update/{id}', [KetuaRWChatController::class, 'update'])->name('rw.update-chat');
+                Route::delete('/KetuaRW/chat/delete/{id}', [KetuaRWChatController::class, 'destroy'])->name('rw.delete-chat');
+                Route::delete('/KetuaRW/chat/deleteChat/{id}', [KetuaRWChatController::class, 'deleteRoomChat'])->name('rw.delete-roomChat');
+
+                Route::put('/KetuaRW/chat/read{id}', [KetuaRWChatController::class, 'readChat'])->name('rw.read-chat');
+                Route::post('/KetuaRW/chatbot/create{id}', [KetuaRWChatController::class, 'store'])->name('rw.add-chatbot');
+            });
 
             Route::middleware(['roles:Bank Sampah'])->group(function () {
                 Route::get('/bank-sampah/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -112,9 +122,13 @@ Route::middleware(['conn'])->group(function () {
                 Route::post('/nasabah/{id}/send-reminder', action: [DataNasabahController::class, 'sendReminder'])->name('nasabah.send-reminder');
 
                 Route::get('/bank-sampah/tracking', [TrackingSetoranController::class, 'index'])->name('data-tracking');
-                
+
                 Route::get('/bank-sampah/transaksi', [DataTransaksiController::class, 'index'])->name('data-transaksi');
                 Route::post('/bank-sampah/{id}/chat-transaction', action: [PelaporanController::class, 'sendChat'])->name('bs.chat-transaction');
+                Route::post('/bank-sampah/transaksi/create', [DataTransaksiController::class, 'store'])->name('bs.add-transaction');
+                Route::put('/bank-sampah/transaksi/update/{id}', [DataTransaksiController::class, 'update'])->name('bs.update-transaction');
+                Route::delete('/bank-sampah/transaksi/delete/{id}', [DataTransaksiController::class, 'destroy'])->name('bs.delete-transaction');
+
 
                 Route::get('/bank-sampah/pencatatan', [PencatatanController::class, 'index'])->name('pencatatan-setoran');
                 Route::post('/bank-sampah/pencatatan/create', [PencatatanController::class, 'store'])->name('add-setoran');
@@ -139,6 +153,7 @@ Route::middleware(['conn'])->group(function () {
                 Route::delete('/bank-sampah/chat/deleteChat/{id}', [UserChatController::class, 'deleteRoomChat'])->name('bs.delete-roomChat');
 
                 Route::put('/bank-sampah/chat/read{id}', [UserChatController::class, 'readChat'])->name('bs.read-chat');
+                Route::post('/bank-sampah/chatbot/create{id}', [UserChatController::class, 'store'])->name('bs.add-chatbot');
             });
 
             Route::middleware(['roles:Warga'])->group(function () {
@@ -154,6 +169,7 @@ Route::middleware(['conn'])->group(function () {
                 Route::delete('/Warga/chat/deleteChat/{id}', [WargaChatController::class, 'deleteRoomChat'])->name('warga.delete-roomChat');
 
                 Route::put('/Warga/chat/read{id}', [WargaChatController::class, 'readChat'])->name('warga.read-chat');
+                Route::post('/Warga/chatbot/create{id}', [WargaChatController::class, 'store'])->name('warga.add-chatbot');
             });
         });
     });

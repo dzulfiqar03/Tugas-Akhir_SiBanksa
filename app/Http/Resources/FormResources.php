@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\Gender;
 use App\Models\RTPerumahan;
+use App\Models\Transaction\Bank;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +27,8 @@ class FormResources extends JsonResource
         foreach ($rt as $rts) {
             $optionRT[] = $rts->RT; // kolom
         }
+
+        $optionBank = Bank::pluck('name');
         $gender = Gender::where('gender', '!=', 'none')->get();
 
         $optionGender = [];
@@ -124,7 +127,25 @@ class FormResources extends JsonResource
                     'placeholder' => 'Re-Masukkan password',
                 ],
 
+                
+
             ],
+             'userBank' => [
+
+                 [
+                    'title' => 'Bank',
+                    'name' => 'id_bank',
+                    'type' => 'select',
+                    'options' => $optionBank,
+                ],
+               [
+                    'title' => 'Nomor Rekening',
+                    'name' => 'nomor_rekening',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Nomor Rekening',
+                ],
+
+             ],
 
             'sampah' => [
 
