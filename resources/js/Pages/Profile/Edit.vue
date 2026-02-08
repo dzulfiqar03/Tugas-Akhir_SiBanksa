@@ -324,9 +324,7 @@ onMounted(() => {
                     {{ props.nasabah?.user_detail.fullName.charAt(0) }}
                 </div>
 
-                <button class="absolute bottom-2 right-2 w-10 h-10 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition-colors">
-                    <i class="fas fa-camera text-gray-600 dark:text-gray-300"></i>
-                </button>
+               
             </div>
 
             <div class="mb-4">
@@ -414,7 +412,7 @@ onMounted(() => {
                <div  class="flex flex-wrap items-center w-full gap-4 mb-8">
 
                                 <div class="flex items-center gap-2 cursor-pointer" @click="step = 1">
-                    <span :class="step >= 1 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'" class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">2</span>
+                    <span :class="step >= 1 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'" class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">1</span>
                     <span :class="step >= 1 ? 'text-emerald-700' : 'text-gray-400'" class="text-[10px] font-bold uppercase tracking-widest">Akun</span>
                 </div>
 
@@ -422,7 +420,7 @@ onMounted(() => {
 
 
                 <div class="flex items-center gap-2 cursor-pointer" @click="step = 2">
-                    <span :class="step >= 2 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'" class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">1</span>
+                    <span :class="step >= 2 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'" class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">2</span>
                     <span :class="step >= 2 ? 'text-emerald-700' : 'text-gray-400'" class="text-[10px] font-bold uppercase tracking-widest">Data Diri</span>
                 </div>
 
