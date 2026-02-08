@@ -48,6 +48,10 @@ class UserDetail extends Model
     {
         return $this->hasMany(UserBot::class, 'id_userdetail', 'id');
     }
+    public function location()
+    {
+        return $this->hasOne(Geolocation::class, 'id_userdetail', 'id');
+    }
 
     public function pencatatan()
     {

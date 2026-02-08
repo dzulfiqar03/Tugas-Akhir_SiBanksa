@@ -60,13 +60,13 @@ class DataResources extends JsonResource
                         'route' => route('rw.jadwal-pelaksanaan'),
                         'uri' => 'rw.jadwal-pelaksanaan',
                     ],
-                      [
+                    [
                         'nama'  => 'Chat',
                         'icon'  => 'fa fa-comment',
                         'route' => route(name: 'rw.chat'),
                         'uri' => 'rw.chat',
                     ],
-                   
+
                     [
                         'nama'  => 'Pengaturan',
                         'route' => route('preference'),
@@ -76,8 +76,8 @@ class DataResources extends JsonResource
                     [
                         'nama'  => 'Profile',
                         'icon'  => 'fa fa-user',
-                        'route' => '#',
-                        'uri' => '#',
+                        'route' => route('profile.edit'),
+                        'uri' => 'profile.edit',
                     ],
                     [
                         'nama'  => 'LogOut',
@@ -173,7 +173,7 @@ class DataResources extends JsonResource
                         'icon'  => 'fas fa-route',
                     ],
 
-                       [
+                    [
                         'nama'  => 'Chat',
                         'icon'  => 'fa fa-comment',
                         'route' => route('banksampah.chat'),
@@ -189,8 +189,8 @@ class DataResources extends JsonResource
 
                     [
                         'nama'  => 'Profile',
-                        'route' => '#',
-                        'uri' => '#',
+                        'route' => route('profile.edit'),
+                        'uri' => 'profile.edit',
                         'icon'  => 'fas fa-user-circle',
                     ],
 
@@ -230,12 +230,12 @@ class DataResources extends JsonResource
                     'icon'  => 'fas fa-sign-out-alt text-danger',
                 ],
 
-                   [
-                        'nama'  => 'Chat',
-                        'icon'  => 'fa fa-user',
-                        'route' => route(name: 'warga.chat'),
-                        'uri' => 'warga.chat',
-                    ],
+                [
+                    'nama'  => 'Chat',
+                    'icon'  => 'fa fa-user',
+                    'route' => route(name: 'warga.chat'),
+                    'uri' => 'warga.chat',
+                ],
 
                 [
                     'nama'  => 'Pengaturan',

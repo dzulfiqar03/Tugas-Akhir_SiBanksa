@@ -73,12 +73,6 @@ class FormResources extends JsonResource
                     'placeholder' => 'Masukkan Nama Lengkap',
                 ],
                 [
-                    'title' => 'Address',
-                    'name' => 'address',
-                    'type' => 'text',
-                    'placeholder' => 'Masukkan Alamat anda',
-                ],
-                [
                     'title' => 'Phone Number',
                     'name' => 'phoneNumber',
                     'type' => 'text',
@@ -352,6 +346,50 @@ class FormResources extends JsonResource
                     'type' => 'select',
                     'options' => ['Hasil Setoran'],
                 ],
+            ],
+
+             'location' => [
+                [
+                    'title' => 'Nama Jalan',
+                    'name' => 'amenity',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Nama Jalam (misal: Bangka)',
+                ],
+
+                 [
+                    'title' => 'Nomor / Blok Alamat',
+                    'name' => 'house_number',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Nomor Alamat (misal: 7B atau B27)',
+                ],
+
+                 [
+                    'title' => 'Kota',
+                    'name' => 'city',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Kota',
+                ],
+                
+                 [
+                    'title' => 'Provinsi',
+                    'name' => 'state',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Provinsi',
+                ],
+
+                 [
+                    'title' => 'Negara',
+                    'name' => 'country',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Negara',
+                ],
+                [
+                    'title' => 'Kode Pos',
+                    'name' => 'postal_code',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Kode Pos',
+                ],
+
             ]
         ];
     }

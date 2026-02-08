@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserBot extends Model
 {
-        protected $table = 'user_bots';
+    protected $table = 'user_bots';
 
     protected $fillable = [
         'id_userdetail',
@@ -17,6 +17,6 @@ class UserBot extends Model
 
     public function user_detail()
     {
-        return $this->hasMany(UserDetail::class, 'id_userdetail', 'id');
+        return $this->belongsTo(UserDetail::class, 'id_userdetail', 'id');
     }
 }

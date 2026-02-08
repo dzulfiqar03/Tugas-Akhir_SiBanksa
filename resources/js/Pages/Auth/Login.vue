@@ -126,7 +126,7 @@ const submit = () => {
                     <input type="checkbox" v-model="form.remember" class="rounded text-emerald-600 focus:ring-emerald-500 mr-2" />
                     Remember me
                 </label>
-                    <Link class="dark:text-white" href="/forgot-password">
+                    <Link class="dark:text-white text-black" href="/forgot-password">
     Forgot your password?
 </Link>
             </div>

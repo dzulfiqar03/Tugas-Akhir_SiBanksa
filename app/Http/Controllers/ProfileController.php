@@ -48,7 +48,9 @@ class ProfileController extends Controller
 
         $setoranTertinggi = $semuaNasabah->max(fn($user) => $user->user_detail?->total_masuk) ?? 0;
 
-        $nasabah = User::with(['user_detail', 'user_detail.sampah', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan'])->find(Auth::user()->id);
+        $nasabah = User::with(['user_detail', 'user_detail.sampah', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan', 'user_detail.location', 'user_detail.location.open_street'])->find(Auth::user()->id);
+
+        $nasabahAll = UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->where('id_rt', Auth::user()->user_detail->id_rt)->get();
 
         $total_setoran = $nasabah->user_detail->pencatatan->sum('total_setoran');
         $fields = [
@@ -109,6 +111,7 @@ class ProfileController extends Controller
             'formdata' => $form,
             'formName' => $formName,
             'nasabah' => $nasabah,
+            'nasabahAll' => $nasabahAll,
             'pageName' => $pageName
 
         ]);
@@ -132,7 +135,7 @@ class ProfileController extends Controller
 
     public function editAll(Request $request): RedirectResponse
     {
-        $nasabah = User::with(['user_detail', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan'])->findOrFail(Auth::user()->id);
+        $nasabah = User::with(['user_detail', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan', 'user_detail.location', 'user_detail.location.open_street'])->findOrFail(Auth::user()->id);
         $bankSampahlist = User::with(['user_detail', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan'])->whereHas('user_detail', function ($query) {
             $query->where('id_rt', Auth::user()->user_detail->id_rt);
             $query->where('id_roles', 2);
@@ -147,15 +150,29 @@ class ProfileController extends Controller
         $nasabah->user_detail->update([
             'fullName' => $request->fullName,
             'userName' => $request->userName,
-            'address' => $request->address,
+            'address' => $request->display_name,
             'telephone_number' => $request->phoneNumber,
         ]);
 
-        $nasabah->user_detail->userbank()->create([
+
+        $geoLocation = $nasabah->user_detail->location()->create([
             'id_userdetail' => $request->id_userdetail,
-            'id_bank' => $request->id_bank,
-            'nomor_rekening' => $request->nomor_rekening,
+            'amenity' => $request->amenity,
+            'house_number' => $request->house_number,
+            'city' => $request->city,
+            'state' => $request->state,
+            'country' => $request->country,
+            'postal_code' => $request->postal_code,
         ]);
+
+        $geoLocation->open_street()->create([
+            'id_geoloc' => $geoLocation->id,
+            'display_name' => $request->display_name,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'type' => $request->type,
+        ]);
+
         $IDRW =  UserDetail::where('id_roles', 1)->first()->id_user;
 
         $bankSampah = UserDetail::where('id_roles', 2)->where('id_rt',  Auth::user()->user_detail->id_rt)->where('fullName', 'LIKE', '%Petugas Bank Sampah%')->get();
