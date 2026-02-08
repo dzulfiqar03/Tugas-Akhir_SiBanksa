@@ -665,18 +665,18 @@ onMounted(() => {
 
   
         <div @click="isPreviewOpen = !isPreviewOpen" class="md:hidden cursor-pointer  w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-3"></div>
-              <h1 class="font-black text-black dark:text-white text-center">Map Detail information</h1>
+              <h1 class="font-black md:text-base text-sm text-black dark:text-white text-center">Map Detail information</h1>
 
     <div class="px-6 pb-6 md:grid grid-cols-1 flex space-x-3 md:space-x-0 space-y-0 md:space-y-5">
         
-        <div class="md:grid m-auto">
+        <div class="md:grid flex m-auto">
 
         <div class=" flex flex-wrap m-auto justify-center lg:justify-between items-end">
             <div class=" "> 
                 
                 <div :class="[
                     selectedData.id_roles === 2?'bg-red-500 dark:bg-red-900 text-red-700 dark:text-red-300 ':'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 ',
-                ]" class="md:w-40 w-32 h-32 md:h-40  rounded-full flex items-center justify-center text-5xl font-bold uppercase border-4 border-white dark:border-gray-800 shadow-sm overflow-hidden">
+                ]" class="md:w-40 w-24 h-24 md:h-40  rounded-full flex items-center justify-center text-5xl font-bold uppercase border-4 border-white dark:border-gray-800 shadow-sm overflow-hidden">
                     {{ selectedData.fullName.charAt(0) }}
                 </div>
 
@@ -689,14 +689,14 @@ onMounted(() => {
 
         <div class="flex flex-col space-y-0 md:space-y-3">
                <div class="mt-4">
-            <h1 class="md:text-2xl text-lg font-bold text-gray-900 capitalize dark:text-white flex items-center gap-2">
+            <h1 class="md:text-2xl text-sm  flex-wrap font-bold text-gray-900 capitalize dark:text-white flex items-center gap-2">
                 {{ selectedData.fullName }}
-                <span class="text-sm font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{{ props.nasabah?.user_detail.location.open_street.type }}</span>
+                <span class="md:text-sm text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{{ props.nasabah?.user_detail.location.open_street.type }}</span>
             </h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">
+            <p class="text-gray-600 dark:text-gray-400 mt-1 md:text-base text-xs">
                 {{ selectedData.roles.role }} • RT0{{ selectedData.rt.RT }}
             </p>
-            <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">
+            <p class="text-gray-400 dark:text-gray-500 text-xs  md:text-sm mt-1">
                 {{ selectedData.address }}
             </p>
         </div>
