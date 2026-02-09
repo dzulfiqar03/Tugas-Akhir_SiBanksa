@@ -124,7 +124,7 @@ const submit = () => {
             <div v-if="step === 1" class="space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div v-for="field in filteredFields" :key="field.name" 
-                         :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
+                         :class="field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
                         
 
                         <div v-if="field.name === 'rt'" class="col-span-full">

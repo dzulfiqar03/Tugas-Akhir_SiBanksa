@@ -142,11 +142,26 @@ const readNotifhandle = (id, url) => {
     
 };
 
-
+const sendLogout= () => {
+    Swal.fire({
+        title: 'Ingin Logout?',
+        text: "Setelah ini akun anda akan logout dan status offline",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Logout!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(route('logout'), {
+                onSuccess: () => Swal.fire('Berhasil!', 'Anda berhasil logout, selamat tinggal.', 'success')
+            });
+        }
+    });
+};
 </script>
 
 <template>
-    <div class="navbar-container">
+    <div class="navbar-container w-full">
         <header class="hidden lg:flex items-center justify-between bg-white/80 dark:bg-gray-800/80 backdrop-blur border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-30">
             <div class="flex flex-col gap-1">
                 <Breadcrumbs :items="breadcrumbItems" />
@@ -256,7 +271,7 @@ const readNotifhandle = (id, url) => {
     <div class="flex gap-3">
            <div class="flex items-center gap-3">
                 <div v-if="count > 0" x-cloak
-        class="px-4 py-1.5 rounded-full bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wider">
+        class="px-4 py-1.5 rounded-full hidden md:flex bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wider">
         new notification
     </div>
                 <div class="relative">
@@ -338,8 +353,8 @@ const readNotifhandle = (id, url) => {
                     <div class="space-y-1">
                         <div v-for="menu in sectionMenus" :key="menu.nama">
                             
-                            <Link v-if="!menu.data"
-                                :href="userDetail.status === 'Pengajuan Verifikasi' ? route('warga.dashboard') : menu.route"
+ <Link v-if="!menu.data && menu.nama !== 'LogOut'"
+                                 :href="userDetail.status === 'Pengajuan Verifikasi' ? route('warga.dashboard') : menu.route"
                                 @click="mobileMenuOpen = false"
                                 class="flex items-center justify-between p-2 rounded transition hover:bg-gray-100 dark:hover:bg-gray-700"
                                 :class="isRouteActive(menu.uri) ? 'bg-gray-100 dark:bg-gray-700 font-semibold' : ''"
@@ -356,7 +371,16 @@ const readNotifhandle = (id, url) => {
                                     unverified
                                 </span>
                             </Link>
-
+<button v-else-if="menu.nama === 'LogOut'"
+    type="button"
+    @click="sendLogout"
+    class="w-full flex items-center gap-3 p-2 rounded-lg transition group text-white font-bold bg-red-500 hover:bg-red-600 shadow-sm mt-4"
+>
+    <span class="w-6 h-6 flex items-center justify-center shrink-0">
+        <i :class="menu.icon"></i>
+    </span>
+    <span class="truncate">{{ menu.nama }}</span>
+</button>
                             <Disclosure v-else v-slot="{ open }" :default-open="menu.data.some(sub => isRouteActive(sub.uri))">
                                 <DisclosureButton class="flex justify-between w-full p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
                                     <div class="flex items-center gap-3">
