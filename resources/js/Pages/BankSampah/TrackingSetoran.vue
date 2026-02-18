@@ -84,7 +84,7 @@ const dtOptions = {
     responsive: true,
     autoWidth: false,
     // Gunakan props.nasabahList sebagai sumber data
-    data: props.nasabahList, 
+    data: props.nasabahList,
      layout: {
         topStart: null,
         topEnd: null,
@@ -169,7 +169,7 @@ const dtOptions = {
             <span class="font-light">Si</span>
             Banksa
         </h1>
-                        
+
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 14px; margin: 0;">Laporan Data Kepengurusan</p>
@@ -214,18 +214,25 @@ const dtOptions = {
             emptyTable: "Tidak ada data tersedia"
         },
     columns: [
-        { 
-            data: null, 
+        {
+            data: null,
             render: (d, t, r, meta) => meta.row + 1,
             title: 'No',
             className: 'text-center w-10 text-black dark:text-white'
         },
-        { 
-            data: 'fullName', 
+
+         {
+            title: 'jadwal',
+            data: 'jadwalPelaksanaan',
+
+        },
+
+        {
+            data: 'nasabah',
             title: 'Nama Nasabah',
             className: 'font-bold capitalize min-w-[150px] text-black dark:text-white'
         },
-        ...statusColumns, 
+        ...statusColumns,
         {
             title: 'Aksi',
             data: null,
@@ -251,8 +258,8 @@ const handleSearch = (e) => {
 
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
-    const regex = val ? `^${val}$` : ''; 
-    
+    const regex = val ? `^${val}$` : '';
+
     dtInstance.value.dt
         .column(2)
         .search(regex, true, false)
@@ -332,7 +339,7 @@ const breadcrumbItems = [
       <span v-else>{{ index + 1 }}</span>
     </div>
 
-    <span class="text-xs md:text-sm mt-2 font-medium text-gray-600 dark:text-gray-300" 
+    <span class="text-xs md:text-sm mt-2 font-medium text-gray-600 dark:text-gray-300"
     :class="[
         step.completed
           ? ' animate-pulse'
@@ -366,10 +373,10 @@ const breadcrumbItems = [
                        <transition name="accordion">
                 <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
-                    
-                              <FormWrapper 
-            formName="formNasabah" 
-            :errors="form.errors" 
+
+                              <FormWrapper
+            formName="formNasabah"
+            :errors="form.errors"
             :processing="form.processing"
             @submit="handleSubmit"
         >
@@ -379,35 +386,35 @@ const breadcrumbItems = [
   <div v-for="field in formdata.nasabah" :key="field.name"">
                                     <div v-if="field.type === 'radio'"  class="col-span-full">
 
-                                                                        <InputLabel :for="field.name" :value="field.title" />                        
+                                                                        <InputLabel :for="field.name" :value="field.title" />
 
-        
+
         <div class="flex gap-3">
                         <label v-for="(opt, idx) in field.options" :key="idx" class="flex-1 cursor-pointer group">
-                                <input type="radio" 
-                                    v-model="form[field.name]" 
-                                    :value="idx + 1" 
+                                <input type="radio"
+                                    v-model="form[field.name]"
+                                    :value="idx + 1"
                                     class="peer sr-only">
                                 <div class="py-2 px-4 dark:text-white text-gray-500 rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
                                     {{ opt }}
                                 </div>
                             </label>
         </div>
-                   
+
     </div>
 
     <div  v-else-if="field.name ==='status'">
         <div class="col-span-2">
-                                            <InputLabel :for="field.name" :value="field.title" />                        
-                                        <select :id="field.name" :name="field.name" v-model="form[field.name]" 
+                                            <InputLabel :for="field.name" :value="field.title" />
+                                        <select :id="field.name" :name="field.name" v-model="form[field.name]"
                                                                                                         :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
 
                                             class="w-full h-11 rounded-xl  border-gray-200 text-gray-500
                                         bg-gray-50 dark:bg-gray-800 dark:text-white  text-sm  pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
                                             <option value="">Pilih Status</option>
-                                           <option 
-            v-for="opt in field.options" 
-            :key="opt" 
+                                           <option
+            v-for="opt in field.options"
+            :key="opt"
             :value="opt"
             class="text-gray-900 dark:text-white"
         >
@@ -415,30 +422,30 @@ const breadcrumbItems = [
         </option>
                                         </select>
         </div>
-                            
+
                                     </div>
 
                        <div  v-else-if="!['address', 'phoneNumber', 'userName', 'status'].includes(field.name) &&  field.type != 'file' &&
                                         field.type != 'select' &&
                                         field.type != 'radio'">
                                         <div class="col-span-2">
-                                             <InputLabel :for="field.name" :value="field.title" />                        
+                                             <InputLabel :for="field.name" :value="field.title" />
                                          <input  :type="field.type"  :id="field.name" :name="field.name"
-                                            :placeholder="field.placeholder" v-model="form[field.name]" 
+                                            :placeholder="field.placeholder" v-model="form[field.name]"
                                                                                                                                                     :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
 
                                             class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-gray-500 pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all  border-gray-200">
-                                   
+
                                         </div>
-                                         
+
                                     </div>
-                            
+
 
                             </div>
 
-                           
-                      
-                        
+
+
+
                         <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
                             <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
                                 <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Nasabah' : 'Simpan Nasabah' }}
@@ -466,12 +473,12 @@ const breadcrumbItems = [
             <div class="flex flex-wrap md:flex-nowrap items-end justify-end gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text" 
+                <input @keyup="handleSearch" type="text"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
 
-           
+
 
             <div class="flex items-center gap-2  pl-3">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
@@ -483,9 +490,9 @@ const breadcrumbItems = [
                 </select>
             </div>
             </div>
-           
+
         </div>
-                    <DataTable 
+                    <DataTable
                      ref="dtInstance"
                     :options="dtOptions"
         :data="nasabahList"
@@ -506,7 +513,7 @@ const breadcrumbItems = [
                                 <td class="font-medium text-gray-800 dark:text-gray-200">{{ nasabah.nama }}</td>
 
                                 <td v-for="step in workflowSteps" :key="step.name" class="text-center">
-                                    <span 
+                                    <span
                                         class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
                                         :class="statusBadge(nasabah.status[step.name] || 'pending')"
                                     >
@@ -515,7 +522,7 @@ const breadcrumbItems = [
                                 </td>
 
                                 <td class="text-center">
-                                    <button 
+                                    <button
                                         @click="viewDetail(nasabah.id)"
                                         class="bg-blue-500 hover:bg-blue-600 text-white text-[10px] uppercase font-bold px-4 py-1.5 rounded-lg transition-all active:scale-95 shadow-lg shadow-blue-500/20"
                                     >
@@ -536,11 +543,11 @@ const breadcrumbItems = [
 .dark td{
     color:white;
 }
-    
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; 
+    max-height: 500px;
     overflow: hidden;
 }
 
@@ -570,10 +577,10 @@ const breadcrumbItems = [
     color: #ffffff !important;
     margin-top: 1rem;
 }
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
 .dark .datatable  .dt-paging {
     color: #ffffff !important;
 }

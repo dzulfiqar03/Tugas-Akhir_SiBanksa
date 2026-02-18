@@ -4,6 +4,7 @@ namespace App\Models\BankSampah;
 
 use App\Models\DocumentArchiver;
 use App\Models\UserDetail;
+use App\Models\Warga\UserQueue;
 use Illuminate\Database\Eloquent\Model;
 
 class JadwalPelaksanaan extends Model
@@ -24,5 +25,10 @@ class JadwalPelaksanaan extends Model
     public function document()
     {
         return $this->hasMany(DocumentArchiver::class, 'id_jadwal', 'id');
+    }
+
+    public function user_queue()
+    {
+        return $this->hasMany(UserQueue::class, 'id_jadwal', 'id');
     }
 }

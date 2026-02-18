@@ -61,40 +61,40 @@ const dtOptions = {
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
-  
+
 columns: [
-        { 
-            data: null, 
-            render: (data, type, row, meta) => meta.row + 1 
-        }, 
-        { 
+        {
+            data: null,
+            render: (data, type, row, meta) => meta.row + 1
+        },
+        {
             // Langsung akses user_detail (tanpa kata 'nasabah')
             data: 'user_detail.fullName',
             className:'capitalize',
             render: (data, type, row) => {
                 return row.user_detail?.fullName || '-';
             },
-            defaultContent: '-' 
+            defaultContent: '-'
         },
-        { 
+        {
             // Sesuai kode PHP Anda, status mungkin ada di level atas atau di user_detail
-            data: 'user_detail.status', 
+            data: 'user_detail.status',
             render: (data, type, row) => {
 
-const className = 
-    row.user_detail?.status === 'Disetujui' ? 'bg-emerald-500 w-max px-3 text-white' :  
-    row.user_detail?.status === 'Pengajuan Verifikasi' ? 'w-max px-3 bg-yellow-500 text-white' : 
-    row.user_detail?.status === 'Pending' ? 'w-max px-3 bg-gray-900 text-white' : 
+const className =
+    row.user_detail?.status === 'Disetujui' ? 'bg-emerald-500 w-max px-3 text-white' :
+    row.user_detail?.status === 'Pengajuan Verifikasi' ? 'w-max px-3 bg-yellow-500 text-white' :
+    row.user_detail?.status === 'Pending' ? 'w-max px-3 bg-gray-900 text-white' :
     'w-max px-3 bg-red-900 text-white';
                     return `<h1 class="${className} rounded-xl">${row.user_detail?.status}</h1>`;
             },
             defaultContent: '-'
         },
-        { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
-        } 
+        {
+            data: null,
+            orderable: false,
+            className: 'no-print text-center'
+        }
     ],
     layout: {
         topStart: null,
@@ -180,7 +180,7 @@ const className =
             <span class="font-light">Si</span>
             Banksa
         </h1>
-                        
+
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
@@ -235,8 +235,8 @@ const handleSearch = (e) => {
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
     // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
-    const regex = val ? `^${val}$` : ''; 
-    
+    const regex = val ? `^${val}$` : '';
+
     dtInstance.value.dt
         .column(2)
         .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
@@ -308,7 +308,7 @@ const handleSubmit = () => {
                             Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
                         }
                     },
-                    
+
     });
 };
 
@@ -345,7 +345,7 @@ const breadcrumbItems = [
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Nasabah</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar harga dan kategori nasabah Anda.</p>
                 </div>
-                <button @click="openCreateForm" 
+                <button @click="openCreateForm"
                     class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
                     {{ showForm ? 'Batal' : 'Tambah Data' }}
@@ -355,10 +355,10 @@ const breadcrumbItems = [
             <Transition name="accordion">
                 <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
-                    
-                              <FormWrapper 
-            formName="formNasabah" 
-            :errors="form.errors" 
+
+                              <FormWrapper
+            formName="formNasabah"
+            :errors="form.errors"
             :processing="form.processing"
             @submit="handleSubmit"
         >
@@ -368,35 +368,35 @@ const breadcrumbItems = [
   <div v-for="field in formdata.nasabah" :key="field.name"">
                                     <div v-if="field.type === 'radio'"  class="col-span-full">
 
-                                                                        <InputLabel :for="field.name" :value="field.title" />                        
+                                                                        <InputLabel :for="field.name" :value="field.title" />
 
-        
+
         <div class="flex gap-3">
                         <label v-for="(opt, idx) in field.options" :key="idx" class="flex-1 cursor-pointer group">
-                                <input type="radio" 
-                                    v-model="form[field.name]" 
-                                    :value="idx + 1" 
+                                <input type="radio"
+                                    v-model="form[field.name]"
+                                    :value="idx + 1"
                                     class="peer sr-only">
                                 <div class="py-2 px-4 dark:text-white text-gray-500 rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
                                     {{ opt }}
                                 </div>
                             </label>
         </div>
-                   
+
     </div>
 
     <div  v-else-if="field.name ==='status'">
         <div class="col-span-2">
-                                            <InputLabel :for="field.name" :value="field.title" />                        
-                                        <select :id="field.name" :name="field.name" v-model="form[field.name]" 
+                                            <InputLabel :for="field.name" :value="field.title" />
+                                        <select :id="field.name" :name="field.name" v-model="form[field.name]"
                                                                                                         :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
 
                                             class="w-full h-11 rounded-xl  border-gray-200 text-gray-500
                                         bg-gray-50 dark:bg-gray-800 dark:text-white  text-sm  pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
                                             <option value="">Pilih Status</option>
-                                           <option 
-            v-for="opt in field.options" 
-            :key="opt" 
+                                           <option
+            v-for="opt in field.options"
+            :key="opt"
             :value="opt"
             class="text-gray-900 dark:text-white"
         >
@@ -404,30 +404,30 @@ const breadcrumbItems = [
         </option>
                                         </select>
         </div>
-                            
+
                                     </div>
 
                        <div  v-else-if="!['address', 'phoneNumber', 'userName', 'status'].includes(field.name) &&  field.type != 'file' &&
                                         field.type != 'select' &&
                                         field.type != 'radio'">
                                         <div class="col-span-2">
-                                             <InputLabel :for="field.name" :value="field.title" />                        
+                                             <InputLabel :for="field.name" :value="field.title" />
                                          <input  :type="field.type"  :id="field.name" :name="field.name"
-                                            :placeholder="field.placeholder" v-model="form[field.name]" 
+                                            :placeholder="field.placeholder" v-model="form[field.name]"
                                                                                                                                                     :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
 
                                             class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-gray-500 pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all  border-gray-200">
-                                   
+
                                         </div>
-                                         
+
                                     </div>
-                            
+
 
                             </div>
 
-                           
-                      
-                        
+
+
+
                         <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
                             <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
                                 <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Nasabah' : 'Simpan Nasabah' }}
@@ -454,7 +454,7 @@ const breadcrumbItems = [
                <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text" 
+                <input @keyup="handleSearch" type="text"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
@@ -481,15 +481,15 @@ const breadcrumbItems = [
                 </select>
             </div>
             </div>
-           
+
         </div>
 
-                <DataTable 
+                <DataTable
                     ref="dtInstance"
-                    :data="nasabah" 
+                    :data="nasabah"
                     :options="dtOptions"
 class="w-full display stripe hover cell-border">
-         
+
                     <thead>
                         <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
                              <th>No</th>
@@ -498,25 +498,29 @@ class="w-full display stripe hover cell-border">
                             <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi</th>
                         </tr>
                     </thead>
-                    
+
                     <template #column-0="data">
                         <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
                     </template>
 
-                    
 
-                    <template #column-3="data"> 
+
+                    <template #column-3="data">
                         <div class="flex justify-center gap-1">
-                            <button 
+                            <button
             @click="viewDetail(data.rowData.id)"
             class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
             title="Lihat Profil Lengkap"
         >
             <i class="fas fa-eye text-sm"></i>
         </button>
-                            <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
+        <template v-if="data.rowData.user_detail.status !== 'Disetujui'">
+
+                 <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
+        </template>
+
                             <button @click="deleteData(data.rowData.id)" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="Hapus">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -526,7 +530,7 @@ class="w-full display stripe hover cell-border">
 
             </div>
 
-            
+
         </div>
     </AuthenticatedLayout>
 </template>
@@ -535,11 +539,11 @@ class="w-full display stripe hover cell-border">
 .dark td{
     color:white;
 }
-    
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; 
+    max-height: 500px;
     overflow: hidden;
 }
 
@@ -568,10 +572,10 @@ class="w-full display stripe hover cell-border">
     color: #ffffff !important;
     margin-top: 1rem;
 }
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
 .dark .datatable  .dt-paging {
     color: #ffffff !important;
 }

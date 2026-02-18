@@ -213,21 +213,21 @@ class DataResources extends JsonResource
 
                 [
                     'nama'  => 'Tracking Setoran',
-                    'route' => route('data-tracking'),
-                    'uri' => 'data-tracking',
+                    'route' => route('warga.tracking-setoran'),
+                    'uri' => 'warga.tracking-setoran',
                     'icon'  => 'fas fa-route',
                 ],
                 [
                     'nama' => 'Transaksi Setoran',
                     'route' => route('warga.data-transaksi'),
-                    'uri' => '#',
-                    'icon'  => 'fas fa-sign-out-alt text-danger',
+                    'uri' => 'warga.data-transaksi',
+                    'icon'  => 'fas fa-money-bill-wave',
                 ],
                 [
-                    'nama' => 'Penjadwalan',
-                    'route' => route('warga.penjadwalan'),
-                    'uri' => '#',
-                    'icon'  => 'fas fa-sign-out-alt text-danger',
+                    'nama' => 'Janji Setor',
+                    'route' => route('warga.janji-setor'),
+                    'uri' => 'warga.janji-setor',
+                    'icon'  => 'fa fa-calendar',
                 ],
 
                 [

@@ -1,16 +1,18 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed,onMounted } from 'vue';
 import { useForm, router, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Swal from 'sweetalert2';
 import FormWrapper from '@/Components/FormWrapper.vue';
 
+
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import InputLabel from '@/Components/InputLabel.vue';
-import 'datatables.net-dt/css/dataTables.dataTables.css';
 
+
+// ================= DATATABLES =================
 import DataTable from 'datatables.net-vue3'
 import DataTablesCore from 'datatables.net'
 import Buttons from 'datatables.net-buttons'
@@ -18,19 +20,22 @@ import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
 import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
 import Responsive from 'datatables.net-responsive-dt'
 
+// CSS (WAJIB)
 import 'datatables.net-dt/css/dataTables.dataTables.css'
 import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
 
+// Register
 DataTable.use(DataTablesCore)
 DataTable.use(Buttons)
 DataTable.use(ButtonsHtml5)
 DataTable.use(ButtonsPrint)
 DataTable.use(Responsive)
+
 window.JSZip = jszip;
 pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
 const props = defineProps({
-    kepengurusan: Array,
+    jadwal: Array,
     formdata: Object,
     sidebardata: Object,
     idUser: Number,
@@ -42,21 +47,11 @@ const showForm = ref(false);
 const isEdit = ref(false);
 const dtInstance = ref(null); // Ref untuk instance datatable
 
-const form = useForm({
-        fullName: '',
-            userName: '',
-                address: '',
-                    phoneNumber: '',
-    id_gender: '',
-    id_userdetail: props.idUser,
-        divisi: '',
-});
-
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
-// --- DATATABLES CONFIG (Mengadopsi data-sampah.js Anda) ---
+
 const dtOptions = {
     pageLength: 5,
     responsive: true,
@@ -68,18 +63,10 @@ columns: [
             render: (data, type, row, meta) => meta.row + 1
         },
         {
-            data: 'fullName',
-            className: 'capitalize',
+            // Langsung akses user_detail (tanpa kata 'jadwal')
+            data: 'tanggal_setoran',
             render: (data, type, row) => {
-                return row.fullName || '-';
-            },
-            defaultContent: '-'
-        },
-
-        {
-            data: 'divisi',
-            render: (data, type, row) => {
-                return row.divisi || '-';
+                return row.tanggal_setoran || '-';
             },
             defaultContent: '-'
         },
@@ -101,7 +88,7 @@ columns: [
                         extend: 'pdfHtml5',
                         text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
                         className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: 'Data Nasabah RT',
+                        title: 'Data Jadwal Pelaksanaan RT',
                         exportOptions: {
                             columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
                         },
@@ -120,7 +107,7 @@ columns: [
                                         margin: [0, 20, 0, 0]
                                     },
                                     {
-                                        text: 'Bank Sampah - Data Kepengurusan',
+                                        text: 'Bank Sampah - Data Sampah',
                                         alignment: 'right',
                                         fontSize: 16,
                                         bold: true,
@@ -177,7 +164,7 @@ columns: [
 
                     </div>
                     <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Kepengurusan</p>
+                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
                         <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
                     </div>
                 </div>
@@ -252,29 +239,57 @@ const openCreateForm = () => {
 };
 
 const viewDetail = (id) => {
-    // Navigasi ke halaman detail nasabah
-    router.get(route('show-kepengurusan', id));
+
+    router.get(route('show-jadwal', id));
 };
+
+const tanggalHariIni = ref('');
+const boolJadwal = ref(false);
+const jadwalSetor = ref('');
+
+onMounted(() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+
+    // Format ini WAJIB untuk input type="date"
+    const formatIso = `${yyyy}-${mm}-${dd}`;
+    // Format ini untuk mencocokkan jika props.jadwal kamu isinya dd/mm/yyyy
+    const formatTampilan = `${dd}/${mm}/${yyyy}`;
+
+    // Cek kecocokan di props.jadwal
+    if (props.jadwal.includes(formatTampilan) || props.jadwal.includes(formatIso)) {
+        boolJadwal.value = true;
+
+        // PENTING: Isi form dengan format ISO agar muncul di input date
+        form.tanggal_setoran = formatIso;
+    }
+});
+
+
+
+const form = useForm({
+    id: null,
+tanggal_setoran: tanggalHariIni.value,
+id_userdetail: props.idUser,
+});
 const editData = (item) => {
     isEdit.value = true;
     form.id = item.id;
-    form.fullName= item.fullName;
-    form.id_gender = item.id_gender;
-    form.userName = item.userName;
-    form.address = item.address;
-    form.phoneNumber = item.telephone_number;
-    form.divisi = item.divisi;
+    form.tanggal_setoran = item.tanggal_setoran ? item.tanggal_setoran.substring(0, 10) : '';
+    form.id_userdetail = form.id_userdetail;
     showForm.value = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 const handleSubmit = () => {
-    const url = isEdit.value ? route('update-kepengurusan', form.id) : route('add-kepengurusan');
+    const url = isEdit.value ? route('warga.update-janjiSetor', form.id) : route('warga.add-janjiSetor');
     const method = isEdit.value ? 'put' : 'post';
 
     form[method](url, {
         onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data kepengurusan telah diproses.', 'success');
+            Swal.fire('Berhasil!', 'Data jadwal telah diproses.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -303,7 +318,15 @@ const handleSubmit = () => {
                             Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
                         }
                     },
-
+                    onFinish: function () {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: result.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    }
     });
 };
 
@@ -317,28 +340,31 @@ const deleteData = (id) => {
         confirmButtonText: 'Ya, Hapus!'
     }).then((res) => {
         if (res.isConfirmed) {
-            router.delete(route('delete-kepengurusan', id), {
+            router.delete(route('warga.delete-janjiSetor', id), {
                 onSuccess: () => Swal.fire('Dihapus!', 'Data berhasil dihapus.', 'success')
             });
         }
     });
 };
 
+
+
+
 const breadcrumbItems = [
-    { label: 'Dashboard', url: route('dashboard') },
-    { label: 'Manajemen Nasabah', url: null },
-    { label: 'Data Kepengurusan', url: route('data-kepengurusan')  },
+    { label: 'Dashboard', url: route('warga.dashboard') },
+    { label: 'Manajemen Setoran', url:  null },
+    { label: 'Janji Setor', url:  route('warga.janji-setor') },
 ];
 </script>
 
 <template>
-    <Head title="Data Kepengurusan" />
+    <Head title="Janji Penyetoran Sampah" />
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumbItems="breadcrumbItems" >
-        <div class="space-y-6">
+        <div v-if="boolJadwal === false" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Kepengurusan Bank Sampah</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola kepengurusan bank sampah Anda.</p>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Jadwal Penyetoran Sampah</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Rencanakan Janji Penyetoran Sampah</p>
                 </div>
                 <button @click="openCreateForm"
                     class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
@@ -348,111 +374,56 @@ const breadcrumbItems = [
             </div>
 
             <Transition name="accordion">
-                <div v-if="showForm" class="bg-white  accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
+                <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
 
                               <FormWrapper
-            formName="formKepengurusan"
+            formName="formJadwal"
             :errors="form.errors"
             :processing="form.processing"
             @submit="handleSubmit"
         >
-          <div v-for="field in formdata.bankSampah" :key="field.name" :class="field.name === 'divisi' ? 'col-span-2' : 'hidden'">
-                        <div v-if="field.name === 'divisi'" >
-                                            <InputLabel :for="field.name" :value="field.title" />
-
-    <select :name="field.name"
-        v-model="form.divisi"
-        class="w-full h-11 rounded-xl bg-gray-50 text-black dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
-         :class="{
-    'border-red-500 ring-1 ring-red-500': form.errors[`${field.name}`]
-}"
-        >
-        <option value="" class="text-gray-400">Pilih Divisi</option>
-
-        <option
-            v-for="opt in field.options"
-            :key="opt"
-            :value="opt"
-            class="text-gray-900 dark:text-white"
-        >
-            {{ opt }}
-        </option>
-    </select>
 
 
-</div>
-
-          <div v-else class="hidden"></div>
-
-
-
-                    </div>
-
-                                                            <input type="hidden" name="id_userdetail" :value="idUser">
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div v-for="field in props.formdata.nasabah" :key="field.name"
-                         :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
+  <div v-for="field in formdata.bankSampah" :key="field.name">
+    <input type="hidden" name="id_userdetail" v-model="form.id_userdetail">
+                                    <div v-if="field.type === 'date'"  class="col-span-full">
 
 
 
 
-                          <div v-if="field.type === 'radio'"  class="col-span-full">
+                                                                                <InputLabel :for="field.name" :value="field.title" />
 
-                                                                        <InputLabel :for="field.name" :value="field.title" />
+                                          <input :type="field.type" :id="field.name"
+                                            :name="field.name" v-model="form[field.name]"
+                                            :placeholder="field.placeholder" :value="jadwalSetor"
+                                                                                                            :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
 
-
-        <div class="flex gap-3">
-                        <label v-for="(opt, idx) in field.options" :key="idx" class="flex-1 cursor-pointer group">
-                                <input type="radio"
-                                    v-model="form[field.name]"
-                                    :value="idx + 1"
-                                    class="peer sr-only">
-                                <div class="py-2 px-4 dark:text-white text-black rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
-                                    {{ opt }}
-                                </div>
-                            </label>
-        </div>
-
-    </div>
-<div v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'"
-     class="col-span-1">
-                                            <InputLabel :for="field.name" :value="field.title" />
+                                            class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
+                                    </div>
 
 
 
-                                    <input :type="field.type" :id="field.name"
-                                                                v-model="form[field.name]"
-
-                                        :name="field.name"
-                                        :placeholder="field.placeholder"
-                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-black pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
-                                        :class="{
-    'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`]
-}"
-                                        >
-                                </div>
 
 
-                    </div>
 
 
-                </div>
+                            </div>
 
-                <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
+
+
+
+                        <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
                             <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
-                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Kepengurusan' : 'Simpan Kepengurusan' }}
+                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Jadwal' : 'Simpan Jadwal' }}
                             </button>
                         </div>
-
-
                    </FormWrapper>
                 </div>
-            </Transition>
+            </transition>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                                 <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
+                                <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
               <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
             <button @click="exportData(0)" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
@@ -465,7 +436,7 @@ const breadcrumbItems = [
                 <i class="fas fa-print"></i> Print
             </button>
         </div>
-               <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
+            <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
                 <input @keyup="handleSearch" type="text"
@@ -473,18 +444,7 @@ const breadcrumbItems = [
                     placeholder="Ketik...">
             </div>
 
-            <div class="flex items-center gap-2">
-                <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                <select @change="handleCategoryFilter"
-                    class="border border-gray-200 dark:border-gray-600 text-black  rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                    <option value="">Semua</option>
-                    <option value="Ketua">Ketua</option>
-                    <option value="Sekretaris">Sekretaris</option>
-                    <option value="Bendahara">Bendahara</option>
-                    <option value="Pemilah">Pemilah</option>
-                    <option value="Penimbang">Penimbang</option>
-                </select>
-            </div>
+
 
             <div class="flex items-center gap-2  pl-3">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
@@ -501,15 +461,14 @@ const breadcrumbItems = [
 
                 <DataTable
                     ref="dtInstance"
-                    :data="kepengurusan"
+                    :data="jadwal"
                     :options="dtOptions"
 class="w-full display stripe hover cell-border">
 
                     <thead>
                         <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
                              <th>No</th>
-                    <th>Nama Lengkap</th>
-                    <th class="text-center">Divisi</th>
+                    <th>Jadwal Pelaksanaan</th>
                             <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -518,9 +477,9 @@ class="w-full display stripe hover cell-border">
                         <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
                     </template>
 
-                    <template #column-3="data">
+                    <template #column-2="data">
                         <div class="flex justify-center gap-1">
-                        
+
                             <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -535,6 +494,26 @@ class="w-full display stripe hover cell-border">
 
 
         </div>
+
+         <div v-else class="space-y-6">
+   <div class="card w-full shadow-sm border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+
+                    <div class="flex px-5  flex-col gap-5 bg-gray-200 dark:bg-gray-800 transition-colors">
+
+                                       <h3 class="border-b border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
+                            Belum Ada Jadwal Bank Sampah Anda !!!
+                        </h3>
+
+                        <span class="w-full pb-5 font-medium text-gray-700 dark:text-gray-300">
+                            Tunggu Informasi Jadwal Pelaksanaan Selanjutnya
+                        </span>
+
+
+
+                    </div>
+
+                </div>
+         </div>
     </AuthenticatedLayout>
 </template>
 

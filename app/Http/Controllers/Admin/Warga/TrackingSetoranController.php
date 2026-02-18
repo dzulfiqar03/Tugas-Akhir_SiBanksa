@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\BankSampah;
+namespace App\Http\Controllers\Admin\Warga;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
@@ -27,11 +27,10 @@ class TrackingSetoranController extends Controller
             'Pencairan'   => 'Bendahara',
         ];
 
-        $nasabahList = PencatatanSetoran::whereHas('user_detail', function ($query) {
-                $query->where('id_rt', Auth::user()->user_detail->id_rt);
-                $query->where('status', 'Disetujui');
-                $query->where('id_roles', 3);
-            })->with(['transaction'])->get();
+        $nasabahList = PencatatanSetoran::where('id_userdetail', Auth::user()->user_detail->id)
+            ->with(['transaction', 'jadwal'])->get();
+
+
 
 
 
@@ -63,8 +62,16 @@ class TrackingSetoranController extends Controller
 
 
 
-            $n->nasabah = $n->user_detail->fullName;
+            $n->nasabah = $n->fullName;
+
+
+
+
                 $n->jadwalPelaksanaan = $n->jadwal->tanggal_setoran;
+
+
+
+
 
 
 
@@ -115,7 +122,7 @@ class TrackingSetoranController extends Controller
 
 
 
-       if ($n->user_detail->status_transaction === 'Disetujui') {
+       if ($n->status_transaction === 'Disetujui') {
             $workflow['Verifikasi']['completed'] = true;
             $workflow['Verifikasi']['petugas'] = [UserDetail::where('id_roles', 1)->first()->fullName];
         }
@@ -200,7 +207,7 @@ class TrackingSetoranController extends Controller
 
 
         $menu = (new DataResources(null))->toArray(request());
-        return Inertia::render('BankSampah/TrackingSetoran', [
+        return Inertia::render('Warga/TrackingSetoran', [
             'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,

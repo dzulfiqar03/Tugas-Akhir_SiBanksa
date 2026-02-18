@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\BankSampah;
+namespace App\Http\Controllers\Admin\Warga;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BankSampah\TransactionRequest;
@@ -54,11 +54,9 @@ class DataTransaksiController extends Controller
 
 
         $nasabahList =  PencatatanSetoran::with(['user_detail', 'pencatatan_items'])
-               ->whereHas('user_detail', function ($query) {
-        $query->where('id_rt', Auth::user()->user_detail->id_rt);
-    })
-    ->whereHas('user_detail.userbank')
-    ->whereDoesntHave('user_detail.user_transaction', function ($query) {
+            ->whereHas('user_detail', function ($query) {
+                $query->where('id_rt', Auth::user()->user_detail->id_rt);
+            })->whereHas('user_detail.userbank')    ->whereHas('user_detail.user_transaction', function ($query) {
 
         $query->whereColumn('pencatatan_setoran_id', 'pencatatan_setoran.id');
     })
@@ -75,13 +73,13 @@ class DataTransaksiController extends Controller
                 // Tambahkan ke object user
                 $user->user_bank = $userBank;
 
-                $user->user_transaction = UserTransaction::where('pencatatan_setoran_id', 'setoran.id')->get();
+                $user->user_transaction = UserTransaction::where('id_userdetail', $detail->id)->get();
 
 
                 return $user;
             });
 
-        return Inertia::render('BankSampah/DataTransaksi', [
+        return Inertia::render('Warga/DataTransaksi', [
             'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,

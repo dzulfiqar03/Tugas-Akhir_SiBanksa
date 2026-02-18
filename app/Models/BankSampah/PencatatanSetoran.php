@@ -2,6 +2,7 @@
 
 namespace App\Models\BankSampah;
 
+use App\Models\Transaction\UserTransaction;
 use App\Models\UserDetail;
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,5 +26,10 @@ class PencatatanSetoran extends Model
     public function pencatatan_items()
     {
         return $this->hasMany(PencatatanSetoranItems::class, 'pencatatan_setoran_id', 'id');
+    }
+
+    public function transaction()
+    {
+        return $this->hasOne(UserTransaction::class, 'pencatatan_setoran_id', 'id');
     }
 }

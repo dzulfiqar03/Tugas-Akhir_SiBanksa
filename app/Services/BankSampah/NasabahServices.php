@@ -28,12 +28,16 @@ class NasabahServices
         $userRT = Auth::user()->user_detail->id_rt; // Ambil nilai RT user yang login
 
 
-        $nasabah = $this->user::with(['user_detail', 'user_detail.image', 'user_detail.document', 'user_detail.pencatatan'])
-            ->whereHas('user_detail', function ($query) use ($userRT) {
-                $query->where('id_rt', $userRT)->where('id_roles', 3);
-            })
-            ->get();
-
+      $nasabah = $this->user::with(['user_detail', 'user_detail.image', 'user_detail.document', 'user_detail.pencatatan'])
+    ->whereHas('user_detail', function ($query) use ($userRT) {
+        $query->where('id_rt', $userRT)->where('id_roles', 3);
+    })
+    ->get()
+    ->sortBy(function ($user) {
+        // Jika status cocok, beri nilai 1 agar di atas, jika tidak beri nilai 2
+        return $user->user_detail->status === 'Pengajuan Verifikasi' ? 1 : 2;
+    })
+    ->values();
         return $nasabah;
     }
 

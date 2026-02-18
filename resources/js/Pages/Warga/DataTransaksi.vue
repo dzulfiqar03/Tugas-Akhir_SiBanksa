@@ -512,68 +512,22 @@ const url = route('bs.add-transaction');
         <Head title="Data Transaksi" />
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
 
-        <template v-if="user.user_detail.status_transaction === 'Belum Disetujui'">
+        <template v-if="props.nasabah.status === 'Pengajuan Verifikasi'">
                 <div class="card w-full shadow-sm border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
 
                     <div class="flex flex-col gap-5 bg-gray-200 dark:bg-gray-800 transition-colors">
 
-                                       <template v-if="props.transaction.length === 0">
-
-                                                                <h3 class="border-b capitalize border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
-                            Anda belum melakukan pencatatan setoran nasabah !!!
-                        </h3>
-
-                        <span class="w-full font-medium capitalize text-gray-700 dark:text-gray-300">
-                            Lakukan pencatatan pada menu manajemen nasabah -> Pencatatan Setoran
-                        </span>
-                                       </template>
-
-
-
-
-                                         <template v-else-if="props.reporting.length > 0">
-                                                                       <h3 class="border-b capitalize border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
-                            Anda belum melakukan pelaporan setoran ke RW !!!
-                        </h3>
-
-                        <span v-if="props.reporting.length > 0" class="w-full font-medium capitalize text-gray-700 dark:text-gray-300">
-                            Lakukan pengajuan pelaporan ke RW dengan menekan tombol reminder dibawah ini
-                        </span>
-
-                        <span v-else class="w-full font-medium capitalize text-gray-700 dark:text-gray-300">
-                            Lakukan pelaporan dengan upload dokumen hasil setoran atau foto bukti pelaksanaan kegiatan melalui menu manajemen nasabah -> Pelaporan setoran
-                        </span>
-                                       </template>
-
-                                             <template v-else>
-                                                                <h3 class="border-b border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
+               <h3 class="border-b border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
                             Anda belum melakukan verifikasi akun !!!
                         </h3>
 
                         <span class="w-full font-medium text-gray-700 dark:text-gray-300">
                             Isi Biodata anda dan keperluan dokumen (Opsional)
                         </span>
-                                       </template>
-
-                <template v-if="props.transaction.length === 0">
-                        <button
-                                            @click=""
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-bell"></i> Anda Belum Melakukan Pencatatan Setoran
-                                        </button>
 
 
-                </template>
-
-                 <template v-else-if="props.reporting.length > 0">
-                        <button
-                                            @click="sendReminder(props.IDRW)"
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-bell"></i> Lakukan Pengajuan Persetujuan Buka Rekening Ke RW
-                                        </button>
 
 
-                </template>
 
 
                     </div>
@@ -588,82 +542,16 @@ const url = route('bs.add-transaction');
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
                 <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
                     <h3 class="text-lg font-bold text-black dark:text-white">Pencairan Dana Nasabah</h3>
-                    <button v-if="showForm" @click="showForm = !showForm" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                        <i class="fas mr-2" :class="showForm ? 'fa-minus' : 'fa-plus'"></i>
-                        {{ showForm ? 'Tutup Form' : 'Tambah Transaksi' }}
-                    </button>
+   
                 </div>
 
-                    <Transition name="accordion">
-                <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
 
-
-
-          <FormWrapper
-            :errors="form.errors"
-            :processing="form.processing"
-            @submit="handleSubmit"
-        >
-
-            <input type="hidden" name="id_userdetail" v-model="form.id_userdetail">
-
-            <div class="grid grid-cols-1 gap-4">
-
-
-
-    <template v-for="field in formdata.Dokumen" :key="field.name">
-
-
-
-        <div v-if="field.type === 'file' && field.name === 'fileDoc'" class="flex flex-col">
-            <InputLabel :for="field.name" :value="field.title" />
-            <input
-                :type="field.type"
-                :id="field.name"
-                multiple
-            @input="(e) => {
-    const newFiles = Array.from(e.target.files);
-    form.fileDoc = [...form.fileDoc, ...newFiles];
-}"
-                :placeholder="field.placeholder"
-                class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm border-gray-200"
-                :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
-            >
-            <p v-if="form[field.name]?.length" class="text-xs text-emerald-600 mt-2 font-medium">
-            {{ form[field.name].length }} file terpilih
-        </p>
-
-        <ul v-if="form.fileDoc.length > 0" class="mt-2 space-y-1">
-    <li v-for="(file, index) in renamedFileList" :key="index" class="text-xs text-gray-500 flex items-center">
-        <svg class="w-3 h-3 mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-        </svg>
-        {{ file.dynamic }} ({{ (file.size / 1024).toFixed(1) }} KB)
-    </li>
-</ul>
-            <div v-if="form.errors[field.name]" class="text-red-500 text-xs mt-1">{{ form.errors[field.name] }}</div>
-        </div>
-
-    </template>
-</div>
-
- <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
-                            <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
-                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Dokumen' : 'Simpan Dokumen' }}
-                            </button>
-                        </div>
-
-             </FormWrapper>
-
-             </div>
-                </Transition>
 
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-7 gap-4">
+            <div class="grid grid-cols-1  gap-4">
 
-                <div class="lg:col-span-5 bg-white dark:bg-gray-800 rounded-xl shadow p-5 overflow-hidden">
+                <div class=" bg-white dark:bg-gray-800 rounded-xl shadow p-5 overflow-hidden">
                     <h3 class="mb-4 font-bold dark:text-white text-sm uppercase tracking-wider">Riwayat Transaksi</h3>
                     <div class="overflow-x-auto">
 
@@ -728,48 +616,7 @@ const url = route('bs.add-transaction');
                     </div>
                 </div>
 
-                <div class="lg:col-span-2 bg-gray-50 dark:bg-gray-700 rounded-xl shadow p-5">
-                    <h3 class="mb-4 font-bold text-center border-b dark:border-gray-600 pb-2 dark:text-white text-sm uppercase">Pilih Nasabah</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-xs">
-                            <thead>
-                                <tr class="text-left border-b dark:border-gray-600">
-                                    <th class="pb-2">Profil</th>
-                                    <th class="pb-2">Nama</th>
-                                    <th class="pb-2">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="user in nasabah"
-                                    @click="viewDetail(user.user_detail.id_user)"
-                                    class="cursor-pointer hover:bg-emerald-50 dark:hover:bg-gray-600 transition border-b dark:border-gray-600 last:border-0"
-                                >
-                                    <td class="py-2">
 
-
-    <div class="border-gray-100 w-max dark:border-gray-800">
-      <div v-if="user" class="profile-circle py-1 px-2 rounded-full border border-gray-600 text-gray-800 dark:text-white">
-        {{ initials(user.user_detail?.fullName) }}
-      </div>
-
-      <div v-else class="profile-circle">
-        <img
-          class="w-8 h-8 rounded-full"
-          src="https://ui-avatars.com/api/?name=Guest&background=random"
-          alt="Guest"
-        >
-      </div>
-    </div>
-                                    </td>
-                                    <td class="py-2 font-medium dark:text-gray-200">{{ user.user_detail.fullName }}</td>
-                                    <td class="py-2 text-right">
-                                        <i class="fas fa-chevron-right text-gray-400"></i>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
             </div>
         </div>

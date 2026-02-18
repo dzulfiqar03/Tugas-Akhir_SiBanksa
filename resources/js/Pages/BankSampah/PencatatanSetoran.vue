@@ -112,20 +112,20 @@ const handleSubmit = () => {
                             Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
                         }
                     },
-                    
+
     });
 };
 
 
 const selectedJadwalFilter = ref('');
 
-const categories = ['Non Daur Ulang', 'Daur Ulang', 'Lainnya']; 
+const categories = ['Non Daur Ulang', 'Daur Ulang', 'Lainnya'];
 const activeCategory = ref('Non Daur Ulang');
 
 const filteredJenisSampah = computed(() => {
     // Pastikan data ada sebelum di-filter
     const data = props.jenisSampah || [];
-    
+
     return data.filter(s => {
         // Bandingkan kategori, pastikan handle null dengan optional chaining
         return s.kategori?.trim() === activeCategory.value.trim();
@@ -177,23 +177,34 @@ const columnTotal = {
         return acc + parseFloat(nota.total_setoran || 0);
     }, 0);
 
-    return grandTotal > 0 
-        ? `<span class="text-emerald-600 font-bold">Rp${grandTotal.toLocaleString()}</span>` 
+    return grandTotal > 0
+        ? `<span class="text-emerald-600 font-bold">Rp${grandTotal.toLocaleString()}</span>`
         : `Rp 0`;
 }
 };
 
+
+const openDetail = (base64)=>{
+    const row = JSON.parse(decodeURIComponent(escape(atob(base64))));
+    router.get(route('show-pencatatan', row.id));
+}
+window.viewDetail = openDetail;
     // 3. Kolom Statis Akhir (Aksi)
     const actionColumn = [
-        { 
-            data: null, 
-            title: 'Aksi', 
-            orderable: false, 
+        {
+            data: null,
+            title: 'Aksi',
+            orderable: false,
             className: 'text-center no-print dark:text-white text-black',
             render: (data, type, row) => {
-                return `<button class="text-red-500 hover:text-red-700" onclick="window.deleteData(${row.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>`;
+                const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(row))));
+                return ` <button
+            onclick="window.viewDetail('${base64Data}')"
+            class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
+            title="Lihat Pencatatan Lengkap"
+        >
+            <i class="fas fa-eye text-sm"></i>
+        </button>`;
             }
         }
     ];
@@ -236,8 +247,8 @@ const nextPage = () => dtInstance.value.dt.page('next').draw('page');
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
     // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
-    const regex = val ? `^${val}$` : ''; 
-    
+    const regex = val ? `^${val}$` : '';
+
     dtInstance.value.dt
         .column(2)
         .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
@@ -289,7 +300,7 @@ const breadcrumbItems = [
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Sampah</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar harga dan kategori sampah Anda.</p>
                 </div>
-                <button @click="openCreateForm" 
+                <button @click="openCreateForm"
                     class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
                     {{ showForm ? 'Batal' : 'Tambah Data' }}
@@ -300,9 +311,9 @@ const breadcrumbItems = [
                  <Transition name="accordion">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
                 <div v-if="showForm" class="p-5 bg-gray-50 dark:bg-gray-900">
-                                    <FormWrapper 
-            formName="formPencatatan" 
-            :errors="form.errors" 
+                                    <FormWrapper
+            formName="formPencatatan"
+            :errors="form.errors"
             :processing="form.processing"
             @submit="handleSubmit"
         >
@@ -355,34 +366,34 @@ const breadcrumbItems = [
                             <button type="button" @click="step = Math.max(step - 1, 1)" :disabled="step === 1" class="text-gray-500 disabled:opacity-30">
                                 ← Kembali
                             </button>
-                            
+
                             <button v-if="step < totalSteps" type="button" @click="step++" class="px-6 py-2 bg-blue-600 text-white rounded-lg">
                                 Lanjut →
                             </button>
-                            
+
                             <button v-else type="submit" :disabled="form.processing" class="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold">
                                 {{ form.processing ? 'Menyimpan...' : 'Simpan Setoran' }}
                             </button>
                         </div>
                     </FormWrapper>
                 </div>
-            </div> 
+            </div>
             </Transition>
 
             <!-- TABLE -->
             <div class="bg-white dark:bg-gray-800 p-4 rounded-xl">
                  <div class="bg-white dark:bg-gray-800  rounded-2xl shadow-sm ">
-            
+
 
                 <div class="mb-6 flex flex-wrap gap-2 p-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl w-fit border border-gray-100 dark:border-gray-700">
-                    <button 
-                        v-for="cat in categories" 
+                    <button
+                        v-for="cat in categories"
                         :key="cat"
                         @click="activeCategory = cat"
                         :class="[
                             'px-6 py-2 text-sm font-bold rounded-xl transition-all duration-300',
-                            activeCategory === cat 
-                                ? 'bg-white dark:bg-gray-800 text-emerald-600 shadow-md ring-1 ring-black/5' 
+                            activeCategory === cat
+                                ? 'bg-white dark:bg-gray-800 text-emerald-600 shadow-md ring-1 ring-black/5'
                                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                         ]"
                     >
@@ -406,7 +417,7 @@ const breadcrumbItems = [
             <div class="flex flex-wrap gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto  font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text" 
+                <input @keyup="handleSearch" type="text"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
@@ -432,13 +443,13 @@ const breadcrumbItems = [
                 </select>
             </div>
             </div>
-           
+
         </div>
 </div>
-                <DataTable 
+                <DataTable
 :key="activeCategory + selectedJadwalFilter"
         ref="dtInstance"
-        :data="nasabahList" 
+        :data="nasabahList"
         :options="dtOptions"
         class="w-full display stripe hover cell-border dark:text-gray-200"
     >
@@ -453,11 +464,11 @@ const breadcrumbItems = [
 .dark td{
     color:white;
 }
-    
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; 
+    max-height: 500px;
     overflow: hidden;
 }
 
@@ -487,10 +498,10 @@ const breadcrumbItems = [
     color: #ffffff !important;
     margin-top: 1rem;
 }
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
 .dark .datatable  .dt-paging {
     color: #ffffff !important;
 }

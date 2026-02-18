@@ -12,7 +12,7 @@ class PencatatanServices
     /**
      * Create a new class instance.
      */
-    public function __construct(protected PencatatanSetoran $pencatatanSetoran)
+    public function __construct(protected PencatatanSetoran $pencatatanSetoran, protected PencatatanSetoranItems $pencatatanSetoranItems)
     {
         //
     }
@@ -21,20 +21,20 @@ class PencatatanServices
     {
 
 
-    try {
-      $newSetoran=  DB::transaction(function () use ($data) {
-            // 1. Simpan ke tabel Induk (pencatatan_setoran)
-            $setoran = PencatatanSetoran::create([
-                'id_jadwal'     => $data['id_jadwal'],
-                'id_userdetail' => $data['id_userdetail'],
-                'total_setoran' => 0, // Akan di-update setelah loop item
-            ]);
+        try {
+            $newSetoran =  DB::transaction(function () use ($data) {
+                // 1. Simpan ke tabel Induk (pencatatan_setoran)
+                $setoran = PencatatanSetoran::create([
+                    'id_jadwal'     => $data['id_jadwal'],
+                    'id_userdetail' => $data['id_userdetail'],
+                    'total_setoran' => 0, // Akan di-update setelah loop item
+                ]);
 
-            $grandTotal = 0;
+                $grandTotal = 0;
 
-            // 2. Loop simpan ke tabel Detail (pencatatan_setoran_items)
-            foreach ($data['items'] as $item) {
-                // Hanya simpan jika berat/jumlah lebih dari 0
+                // 2. Loop simpan ke tabel Detail (pencatatan_setoran_items)
+                foreach ($data['items'] as $item) {
+                    // Hanya simpan jika berat/jumlah lebih dari 0
 
                     $subtotal = $item['jumlah'] * $item['harga_satuan'];
                     $grandTotal += $subtotal;
@@ -46,21 +46,42 @@ class PencatatanServices
                         'harga_satuan'          => $item['harga_satuan'],
                         'subtotal'              => $subtotal,
                     ]);
- 
-            }
+                }
 
-            // 3. Update total_setoran di tabel Induk
-            $setoran->update(['total_setoran' => $grandTotal]);
-            
-            // 4. (Opsional) Tambah saldo ke dompet Nasabah
-            // UserDetail::find($data['id_nasabah'])->increment('saldo', $grandTotal);
-        });
+                // 3. Update total_setoran di tabel Induk
+                $setoran->update(['total_setoran' => $grandTotal]);
 
-        return $newSetoran;
+                // 4. (Opsional) Tambah saldo ke dompet Nasabah
+                // UserDetail::find($data['id_nasabah'])->increment('saldo', $grandTotal);
+            });
 
-    } catch (\Exception $e) {
-        return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return $newSetoran;
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
+    public function deletePencatatan($id)
+    {
+        return DB::transaction(function () use ($id) {
+
+            $item = PencatatanSetoranItems::findOrFail($id);
+            $setoranId = $item->pencatatan_setoran_id;
+
+            // 2. Hapus item tersebut
+            $item->delete();
+
+            // 3. Hitung ulang total dari item yang tersisa
+            $totalBaru = PencatatanSetoranItems::where('pencatatan_setoran_id', $setoranId)
+                ->sum('subtotal');
+
+            // 4. Update table parent (pencatatan_setoran)
+            PencatatanSetoran::where('id', $setoranId)->update([
+                'total_setoran' => $totalBaru
+            ]);
+
+
+            return $item;
+        });
     }
 }

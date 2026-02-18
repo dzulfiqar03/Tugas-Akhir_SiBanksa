@@ -1,16 +1,15 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useForm, router, Head, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Swal from 'sweetalert2';
-import FormWrapper from '@/Components/FormWrapper.vue';
+
 
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-import InputLabel from '@/Components/InputLabel.vue';
-import 'datatables.net-dt/css/dataTables.dataTables.css';
 
+
+// ================= DATATABLES =================
 import DataTable from 'datatables.net-vue3'
 import DataTablesCore from 'datatables.net'
 import Buttons from 'datatables.net-buttons'
@@ -18,79 +17,75 @@ import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
 import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
 import Responsive from 'datatables.net-responsive-dt'
 
+// CSS (WAJIB)
 import 'datatables.net-dt/css/dataTables.dataTables.css'
 import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
 
+// Register
 DataTable.use(DataTablesCore)
 DataTable.use(Buttons)
 DataTable.use(ButtonsHtml5)
 DataTable.use(ButtonsPrint)
 DataTable.use(Responsive)
+
 window.JSZip = jszip;
 pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
-
 const props = defineProps({
+    nasabahList: Array,
     kepengurusan: Array,
-    formdata: Object,
     sidebardata: Object,
-    idUser: Number,
     breadcrumbItems: Array,
 });
 
-// --- STATE ---
-const showForm = ref(false);
-const isEdit = ref(false);
-const dtInstance = ref(null); // Ref untuk instance datatable
 
-const form = useForm({
-        fullName: '',
-            userName: '',
-                address: '',
-                    phoneNumber: '',
-    id_gender: '',
-    id_userdetail: props.idUser,
-        divisi: '',
-});
+const workflowSteps = [
+  'Pemilahan',
+  'Penimbangan',
+  'Pencatatan',
+  'Verifikasi',
+  'Pencairan'
+]
+
+const statusColumns = workflowSteps.map(step => ({
+  title: step,
+  data: null,
+  className: 'text-center min-w-[120px] text-black dark:text-white',
+  render: (d, t, row) => {
+    const wf = row.workflow?.[step]
+
+    if (!wf) return '-'
+
+    return `
+      <div class="flex flex-col items-center gap-1">
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+          ${wf.completed
+            ? 'bg-emerald-100 text-emerald-700'
+            : 'bg-gray-200 text-gray-500'}">
+          ${wf.completed ? 'Completed' : 'Pending'}
+        </span>
+
+        <span class="text-[10px] font-semibold text-gray-700">
+          ${wf.petugas?.join(', ') || '-'}
+        </span>
+
+        <span class="text-[9px] text-gray-400">
+          ${wf.divisi}
+        </span>
+      </div>
+    `
+  }
+}))
 
 
-const page = usePage();
-const user = computed(() => page.props.auth.user);
-const userDetail = computed(() => user.value?.user_detail || {});
-// --- DATATABLES CONFIG (Mengadopsi data-sampah.js Anda) ---
+
+
+
 const dtOptions = {
-    pageLength: 5,
     responsive: true,
-    lengthMenu: [5, 10, 25, 50],
-
-columns: [
-        {
-            data: null,
-            render: (data, type, row, meta) => meta.row + 1
-        },
-        {
-            data: 'fullName',
-            className: 'capitalize',
-            render: (data, type, row) => {
-                return row.fullName || '-';
-            },
-            defaultContent: '-'
-        },
-
-        {
-            data: 'divisi',
-            render: (data, type, row) => {
-                return row.divisi || '-';
-            },
-            defaultContent: '-'
-        },
-
-        {
-            data: null,
-            orderable: false,
-            className: 'no-print text-center'
-        }
-    ],
-    layout: {
+    autoWidth: false,
+    // Gunakan props.nasabahList sebagai sumber data
+    data: props.nasabahList,
+     layout: {
         topStart: null,
         topEnd: null,
         bottomStart: 'info',
@@ -101,7 +96,7 @@ columns: [
                         extend: 'pdfHtml5',
                         text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
                         className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: 'Data Nasabah RT',
+                        title: 'Data Tracking RT',
                         exportOptions: {
                             columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
                         },
@@ -217,8 +212,39 @@ columns: [
                 next: "Berikutnya →"
             },
             emptyTable: "Tidak ada data tersedia"
+        },
+    columns: [
+        {
+            data: null,
+            render: (d, t, r, meta) => meta.row + 1,
+            title: 'No',
+            className: 'text-center w-10 text-black dark:text-white'
+        },
+
+         {
+            title: 'Jadwal',
+            data: 'jadwalPelaksanaan',
+            className: 'text-center text-black dark:text-white'
+
+        },
+
+        ...statusColumns,
+        {
+            title: 'Aksi',
+            data: null,
+            render: (data, type, row) => {
+                return `
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white text-[10px] uppercase font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95 shadow-lg shadow-blue-500/20" onclick="window.location.href='/nasabah/${row.id}'">
+                        Detail
+                    </button>
+                `;
+            }
         }
+    ]
 };
+
+
+window.viewDetail = (id) => viewDetail(id);
 
 const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
 const nextPage = () => dtInstance.value.dt.page('next').draw('page');
@@ -228,12 +254,11 @@ const handleSearch = (e) => {
 
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
-    // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
     const regex = val ? `^${val}$` : '';
 
     dtInstance.value.dt
         .column(2)
-        .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
+        .search(regex, true, false)
         .draw();
 };
 const handleLengthChange = (e) => {
@@ -244,161 +269,118 @@ const exportData = (index) => {
     dtInstance.value.dt.button(index).trigger();
 };
 
-const openCreateForm = () => {
-    isEdit.value = false;
-    form.reset();
-    showForm.value = !showForm.value;
-
+const formatStatus = (status) => {
+    return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
 const viewDetail = (id) => {
-    // Navigasi ke halaman detail nasabah
-    router.get(route('show-kepengurusan', id));
-};
-const editData = (item) => {
-    isEdit.value = true;
-    form.id = item.id;
-    form.fullName= item.fullName;
-    form.id_gender = item.id_gender;
-    form.userName = item.userName;
-    form.address = item.address;
-    form.phoneNumber = item.telephone_number;
-    form.divisi = item.divisi;
-    showForm.value = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    router.get(route('', id));
 };
 
-const handleSubmit = () => {
-    const url = isEdit.value ? route('update-kepengurusan', form.id) : route('add-kepengurusan');
-    const method = isEdit.value ? 'put' : 'post';
+const timelineSteps = computed(() => {
+  // ambil 1 contoh data (misal row pertama)
+  // atau bisa kamu ganti dengan nasabah yang sedang dipilih
+  const workflow = props.nasabahList?.[0]?.workflow || {}
 
-    form[method](url, {
-        onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data kepengurusan telah diproses.', 'success');
-            showForm.value = false;
-            form.reset();
-        },
-        onError: function (xhr) {
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON.errors;
-                            let errorHtml = '';
-                            let totalErrorCount = 0;
-                            Object.keys(errors).forEach(key => {
-                                errors[key].forEach(msg => {
-                                    errorHtml += ` <li class="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2">
-                           <span class="w-1 h-1 bg-red-400 rounded-full"></span>
-                           ${msg}
-                       </li>`;
-                                    totalErrorCount++;
-                                });
-                                $(`[name="${key}"]`).addClass('border-red-500 ring-1 ring-red-500');
+  return workflowSteps.map((name, index) => {
+    const wf = workflow[name]
 
-                            });
+    let status = 'pending'
 
-                            $('#error-count').text(totalErrorCount);
-                            $('#error-list').html(errorHtml);
-                            $('#error-message').removeClass('hidden').fadeIn();
-                            Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
-                        } else {
-                            Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
-                        }
-                    },
+    if (wf?.completed) {
+      status = 'completed'
+    } else if (
+      index > 0 &&
+      workflow[workflowSteps[index - 1]]?.completed
+    ) {
+      status = 'in_progress'
+    }
 
-    });
-};
+    return {
+      name,
+      status,
+      completed: status === 'completed'
+    }
+  })
+})
 
-const deleteData = (id) => {
-    Swal.fire({
-        title: 'Hapus data?',
-        text: "Tindakan ini tidak bisa dibatalkan!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Hapus!'
-    }).then((res) => {
-        if (res.isConfirmed) {
-            router.delete(route('delete-kepengurusan', id), {
-                onSuccess: () => Swal.fire('Dihapus!', 'Data berhasil dihapus.', 'success')
-            });
-        }
-    });
-};
 
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') },
-    { label: 'Manajemen Nasabah', url: null },
-    { label: 'Data Kepengurusan', url: route('data-kepengurusan')  },
+    { label: 'Tracking Setoran', url:  route('data-tracking') },
 ];
 </script>
 
 <template>
-    <Head title="Data Kepengurusan" />
-    <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumbItems="breadcrumbItems" >
-        <div class="space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Kepengurusan Bank Sampah</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola kepengurusan bank sampah Anda.</p>
+    <Head title="Tracking Setor Sampah" />
+    <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
+        <div class="container mx-auto px-4 space-y-8">
+            <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white">Tracking Workflow Proses</h1>
+
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                  <template v-for="(step, index) in timelineSteps" :key="index">
+  <div class="flex flex-col items-center relative z-10">
+    <div
+      class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-colors duration-500"
+      :class="[
+        step.completed
+          ? 'bg-green-500 animate-pulse'
+          : step.status === 'in_progress'
+            ? 'bg-blue-500 animate-bounce'
+            : 'bg-gray-300'
+      ]"
+    >
+      <i v-if="step.status === 'completed'" class="fas fa-check text-sm " ></i>
+      <span v-else>{{ index + 1 }}</span>
+    </div>
+
+    <span class="text-xs md:text-sm mt-2 font-medium text-gray-600 dark:text-gray-300"
+    :class="[
+        step.completed
+          ? ' animate-pulse'
+          : step.status === 'in_progress'
+            ? 'animate-bounce'
+            : 'animate-none'
+      ]">
+      {{ step.name }}
+    </span>
+  </div>
+
+<div
+  v-if="index < timelineSteps.length - 1"
+  class="flex-1 h-1 mx-2 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700"
+>
+  <div
+    class="h-full transition-all duration-500"
+    :class="{
+      'progress-flow': step.status === 'in_progress',
+      'bg-green-500 w-full': step.status === 'completed',
+      'w-0': step.status === 'pending'
+    }"
+  ></div>
+</div>
+
+</template>
+
                 </div>
-                <button @click="openCreateForm"
-                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
-                    <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
-                    {{ showForm ? 'Batal' : 'Tambah Data' }}
-                </button>
             </div>
 
-            <Transition name="accordion">
-                <div v-if="showForm" class="bg-white  accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
+                       <transition name="accordion">
+                <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
 
                               <FormWrapper
-            formName="formKepengurusan"
+            formName="formNasabah"
             :errors="form.errors"
             :processing="form.processing"
             @submit="handleSubmit"
         >
-          <div v-for="field in formdata.bankSampah" :key="field.name" :class="field.name === 'divisi' ? 'col-span-2' : 'hidden'">
-                        <div v-if="field.name === 'divisi'" >
-                                            <InputLabel :for="field.name" :value="field.title" />
+                                                    <input type="hidden" name="id_rt" :value="idUserRT">
+            <input type="hidden" name="id_roles" v-model="form.id_roles">
 
-    <select :name="field.name"
-        v-model="form.divisi"
-        class="w-full h-11 rounded-xl bg-gray-50 text-black dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
-         :class="{
-    'border-red-500 ring-1 ring-red-500': form.errors[`${field.name}`]
-}"
-        >
-        <option value="" class="text-gray-400">Pilih Divisi</option>
-
-        <option
-            v-for="opt in field.options"
-            :key="opt"
-            :value="opt"
-            class="text-gray-900 dark:text-white"
-        >
-            {{ opt }}
-        </option>
-    </select>
-
-
-</div>
-
-          <div v-else class="hidden"></div>
-
-
-
-                    </div>
-
-                                                            <input type="hidden" name="id_userdetail" :value="idUser">
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div v-for="field in props.formdata.nasabah" :key="field.name"
-                         :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
-
-
-
-
-                          <div v-if="field.type === 'radio'"  class="col-span-full">
+  <div v-for="field in formdata.nasabah" :key="field.name"">
+                                    <div v-if="field.type === 'radio'"  class="col-span-full">
 
                                                                         <InputLabel :for="field.name" :value="field.title" />
 
@@ -409,50 +391,69 @@ const breadcrumbItems = [
                                     v-model="form[field.name]"
                                     :value="idx + 1"
                                     class="peer sr-only">
-                                <div class="py-2 px-4 dark:text-white text-black rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
+                                <div class="py-2 px-4 dark:text-white text-gray-500 rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
                                     {{ opt }}
                                 </div>
                             </label>
         </div>
 
     </div>
-<div v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'"
-     class="col-span-1">
+
+    <div  v-else-if="field.name ==='status'">
+        <div class="col-span-2">
                                             <InputLabel :for="field.name" :value="field.title" />
+                                        <select :id="field.name" :name="field.name" v-model="form[field.name]"
+                                                                                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
+
+                                            class="w-full h-11 rounded-xl  border-gray-200 text-gray-500
+                                        bg-gray-50 dark:bg-gray-800 dark:text-white  text-sm  pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                                            <option value="">Pilih Status</option>
+                                           <option
+            v-for="opt in field.options"
+            :key="opt"
+            :value="opt"
+            class="text-gray-900 dark:text-white"
+        >
+            {{ opt }}
+        </option>
+                                        </select>
+        </div>
+
+                                    </div>
+
+                       <div  v-else-if="!['address', 'phoneNumber', 'userName', 'status'].includes(field.name) &&  field.type != 'file' &&
+                                        field.type != 'select' &&
+                                        field.type != 'radio'">
+                                        <div class="col-span-2">
+                                             <InputLabel :for="field.name" :value="field.title" />
+                                         <input  :type="field.type"  :id="field.name" :name="field.name"
+                                            :placeholder="field.placeholder" v-model="form[field.name]"
+                                                                                                                                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
+
+                                            class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-gray-500 pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all  border-gray-200">
+
+                                        </div>
+
+                                    </div>
+
+
+                            </div>
 
 
 
-                                    <input :type="field.type" :id="field.name"
-                                                                v-model="form[field.name]"
 
-                                        :name="field.name"
-                                        :placeholder="field.placeholder"
-                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-black pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
-                                        :class="{
-    'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`]
-}"
-                                        >
-                                </div>
-
-
-                    </div>
-
-
-                </div>
-
-                <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
+                        <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
                             <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
-                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Kepengurusan' : 'Simpan Kepengurusan' }}
+                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Nasabah' : 'Simpan Nasabah' }}
                             </button>
                         </div>
-
-
                    </FormWrapper>
                 </div>
-            </Transition>
+            </transition>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                                 <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
+                <div class="overflow-x-auto">
+                                                    <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
               <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
             <button @click="exportData(0)" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
@@ -465,7 +466,7 @@ const breadcrumbItems = [
                 <i class="fas fa-print"></i> Print
             </button>
         </div>
-               <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
+            <div class="flex flex-wrap md:flex-nowrap items-end justify-end gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
                 <input @keyup="handleSearch" type="text"
@@ -473,18 +474,7 @@ const breadcrumbItems = [
                     placeholder="Ketik...">
             </div>
 
-            <div class="flex items-center gap-2">
-                <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                <select @change="handleCategoryFilter"
-                    class="border border-gray-200 dark:border-gray-600 text-black  rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                    <option value="">Semua</option>
-                    <option value="Ketua">Ketua</option>
-                    <option value="Sekretaris">Sekretaris</option>
-                    <option value="Bendahara">Bendahara</option>
-                    <option value="Pemilah">Pemilah</option>
-                    <option value="Penimbang">Penimbang</option>
-                </select>
-            </div>
+
 
             <div class="flex items-center gap-2  pl-3">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
@@ -498,45 +488,52 @@ const breadcrumbItems = [
             </div>
 
         </div>
-
-                <DataTable
-                    ref="dtInstance"
-                    :data="kepengurusan"
+                    <DataTable
+                     ref="dtInstance"
                     :options="dtOptions"
-class="w-full display stripe hover cell-border">
+        :data="nasabahList"
+                    class="w-full display stripe hover cell-border dark:text-white">
+                        <!-- <thead>
+                            <tr class="text-left text-gray-500 dark:text-gray-400">
+                                <th class="text-center">No</th>
+                                <th>Nama Nasabah</th>
+                                <th v-for="step in workflowSteps" :key="step.name" class="text-center">
+                                    {{ step.name }}
+                                </th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(nasabah, index) in nasabahList" :key="index" class="dark:hover:bg-gray-700/50 transition-colors">
+                                <td class="text-center">{{ index + 1 }}</td>
+                                <td class="font-medium text-gray-800 dark:text-gray-200">{{ nasabah.nama }}</td>
 
-                    <thead>
-                        <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                             <th>No</th>
-                    <th>Nama Lengkap</th>
-                    <th class="text-center">Divisi</th>
-                            <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi</th>
-                        </tr>
-                    </thead>
+                                <td v-for="step in workflowSteps" :key="step.name" class="text-center">
+                                    <span
+                                        class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                        :class="statusBadge(nasabah.status[step.name] || 'pending')"
+                                    >
+                                        {{ formatStatus(nasabah.status[step.name] || 'pending') }}
+                                    </span>
+                                </td>
 
-                    <template #column-0="data">
-                        <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
-                    </template>
-
-                    <template #column-3="data">
-                        <div class="flex justify-center gap-1">
-                        
-                            <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button @click="deleteData(data.rowData.id)" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </template>
-                </DataTable>
-
+                                <td class="text-center">
+                                    <button
+                                        @click="viewDetail(nasabah.id)"
+                                        class="bg-blue-500 hover:bg-blue-600 text-white text-[10px] uppercase font-bold px-4 py-1.5 rounded-lg transition-all active:scale-95 shadow-lg shadow-blue-500/20"
+                                    >
+                                        Detail
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody> -->
+                    </DataTable>
+                </div>
             </div>
-
-
         </div>
     </AuthenticatedLayout>
 </template>
+
 
 <style>
 .dark td{
@@ -588,4 +585,26 @@ class="w-full display stripe hover cell-border">
 .slide-fade-enter-active { transition: all 0.3s ease-out; }
 .slide-fade-leave-active { transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1); }
 .slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-10px); opacity: 0; }
+
+.progress-flow {
+  width: 100%;
+  background: linear-gradient(
+    110deg,
+    #3b82f6 25%,
+    #60a5fa 37%,
+    #3b82f6 63%
+  );
+  background-size: 200% 100%;
+  animation: flow 1.2s linear infinite;
+}
+
+@keyframes flow {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
 </style>

@@ -6,6 +6,7 @@ use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
 use App\Models\User;
+use App\Models\UserBank;
 use App\Models\UserDetail;
 use App\Notifications\Admin\BankSampahReminder;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -136,11 +137,6 @@ class ProfileController extends Controller
     public function editAll(Request $request): RedirectResponse
     {
         $nasabah = User::with(['user_detail', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan', 'user_detail.location', 'user_detail.location.open_street'])->findOrFail(Auth::user()->id);
-        $bankSampahlist = User::with(['user_detail', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan'])->whereHas('user_detail', function ($query) {
-            $query->where('id_rt', Auth::user()->user_detail->id_rt);
-            $query->where('id_roles', 2);
-            $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%');
-        })->get();
 
 
         $nasabah->update([
@@ -155,8 +151,17 @@ class ProfileController extends Controller
         ]);
 
 
-        $geoLocation = $nasabah->user_detail->location()->create([
-            'id_userdetail' => $request->id_userdetail,
+        UserBank::updateOrCreate(
+        ['id_userdetail' => $request->id_userdetail],
+        [
+            'id_bank' => $request->id_bank,
+            'nomor_rekening' => $request->nomor_rekening,
+        ]);
+
+
+        $geoLocation = $nasabah->user_detail->location()->updateOrCreate([
+            'id_userdetail' => $request->id_userdetail],
+            [
             'amenity' => $request->amenity,
             'house_number' => $request->house_number,
             'city' => $request->city,
@@ -180,41 +185,63 @@ class ProfileController extends Controller
         $userDetail = Auth::user()?->user_detail;
         $rt = $userDetail->id_rt;
         $fullName = $userDetail->fullName;
-        // 1. Ambil daftar petugas (Sudah benar query-nya)
+
         $bankSampahlist = User::whereHas('user_detail', function ($query) {
             $query->where('id_rt', Auth::user()->user_detail->id_rt)
                 ->where('id_roles', 2)
                 ->where('fullName', 'LIKE', '%Petugas Bank Sampah%');
         })->get();
 
+        $nasabahlist = User::whereHas('user_detail', function ($query) {
+            $query->where('id_rt', Auth::user()->user_detail->id_rt)
+                ->where('id_roles', 3);
+        })->get();
+
         // 2. Logika Notifikasi Profil
         if ($request->filled(['address', 'phoneNumber'])) {
-            foreach ($bankSampahlist as $petugas) {
-                $pesan = ($userDetail->id_roles === 2)
-                    ? "Profil Bank Sampah RT0{$rt} sudah dilengkapi, silahkan disetujui"
-                    : "Profil atas nama {$fullName} sudah dilengkapi, silahkan disetujui";
 
-                $uri = ($userDetail->id_roles === 3)
-                    ? '/bank-sampah/nasabah'
-                    : '/Profil';
-                $target = ($userDetail->id_roles === 2) ? $IDRW : $bankSampah;
-                $petugas->notify(new BankSampahReminder($target, $pesan, '/profile'));
+            if ($userDetail->id_roles === 2) {
+                foreach ($bankSampahlist as $petugas) {
+                    $pesan = "Profil Bank Sampah RT0{$rt} sudah dilengkapi, silahkan disetujui";
+
+                    $uri = '/profil';
+                    $target = $IDRW;
+                    $petugas->notify(new BankSampahReminder($target, $pesan, '/profile'));
+                }
+            } elseif ($userDetail->id_roles === 3) {
+                foreach ($nasabahlist as $petugas) {
+                    $pesan = "Profil atas nama {$fullName} sudah dilengkapi, silahkan disetujui";
+
+                    $uri =  '/bank-sampah/nasabah';
+                    $target =  $bankSampah;
+                    $petugas->notify(new BankSampahReminder($target, $pesan, '/profile'));
+                }
             }
         }
 
         if ($request->filled(['id_bank', 'nomor_rekening'])) {
-            foreach ($bankSampahlist as $petugas) {
-                $pesanBank = ($userDetail->id_roles === 3)
-                    ? "Nomor Rekening nasabah {$fullName} sudah dilengkapi, segera lakukan pencairan!!!"
-                    : "Profil";
+            if ($userDetail->id_roles === 2) {
 
-                $uri = ($userDetail->id_roles === 3)
-                    ? '/bank-sampah/transaksi'
-                    : '/Profil';
+            foreach ($bankSampahlist as $petugas) {
+                $pesanBank =  "Profil";
+
+                $uri =  '/profil';
 
                 // Kirim notifikasi ke TIAP petugas di list
                 $petugas->notify(new BankSampahReminder($petugas, $pesanBank, $uri));
             }
+            } elseif($userDetail->id_roles === 3) {
+
+            foreach ($nasabahlist as $petugas) {
+                $pesanBank = "Nomor Rekening nasabah {$fullName} sudah dilengkapi, segera lakukan pencairan!!!";
+
+
+                $uri = '/bank-sampah/transaksi';
+
+                $petugas->notify(new BankSampahReminder($petugas, $pesanBank, $uri));
+            }
+            }
+
         }
 
 

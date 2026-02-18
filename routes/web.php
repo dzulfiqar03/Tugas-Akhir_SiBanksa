@@ -18,6 +18,9 @@ use App\Http\Controllers\Admin\KetuaRW\KelolaBankSampahController;
 use App\Http\Controllers\Admin\KetuaRW\KetuaRWChatController;
 use App\Http\Controllers\Admin\KetuaRW\PelaporanController;
 use App\Http\Controllers\Admin\PreferenceController;
+use App\Http\Controllers\Admin\Warga\DataTransaksiController as WargaDataTransaksiController;
+use App\Http\Controllers\Admin\Warga\JadwalPenyetoranController;
+use App\Http\Controllers\Admin\Warga\TrackingSetoranController as WargaTrackingSetoranController;
 use App\Http\Controllers\Admin\Warga\WargaChatController;
 use App\Http\Controllers\DocumentArchiverController;
 use App\Http\Controllers\EvidenceArchiverController;
@@ -132,6 +135,8 @@ Route::middleware(['conn'])->group(function () {
 
                 Route::get('/bank-sampah/pencatatan', [PencatatanController::class, 'index'])->name('pencatatan-setoran');
                 Route::post('/bank-sampah/pencatatan/create', [PencatatanController::class, 'store'])->name('add-setoran');
+                Route::get('/bank-sampah/pencatatan/detail/{id}', [PencatatanController::class, 'show'])->name('show-pencatatan');
+                Route::delete('/bank-sampah/pencatatan/delete/{id}', [PencatatanController::class, 'destroy'])->name('delete-pencatatan');
 
 
                 Route::get('/bank-sampah/pelaporan', [ArchiverReportController::class, 'index'])->name('data-pelaporanRW');
@@ -158,9 +163,15 @@ Route::middleware(['conn'])->group(function () {
 
             Route::middleware(['roles:Warga'])->group(function () {
                 Route::get('/Warga/dashboard', [DashboardController::class, 'index'])->name('warga.dashboard');
-                Route::get('/Warga/transaksi', [DataTransaksiController::class, 'index'])->name('warga.data-transaksi');
-                Route::get('/Warga/penjadwalan', [DataNasabahController::class, 'index'])->name('warga.penjadwalan');
-                Route::get('/Warga/tracking', [TrackingSetoranController::class, 'index'])->name('warga.tracking-setoran');
+                Route::get('/Warga/transaksi', [WargaDataTransaksiController::class, 'index'])->name('warga.data-transaksi');
+
+                Route::get('/Warga/JanjiSetor', [JadwalPenyetoranController::class, 'index'])->name('warga.janji-setor');
+                Route::post('/Warga/JanjiSetor/Create', [JadwalPenyetoranController::class, 'store'])->name('warga.add-janjiSetor');
+                Route::put('/Warga/JanjiSetor/Update/{Jadwal}', [JadwalPenyetoranController::class, 'update'])->name('warga.update-janjiSetor');
+                Route::delete('/Warga/JanjiSetor/Delete/{Jadwal}', [JadwalPenyetoranController::class, 'destroy'])->name('warga.delete-janjiSetor');
+
+
+                Route::get('/Warga/tracking', [WargaTrackingSetoranController::class, 'index'])->name('warga.tracking-setoran');
 
                 Route::get('/Warga/chat', [WargaChatController::class, 'index'])->name('warga.chat');
                 Route::post('/Warga/chat/create{id}', [WargaChatController::class, 'store'])->name('warga.add-chat');

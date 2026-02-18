@@ -88,6 +88,11 @@ class UserDetail extends Model
         return $this->hasOne(UserTransaction::class, 'id_userdetail', 'id');
     }
 
+    public function user_queue()
+    {
+        return $this->hasOne(UserTransaction::class, 'id_userdetail', 'id');
+    }
+
      public function user_chat()
     {
         return $this->hasMany(UserChat::class, 'id_userdetail', 'id');

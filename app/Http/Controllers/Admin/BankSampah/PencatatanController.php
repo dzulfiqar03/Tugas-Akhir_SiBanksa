@@ -91,9 +91,43 @@ class PencatatanController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $menu = (new DataResources(null))->toArray(request());
+        $form = (new FormResources(null))->toArray(request());
+
+        $jadwalPelaksanaan = $this->userDetail::find(Auth::user()->user_detail->id)->jadwal()->get();
+        $nasabahList = UserDetail::with('user')->findOrFail($id);;
+        $formName = 'formPencatatan';
+
+        $jenisSampah = $this->sampah::where('id_userdetail', $id)->get();
+
+        $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail','setoran.jadwal', 'sampah'])
+            ->whereHas('setoran', function ($query) use ($id) {
+                $query->where('id_userdetail', $id);
+            })
+            ->get();
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+
+        return Inertia::render('BankSampah/DetailPencatatan', [
+            'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
+            'sidebardata' => $menu,
+            'formdata' => $form,
+            'formName' => $formName,
+            'jadwalPelaksanaan' => $jadwalPelaksanaan,
+            'nasabah' => $nasabahList,
+            'jenisSampah' => $jenisSampah,
+            'pencatatanSetoranItems' => $pencatatanSetoranItems
+        ]);
     }
 
     /**
@@ -115,8 +149,13 @@ class PencatatanController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        try {
+            $this->pencatatanServices->deletePencatatan($id);
+            return redirect()->back()->with('message', 'Data berhasil dihapus');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
+        }
     }
 }

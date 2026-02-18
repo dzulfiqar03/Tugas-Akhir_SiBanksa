@@ -23,7 +23,7 @@ class JadwalServices
     public function getAllJadwal()
     {
 
-        $jadwal = $this->jadwal::where('id_userdetail', operator: Auth::user()->user_detail->id)->get();
+        $jadwal = $this->jadwal::where('id_userdetail', operator: Auth::user()->user_detail->id)->orderBy('created_at', 'DESC')->get();
 
         return $jadwal;
     }
@@ -57,7 +57,7 @@ class JadwalServices
                 $adminUser->notify(new \App\Notifications\Admin\JadwalBlasting(
                     $data['id_userdetail'],
                     "Jadwal Pelaksanaan Bank Sampah Baru pada tanggal " . $data['tanggal_setoran']
-                ));   
+                ));
                 $user = Auth::user();
 
 

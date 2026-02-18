@@ -15,8 +15,12 @@ const step = ref(1);
 const form = useForm({
     id_rt: '',
     id_roles: 2,
-    bankSampah: {},
-    nasabah: {},
+    bankSampah: {
+    address: null
+    },
+    nasabah: {
+    address: null
+    },
     id_gender: '',
     status: "Pengajuan Verifikasi"
 });
@@ -25,11 +29,11 @@ const form = useForm({
 const filteredFields = computed(() => {
     if (showForm.value === 'BankSampah') {
         return props.formdata.nasabah.filter(field => field.type !== 'radio');
-    } 
+    }
     return props.formdata.nasabah;
 });
 
-const showPassword = ref({}); 
+const showPassword = ref({});
 
 const toggleVisibility = (fieldName) => {
     showPassword.value[fieldName] = !showPassword.value[fieldName];
@@ -52,7 +56,7 @@ const submit = () => {
 <template>
         <GuestLayout>
         <Head title="Sign Up" />
-        
+
             <div x-data="{ showUsername: false }">
                   <div class=" mb-5 justify-center sm:mb-8">
 
@@ -67,9 +71,9 @@ const submit = () => {
 
 
 
-                                <a 
+                                <a
                                     class="group relative flex items-center justify-start gap-0 hover:gap-3 overflow-hidden rounded-full bg-emerald-500 px-4 py-3 text-sm font-medium text-gray-700 w-max transition-all duration-300 hover:bg-gray-200 hover:pl-6 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-                                
+
 
                                     <span @click="showUsername = !showUsername" class="overflow-hidden text-white font-bold hover:text-emerald-500 dark:text-emerald-500">
                                         Join Us
@@ -100,9 +104,9 @@ const submit = () => {
             </button>
         </div>
 
-          <FormWrapper 
-            formName="formRegister" 
-            :errors="form.errors" 
+          <FormWrapper
+            formName="formRegister"
+            :errors="form.errors"
             :processing="form.processing"
             @submit="submit"
         >
@@ -120,76 +124,76 @@ const submit = () => {
             <input type="hidden" name="id_roles" v-model="form.id_roles">
 
             <input v-if="showForm === 'BankSampah'" type="hidden" name="id_gender" value="3">
-            
+
             <div v-if="step === 1" class="space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div v-for="field in filteredFields" :key="field.name" 
+                    <div v-for="field in filteredFields" :key="field.name"
                          :class="field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
-                        
+
 
                         <div v-if="field.name === 'rt'" class="col-span-full">
-                                            <InputLabel :for="field.name" :value="field.title" />                        
+                                            <InputLabel :for="field.name" :value="field.title" />
 
-    <select  
+    <select
         v-model="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'].id_rt"
         class="w-full h-11 rounded-xl bg-gray-50 text-black  dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
-         :class="{ 
-    'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`] 
+         :class="{
+    'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`]
 }"
         >
         <option value="" class="text-black dark:text-white">Pilih RT</option>
-        
-        <option 
-            v-for="opt in field.options" 
-            :key="opt" 
+
+        <option
+            v-for="opt in field.options"
+            :key="opt"
             :value="opt"
             class="text-gray-900 dark:text-white"
         >
             {{ opt }}
         </option>
     </select>
-    
+
 
 </div>
-                 
+
 
                           <div v-else-if="field.type === 'radio'"  class="col-span-full">
 
-                                                                        <InputLabel :for="field.name" :value="field.title" />                        
+                                                                        <InputLabel :for="field.name" :value="field.title" />
 
-        
+
         <div class="flex gap-3">
                         <label v-for="(opt, idx) in field.options" :key="idx" class="flex-1 cursor-pointer group">
-                                <input type="radio" 
-                                    v-model="form.nasabah[field.name]" 
-                                    :value="idx + 1" 
+                                <input type="radio"
+                                    v-model="form.nasabah[field.name]"
+                                    :value="idx + 1"
                                     class="peer sr-only">
                                 <div class="py-2 px-4 text-gray-600  dark:text-white rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
                                     {{ opt }}
                                 </div>
                             </label>
         </div>
-                   
+
     </div>
-<div v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'" 
-     class="col-span-1"> 
-                                            <InputLabel :for="field.name" :value="field.title" />                        
+<div v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'"
+     class="col-span-1">
+                                            <InputLabel :for="field.name" :value="field.title" />
 
 
-                              
+
                                     <input :type="field.type" :id="field.name"
                                                                 v-model="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'][field.name]"
 
                                         :name="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'][field.name]"
                                         :placeholder="field.placeholder"
                                         class="w-full text-black  h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
-                                        :class="{ 
-    'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`] 
+                                        :class="{
+    'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`]
 }"
                                         >
                                 </div>
-             
-                                 
+
+
                     </div>
                 </div>
                 <button type="button" @click="step = 2" class="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold">Lanjut</button>
@@ -198,25 +202,25 @@ const submit = () => {
             <div v-if="step === 2" class="space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
 <div  v-for="field in formdata.userAuth" :key="field.name">
-                                                
-                    
+
+
  <div class="col-span-1 relative">
     <InputLabel :for="field.name" :value="field.title" />
-    
+
     <div class="relative mt-1">
-        <input 
+        <input
             :type="field.type === 'password' ? (showPassword[field.name] ? 'text' : 'password') : field.type"
             v-model="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'][field.name]"
             :placeholder="field.placeholder"
             class="w-full h-11 text-sm rounded-xl text-black  bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
-            :class="{ 
-                'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`] 
+            :class="{
+                'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`]
             }"
         />
-        
-        <button 
+
+        <button
             v-if="field.type === 'password'"
-            type="button" 
+            type="button"
             @click="toggleVisibility(field.name)"
             class="absolute inset-y-0 right-3 flex items-center z-10"
         >
@@ -234,12 +238,12 @@ const submit = () => {
     </div>
 </div>
 
-        
+
                                                 </div>
 
 
-                  
-               
+
+
                 </div>
                  <div class="flex justify-between gap-4">
                     <button type="button" @click="step = 1" class="text-gray-400 text-sm font-bold">Kembali</button>

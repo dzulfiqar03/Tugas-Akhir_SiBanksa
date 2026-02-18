@@ -36,7 +36,7 @@ class DataNasabahController extends Controller
                 'is_read' => $n->read_at !== null
             ];
         });
-        
+
         $formName = 'formNasabah';
         $nasabah = $this->nasabahServices->getAllNasabah();
         $idUserRT = Auth::user()->user_detail->id_rt;

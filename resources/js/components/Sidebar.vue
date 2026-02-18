@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { usePage, router,Link } from '@inertiajs/vue3';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue';
 
-const route = window.route; 
+const route = window.route;
 const page = usePage();
 
 const props = defineProps({
@@ -29,14 +29,14 @@ const statusVerifikasi = computed(() => userDetail.value?.status);
 const countChat = computed(() => {
   if (!userDetail.value.user_chat) return 0;
 
-  return userDetail.value.user_chat.filter(msg => 
+  return userDetail.value.user_chat.filter(msg =>
     msg.is_read === false || msg.is_read === 0
   ).length;
 });
 const menus = computed(() => props.sidebardata?.['sub-data'] || []);
 
 const isRouteActive = (uri) => {
-    try { return route && route().current(uri); } 
+    try { return route && route().current(uri); }
     catch (e) { return false; }
 };
 
@@ -66,7 +66,7 @@ const sections = computed(() => {
         menus.value.forEach(menu => {
                                     if (['Profile','Tracking Setoran'].includes(menu.nama)) grouped['MAIN'].push(menu);
 
-            else if (menu.data || ['Bank Sampah', 'Nasabah', 'Transaksi Setoran', 'Penjadwalan'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
+            else if (menu.data || ['Bank Sampah', 'Nasabah', 'Transaksi Setoran', 'Janji Setor'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
             else grouped['LAINNYA'].push(menu);
         });
     }
@@ -108,11 +108,11 @@ const sendLogout= () => {
                     <span class="font-light">SI </span>BANKSA
                 </h1>
             </div>
-            
+
             <button @click="$emit('close')" class="lg:hidden text-gray-500 p-2">
                 <i class="fas fa-times text-xl"></i>
             </button>
-            
+
             <button @click="sidebarExpanded = !sidebarExpanded" class="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                 <i class="fas" :class="sidebarExpanded ? 'fa-angle-left' : 'fa-angle-right'"></i>
             </button>
@@ -126,12 +126,12 @@ const sendLogout= () => {
 
                 <div class="space-y-1">
                     <div v-for="menu in sectionMenus" :key="menu.nama">
-                        
+
                         <Link v-if="!menu.data && menu.nama !== 'LogOut'"
     :href="statusVerifikasi === 'Pengajuan Verifikasi' ? route('warga.dashboard') : menu.route"
     class="flex items-center justify-between  p-2 rounded-lg transition group"
-    :class="isRouteActive(menu.uri) 
-        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' 
+    :class="isRouteActive(menu.uri)
+        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
 >
 <div class="flex gap-3">
@@ -159,8 +159,8 @@ const sendLogout= () => {
 </button>
                         <Disclosure v-else v-slot="{ open }" :default-open="menu.data.some(sub => isRouteActive(sub.uri))">
                             <DisclosureButton class="flex justify-between w-full p-2 rounded-lg transition"
-                                :class="menu.data.some(sub => isRouteActive(sub.uri)) 
-                                    ? 'text-emerald-600 dark:text-emerald-400' 
+                                :class="menu.data.some(sub => isRouteActive(sub.uri))
+                                    ? 'text-emerald-600 dark:text-emerald-400'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
                             >
                                 <div class="flex items-center gap-3 overflow-hidden">
@@ -169,13 +169,13 @@ const sendLogout= () => {
                                 </div>
                                 <i v-show="sidebarExpanded || isOpen" class="fas fa-chevron-right text-[10px] self-center transition-transform" :class="open ? 'rotate-90' : ''"></i>
                             </DisclosureButton>
-                            
+
                             <DisclosurePanel v-show="sidebarExpanded || isOpen" class="space-y-1 mt-1">
                                 <Link v-for="sub in menu.data" :key="sub.nama"
                                     :href="sub.route"
                                     class="flex items-center p-2 rounded-lg text-sm transition"
-                                    :class="isRouteActive(sub.uri) 
-                                        ? 'bg-emerald-50 text-emerald-600 font-bold pl-12' 
+                                    :class="isRouteActive(sub.uri)
+                                        ? 'bg-emerald-50 text-emerald-600 font-bold pl-12'
                                         : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 pl-12'"
                                 >
                                     <span>{{ sub.nama }}</span>

@@ -48,7 +48,7 @@ const breadcrumbItems = [
         <div class="space-y-6">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <h2 class="text-2xl font-bold mb-6 dark:text-white">Detail Nasabah</h2>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Email</p>
@@ -60,7 +60,7 @@ const breadcrumbItems = [
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">RT</p>
-                        <p class="dark:text-gray-300 text-black">{{ nasabah.user_detail.rt?.RT || '-' }}</p>
+                        <p class="dark:text-gray-300 text-black">{{ nasabah.user_detail.id_rt || '-' }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">No. Telepon</p>
@@ -87,7 +87,7 @@ const breadcrumbItems = [
                         <tbody class="divide-y dark:divide-gray-700 font-medium">
                             <tr class="dark:text-gray-300">
                                 <td class="px-6 py-4 capitalize text-black dark:text-gray-400">{{ nasabah.user_detail.fullName }}</td>
-                                
+
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-32 bg-gray-200 rounded-full h-2 dark:bg-gray-700">
@@ -103,11 +103,11 @@ const breadcrumbItems = [
                                 </td>
 
                                 <td class="px-6 py-4">
-                                    <span v-if="percentageSuccessfullDocument === 100" 
+                                    <span v-if="percentageSuccessfullDocument === 100"
                                         class="px-2.5 py-1 rounded-full text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30">
                                         <i class="fas fa-check-circle mr-1"></i> Lengkap
                                     </span>
-                                    <span v-else 
+                                    <span v-else
                                         class="px-2.5 py-1 rounded-full text-[10px] bg-red-900 text-white dark:bg-red-900">
                                         Belum Lengkap ({{ Math.round(percentageSuccessfullDocument) }}%)
                                     </span>
@@ -115,7 +115,7 @@ const breadcrumbItems = [
 
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center gap-2">
-            
+
 
                                         <button v-if="percentageSuccessProfile < 100 || percentageSuccessfullDocument < 100"
                                             @click="sendReminder"

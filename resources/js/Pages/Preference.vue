@@ -9,7 +9,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">Atur Sesukamu dan custom sesuai pilihan anda</p>
                 </div>
   <div class="bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 rounded-2xl p-6 transition-all">
-    
+
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -78,24 +78,7 @@
 
   </div>
 </div>
- 
 
- <div>
-    <h3>Web GIS - Cari Alamat (Structured)</h3>
-
-    <form @submit.prevent="searchStructuredAddress" class="space-y-2 max-w-lg">
-      <input v-model="form.amenity" placeholder="Amenity (name and/or type)" class="input" />
-      <input v-model="form.street" placeholder="House number / Street" class="input" />
-      <input v-model="form.city" placeholder="City" class="input" />
-      <input v-model="form.county" placeholder="County" class="input" />
-      <input v-model="form.state" placeholder="State" class="input" />
-      <input v-model="form.country" placeholder="Country" class="input" />
-      <input v-model="form.postalcode" placeholder="Postal Code" class="input" />
-      <button type="submit" class="btn">Cari</button>
-    </form>
-
-    <div id="map" style="height: 400px; margin-top: 16px;"></div>
-  </div>
 
 
       </AuthenticatedLayout>
@@ -107,8 +90,7 @@ import { ref, onMounted } from 'vue';
 
 import {Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+
 const props = defineProps({
   modelValue: {
     type: Boolean,
@@ -121,9 +103,7 @@ const props = defineProps({
 
 const isDark = ref(localStorage.getItem('darkMode') === 'true');
 const notifEnable = ref(localStorage.getItem('notif_sound_enabled')|| '0');
-const address = ref('')
-let map = null
-let marker = null
+
 
 
 const toggleTheme = () => {
@@ -146,13 +126,7 @@ const updateTheme = () => {
 
 onMounted(() => {
   updateTheme();
-  map = L.map('map').setView([-7.1680294, 112.6596363], 13)
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map)
-
-  renderNasabahMarkers();
 });
 
 
@@ -171,14 +145,14 @@ const toggleSound = () => {
 
     window.notificationAudio = audio
     window.audioUnlocked = true
-      
+
       notifEnable.value = '1';
       localStorage.setItem('notif_sound_enabled', '1');
-      
+
       window.notificationAudio = audio;
       console.log('🔓 Sound Enabled');
     }).catch(err => console.log('Izin ditolak browser', err));
-    
+
   } else {
     // PROSES MEMATIKAN
     audio.muted = false;
@@ -199,83 +173,4 @@ const breadcrumbItems = [
     { label: 'Preferences', url: route('preference')  },
 ];
 
-const form = ref({
-  amenity: '',
-  street: '',
-  city: '',
-  county: '',
-  state: '',
-  country: '',
-  postalcode: ''
-})
-
-
-const searchStructuredAddress = async () => {
-  // Bangun URL dengan parameter structured search
-  const baseUrl = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1'
-
-  const params = new URLSearchParams()
-
-  // Nominatim expects keys sesuai dokumentasi:
-  // https://nominatim.org/release-docs/latest/api/Search/#structured
-
-  if(form.value.amenity) params.append('amenity', form.value.amenity)
-  if(form.value.street) params.append('street', form.value.street)
-  if(form.value.city) params.append('city', form.value.city)
-  if(form.value.county) params.append('county', form.value.county)
-  if(form.value.state) params.append('state', form.value.state)
-  if(form.value.country) params.append('country', form.value.country)
-  if(form.value.postalcode) params.append('postalcode', form.value.postalcode)
-
-  const url = `${baseUrl}&${params.toString()}`
-
-  const res = await fetch(url)
-  const data = await res.json()
-
-  if (!data.length) {
-    alert('Alamat tidak ditemukan')
-    return
-  }
-
-  console.log(data);
-
-  const { lat, lon } = data[0]
-
-  // hapus marker lama
-  if(marker){
-    map.removeLayer(marker)
-  }
-
-  marker = L.marker([lat, lon]).addTo(map)
-  map.setView([lat, lon], 15)
-}
-
-
-const renderNasabahMarkers = () => {
-  if (!map) return
-
-  // hapus marker lama
-  if (markerLayer) {
-    markerLayer.clearLayers()
-  }
-
-  markerLayer = L.layerGroup().addTo(map)
-
-  props.nasabahs.forEach(nasabah => {
-    if (!nasabah.lat || !nasabah.lng) return
-
-    const m = L.marker([nasabah.lat, nasabah.lng])
-      .addTo(markerLayer)
-      .bindPopup(`
-        <div class="space-y-1">
-          <div class="font-semibold">${nasabah.nama}</div>
-          <div class="text-xs text-gray-600">${nasabah.alamat}</div>
-        </div>
-      `)
-
-    m.on('click', () => {
-      map.setView([nasabah.lat, nasabah.lng], 16)
-    })
-  })
-}
 </script>
