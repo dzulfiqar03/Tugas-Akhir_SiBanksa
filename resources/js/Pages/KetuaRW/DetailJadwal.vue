@@ -119,7 +119,7 @@ const dtOptions = {
             <span class="font-light">Si</span>
             Banksa
         </h1>
-                        
+
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan Bank Sampah RT-+${props.jadwal.user_detail.id_rt}</p>
@@ -181,7 +181,7 @@ const breadcrumbItems = [
         <div class="space-y-6">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <h2 class="text-2xl font-bold mb-6 dark:text-white text-black">Detail jadwal</h2>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Email</p>
@@ -223,12 +223,12 @@ const breadcrumbItems = [
                <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text" 
+                <input @keyup="handleSearch" type="text"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
 
-          
+
             <div class="flex items-center gap-2  pl-3">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
                 <select @change="handleLengthChange"
@@ -239,10 +239,10 @@ const breadcrumbItems = [
                 </select>
             </div>
             </div>
-           
+
         </div>
 
-                <DataTable 
+                <DataTable
                     ref="dtInstance"
                     :options="dtOptions"
 class="w-full display stripe hover cell-border">
@@ -254,11 +254,11 @@ class="w-full display stripe hover cell-border">
                             </tr>
                         </thead>
                         <tbody class="divide-y dark:divide-gray-700 font-medium">
-                            <tr v-for="(value, index ) in jadwal.user_detail.jadwal" :key="index" class="dark:text-gray-300">
-                                                                                               <td class="px-6 m-auto py-4">{{index +1}}</td>
+                            <tr v-for="(value, index ) in jadwal.user_detail.jadwal" :key="index" class="text-black dark:text-gray-300">
+                                                                                               <td class="px-6 m-auto py-4 text-black dark:text-white">{{index +1}}</td>
 
-                                                               <td class="px-6 m-auto py-4">{{ value.tanggal_setoran }}</td>
-                               
+                                                               <td class="px-6 m-auto py-4 text-black dark:text-white">{{ value.tanggal_setoran }}</td>
+
                             </tr>
                         </tbody>
                 </DataTable>
@@ -266,7 +266,7 @@ class="w-full display stripe hover cell-border">
             </div>
 
 
-         
+
         </div>
     </AuthenticatedLayout>
 </template>
@@ -275,11 +275,11 @@ class="w-full display stripe hover cell-border">
 .dark td{
     color:white;
 }
-    
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; 
+    max-height: 500px;
     overflow: hidden;
 }
 
@@ -309,10 +309,10 @@ class="w-full display stripe hover cell-border">
     color: #ffffff !important;
     margin-top: 1rem;
 }
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
 .dark .datatable  .dt-paging {
     color: #ffffff !important;
 }

@@ -48,7 +48,7 @@ onMounted(() => {
     // Tempelkan ke window agar bisa dipanggil oleh onclick string
     window.viewDetail = (id) => {
         if (!id) return;
-        
+
         // Menggunakan router Inertia agar navigasi halus (SPA mode)
         router.get(route('rw.show-jadwalBankSampah', id), {}, {
             preserveState: true,
@@ -61,49 +61,46 @@ const dtInstance = ref(null);
 
 const combinedData = computed(() => {
     const dataJadwal = props.bankSampah || [];
-const logs = props.bankSampahLog || []; 
+const logs = props.bankSampahLog || [];
     return dataJadwal.map(item => {
 
-        
+
         const user = item.user_detail;
-        const log = item.user_detail.user_log; // Atau cari di array log lain jika terpisah
+        const log = item.user_detail.user_log;
 
         const userId = user?.id;
-        
-        // Cari log yang cocok dengan ID user ini
+
+
         const userLog = logs.find(log => Number(log.id_userdetail) === Number(userId));
 
         return {
             ...item,
-            // Mengambil data dari relasi user_detail
+
             fullName: user?.fullName || 'Tanpa Nama',
             id_rt: user?.id_rt || '-',
-            
+
             status_online: (userLog?.action === 'LOGIN') ? 'ONLINE' : 'OFFLINE',
-            
-            // Data setoran
+
             tanggal_setoran: item.user_detail?.jadwal?.[0]?.tanggal_setoran || '-',
         };
     });
 });
 
-// 4. Fungsi Format Sub-Baris
 const formatChildRow = (d) => {
     return `
         <div class="p-4 bg-gray-50 dark:bg-gray-900 border-l-4 border-emerald-500 shadow-inner">
             <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
                     <p class="text-gray-500 uppercase text-xs font-bold">Detail Aktivitas</p>
-                    <p class="dark:text-white">Waktu Terakhir: <span class="font-mono">${d.tanggal_setoran}</span></p>
-                    <p class="dark:text-white">Status: ${d.status_online === 'ONLINE' ? '🟢 Aktif' : '⚪ Offline'}</p>
+                    <p class="dark:text-white text-black">Waktu Terakhir: <span class="font-mono">${d.tanggal_setoran}</span></p>
+                    <p class="dark:text-white text-black">Status: ${d.status_online === 'ONLINE' ? '🟢 Aktif' : '⚪ Offline'}</p>
                 </div>
-                
+
             </div>
         </div>
     `;
 };
 
-// 5. Handler Klik Baris
 const onRowClick = (event) => {
     const tr = event.target.closest('tr');
     const row = dtInstance.value.dt.row(tr);
@@ -131,21 +128,25 @@ const dtOptions = {
     },
     data: combinedData.value,
     columns: [
-         { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center ' 
+         {
+            data: null,
+            orderable: false,
+            className: 'no-print text-center '
         },
-        { data: 'user_detail.id_rt', 
+        { data: 'user_detail.id_rt',
             className: 'dark:text-white text-black' },
-        { data: 'user_detail.fullName', 
+        { data: 'user_detail.fullName',
             className: 'dark:text-white text-black' },
-        { 
+        {
             data: 'user_detail.id_user',
+            title:'Aksi',
+            className: 'no-print text-black dark:text-white',
             render: (data) => `
             <button onclick="viewDetail('${data}')" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">
                                             <i class="fas fa-eye"></i></button>`
-        }
+        },
+
+
     ],
          buttons: [
                     {
@@ -225,7 +226,7 @@ const dtOptions = {
             <span class="font-light">Si</span>
             Banksa
         </h1>
-                        
+
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 14px; margin: 0;">Laporan Data Kepengurusan</p>
@@ -280,8 +281,8 @@ const handleSearch = (e) => {
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
     // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
-    const regex = val ? `^${val}$` : ''; 
-    
+    const regex = val ? `^${val}$` : '';
+
     dtInstance.value.dt
         .column(2)
         .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
@@ -310,10 +311,10 @@ const breadcrumbItems = [
         <div class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data jadwal</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar jadwal Anda.</p>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Jadwal</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Pantau Daftar Jadwal Bank Sampah RW Anda.</p>
                 </div>
-               
+
             </div>
 
 
@@ -334,7 +335,7 @@ const breadcrumbItems = [
             <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text" 
+                <input @keyup="handleSearch" type="text"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
@@ -361,7 +362,7 @@ const breadcrumbItems = [
                 </select>
             </div>
             </div>
-           
+
         </div>
 
             <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
@@ -379,15 +380,15 @@ const breadcrumbItems = [
                 </tr>
             </thead>
 
-             <template #column-0="data"> 
+             <template #column-0="data">
                                 <div class="flex justify-center gap-2">
-                                      
+
 
                                         <button  @click="onRowClick" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
-                                 <i  
+                                 <i
                  class="fas fa-plus-circle text-emerald-500 cursor-pointer"></i>
                             </button>
-    
+
                                     </div>
                     </template>
         </DataTable>
@@ -395,10 +396,10 @@ const breadcrumbItems = [
 
             </div>
 
-            
+
         </div>
     </AuthenticatedLayout>
-   
+
 </template>
 
 <style>
@@ -425,11 +426,11 @@ const breadcrumbItems = [
     background-position: -200% 0;
   }
 }
-    
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; 
+    max-height: 500px;
     overflow: hidden;
 }
 
@@ -459,10 +460,10 @@ const breadcrumbItems = [
     color: #ffffff !important;
     margin-top: 1rem;
 }
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
 .dark .datatable  .dt-paging {
     color: #ffffff !important;
 }

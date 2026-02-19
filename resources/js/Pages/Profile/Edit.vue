@@ -43,8 +43,7 @@ const form = useForm({
     phoneNumber: props.nasabah?.user_detail?.telephone_number ?? '',
     email: props.nasabah?.email ?? '',
     bank: '',
-
-id_bank: props.nasabah?.user_detail?.userbank?.id_bank ?? '',
+    id_bank: props.nasabah?.user_detail?.userbank?.id_bank ?? '',
     nomor_rekening: props.nasabah?.user_detail?.userbank?.nomor_rekening?? '',
     password: '',
 

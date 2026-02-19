@@ -73,29 +73,29 @@ const sendReminder = ($id) => {
 
 const combinedData = computed(() => {
     const dataJadwal = props.allBankSampah || [];
-const logs = props.bankSampahLog || []; 
+const logs = props.bankSampahLog || [];
     return dataJadwal.map(item => {
 
-        
+
         const user = item.user_detail;
         const log = item.user_detail.user_log;
 
         const userId = user?.id;
-        
+
         const userLog = logs.find(log => Number(log.id_userdetail) === Number(userId));
-const completion = Array.isArray(item.profile_completion) 
-            ? item.profile_completion[0] 
+const completion = Array.isArray(item.profile_completion)
+            ? item.profile_completion[0]
             : item.profile_completion;
 
-            const statistik = Array.isArray(item.statistik) 
-            ? item.statistik[0] 
+            const statistik = Array.isArray(item.statistik)
+            ? item.statistik[0]
             : item.statistik;
         return {
             ...item,
             // Mengambil data dari relasi user_detail
             fullName: user?.fullName || 'Tanpa Nama',
             id_rt: user?.id_rt || '-',
-            
+
             percentage: completion?.percentage || 0,
             empty_fields: completion?.empty_fields || [],
             profile_completion_data: completion,
@@ -104,7 +104,7 @@ const completion = Array.isArray(item.profile_completion)
             countOnline: statistik?.online_saat_ini || 0,
             statistik_data: statistik,
             status_online: (userLog?.action === 'LOGIN') ? 'Online' : 'Offline',
-           
+
             // Data setoran
             tanggal_setoran: item.user_detail?.jadwal?.[0]?.tanggal_setoran || '-',
         };
@@ -129,7 +129,7 @@ const formatChildRow = (d) => {
                     <p class="dark:text-white text-black">Status Nasabah: <span class="font-mono">${d.countOnline === 0 ? 'Tidak ada yang online':d.countOnline  }</span></p>
 
                 </div>
-                
+
             </div>
         </div>
     `;
@@ -162,12 +162,12 @@ const dtOptions = {
     },
     data: combinedData.value,
     columns: [
-          { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
+          {
+            data: null,
+            orderable: false,
+            className: 'no-print text-center'
         },
-     
+
         { data: 'user_detail.id_rt',
         className: 'text-black dark:text-white'
          },
@@ -183,7 +183,7 @@ const dtOptions = {
 
         const percentage = Math.round(data.percentage || 0);
         const colorClass = percentage === 100 ? 'bg-emerald-500' : 'bg-orange-400';
-        
+
         // Logika untuk menampilkan pesan "Data kurang"
         const emptyFieldsMessage = (percentage < 100 && data.empty_fields?.length > 0)
             ? `<p class="text-[10px] text-red-500 mt-1 italic font-normal">
@@ -206,12 +206,12 @@ const dtOptions = {
         `;
     }
 },
-           { 
+           {
     data: 'status_online',
     render: (data, type, row) => {
         const color = data === 'Online' ? 'bg-emerald-500' : 'bg-gray-300';
         const textColor = data === 'Online' ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500';
-        
+
         return `
             <div class="flex items-center gap-2">
                 <span class="relative flex h-2 w-2">
@@ -223,12 +223,12 @@ const dtOptions = {
         `;
     }
 },
-         { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
+         {
+            data: null,
+            orderable: false,
+            className: 'no-print text-center'
         }
-      
+
     ],
          buttons: [
                     {
@@ -308,7 +308,7 @@ const dtOptions = {
             <span class="font-light">Si</span>
             Banksa
         </h1>
-                        
+
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 14px; margin: 0;">Laporan Data Kepengurusan</p>
@@ -360,8 +360,8 @@ const handleSearch = (e) => {
 
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
-    const regex = val ? `^${val}$` : ''; 
-    
+    const regex = val ? `^${val}$` : '';
+
     dtInstance.value.dt
         .column(2)
         .search(regex, true, false)
@@ -437,7 +437,7 @@ const handleSubmit = () => {
                             Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
                         }
                     },
-                    
+
     });
 };
 
@@ -458,7 +458,7 @@ const viewDetail = (id) => {
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Kelola Bank Sampah</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola bank sampah di RW anda.</p>
                 </div>
-                <button @click="openCreateForm" 
+                <button @click="openCreateForm"
                     class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
                     {{ showForm ? 'Batal' : 'Tambah Data' }}
@@ -469,10 +469,10 @@ const viewDetail = (id) => {
             <Transition name="accordion">
                 <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
-                    
-            <FormWrapper 
-            formName="formVerifikasi" 
-            :errors="form.errors" 
+
+            <FormWrapper
+            formName="formVerifikasi"
+            :errors="form.errors"
             :processing="form.processing"
             @submit="handleSubmit">
             <input v-if="isEdit.value === true" type="hidden" name="id_rt" :value="idUserRT">
@@ -482,13 +482,13 @@ const viewDetail = (id) => {
 
                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <template v-for="field in formdata.nasabah" :key="field.name">
-         <div v-if="!['address', 'phoneNumber', 'userName', 'status', 'rt'].includes(field.name) && !['file', 'select', 'radio'].includes(field.type)" 
+         <div v-if="!['address', 'phoneNumber', 'userName', 'status', 'rt'].includes(field.name) && !['file', 'select', 'radio'].includes(field.type)"
              class="col-span-1">
             <InputLabel :for="field.name" :value="field.title" />
             <input :type="field.type" v-model="form[field.name]" :placeholder="field.placeholder"
                 class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
         </div>
-       
+
 
         <div v-else-if="field.name === 'status'" class="col-span-1">
             <InputLabel :for="field.name" :value="field.title" />
@@ -510,7 +510,7 @@ const viewDetail = (id) => {
 
     </template>
 </div>
-                        
+
                         <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
                             <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
                                 <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Status' : 'Simpan Bank Sampah' }}
@@ -537,7 +537,7 @@ const viewDetail = (id) => {
                <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text" 
+                <input @keyup="handleSearch" type="text"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
@@ -545,7 +545,7 @@ const viewDetail = (id) => {
             <div class="flex items-center gap-2">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
                 <select @change="handleCategoryFilter"
-                    class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+                    class="border border-gray-200 text-black dark:text-white dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
                     <option value="">Semua</option>
                     <option value="Ketua">Ketua</option>
                     <option value="Sekretaris">Sekretaris</option>
@@ -565,12 +565,12 @@ const viewDetail = (id) => {
                 </select>
             </div>
             </div>
-           
+
         </div>
             <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
                     <DataTable
                         ref="dtInstance"
-                        :options="dtOptions" 
+                        :options="dtOptions"
                     class="w-full display stripe hover cell-border dark:text-white">
                         <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
                             <tr>
@@ -584,24 +584,24 @@ const viewDetail = (id) => {
                                 <th class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                      
 
-                         <template #column-0="data"> 
+
+                         <template #column-0="data">
                                 <div class="flex justify-center gap-2">
-                                      
+
 
                                         <button  @click="onRowClick" class=" text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
-                                 <i  
+                                 <i
                  class="fas fa-plus-circle text-emerald-500 cursor-pointer"></i>
                             </button>
-    
+
                                     </div>
                     </template>
-                        <template #column-6="data"> 
+                        <template #column-6="data">
                                 <div class="flex justify-center gap-2">
                                         <button  @click="viewDetail(data.rowData.id)" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">
                                             <i class="fas fa-eye"></i>
-                                        </button>                           
+                                        </button>
 
                                         <button v-if="data.rowData.profile_completion.percentage < 100 && data.rowData.profile_completion.percentage > 50 || percentageSuccessfullDocument < 100"
                                             @click="sendReminder(data.rowData.id)"
@@ -612,16 +612,16 @@ const viewDetail = (id) => {
                                         <button @click="editData(data.rowData.id,data.rowData.user_detail.fullName, data.rowData.user_detail.status, data.rowData.user_detail.id_gender, data.rowData.user_detail.id_rt)" v-if="data.rowData.profile_completion.percentage > 50" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-    
+
                                     </div>
                     </template>
-               
+
                    </DataTable>
 </div>
 
             </div>
 
-       
+
         </div>
     </AuthenticatedLayout>
 </template>
@@ -650,11 +650,11 @@ const viewDetail = (id) => {
     background-position: -200% 0;
   }
 }
-    
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; 
+    max-height: 500px;
     overflow: hidden;
 }
 
@@ -683,10 +683,10 @@ const viewDetail = (id) => {
     color: #ffffff !important;
     margin-top: 1rem;
 }
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
 .dark .datatable  .dt-paging {
     color: #ffffff !important;
 }

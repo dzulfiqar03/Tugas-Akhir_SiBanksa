@@ -75,6 +75,7 @@ class DataTransaksiController extends Controller
 
                 $user->user_transaction = UserTransaction::where('id_userdetail', $detail->id)->get();
 
+                $user->jadwalPelaksanaan = $user->jadwal->tanggal_setoran;
 
                 return $user;
             });

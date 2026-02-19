@@ -126,7 +126,7 @@ const dtOptions = {
             <span class="font-light">Si</span>
             Banksa
         </h1>
-                        
+
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 14px; margin: 0;">Laporan Data Kepengurusan</p>
@@ -168,7 +168,7 @@ const dtOptions = {
                 previous: "← Sebelumnya",
                 next: "Berikutnya →"
             },
-            emptyTable: "Tidak ada data tersedia"
+            emptyTable: "Tidak ada data tersedia",
         }
 };
 
@@ -182,8 +182,8 @@ const handleSearch = (e) => {
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
     // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
-    const regex = val ? `^${val}$` : ''; 
-    
+    const regex = val ? `^${val}$` : '';
+
     dtInstance.value.dt
         .column(1)
         .search(val, true, false) // parameter kedua 'true' mengaktifkan regex
@@ -231,7 +231,7 @@ const sendReminder = ($id) => {
                                             <i class="fas fa-bell"></i> REMINDER
                                         </button>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="space-y-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Email</p>
@@ -277,7 +277,7 @@ const sendReminder = ($id) => {
                <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text" 
+                <input @keyup="handleSearch" type="text"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
@@ -302,16 +302,16 @@ const sendReminder = ($id) => {
                 </select>
             </div>
             </div>
-           
+
         </div>
 
      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <DataTable 
-                 
+                    <DataTable
+
                         ref="dtInstance"
-                        :data="items" 
-                        :options="dtOptions" 
+                        :data="items"
+                        :options="dtOptions"
                     class="w-full display stripe hover p-3 cell-border dark:text-white">
                         <thead class="text-xs text-gray-700 uppercase  dark:text-gray-400">
                             <tr>
@@ -321,23 +321,23 @@ const sendReminder = ($id) => {
                                 <th class="px-6 py-4">Kelengkapan Dokumen</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y dark:divide-gray-700 font-medium">
+                        <tbody class="divide-y dark:divide-gray-700 font-medium ">
                             <tr  v-for="(field, index) in allNasabah" :key="index"  class="dark:text-gray-300">
-                                                                <td class="px-6 py-4">{{ index + 1}}</td>
+                                                                <td class="px-6 py-4 text-black dark:text-white">{{ index + 1}}</td>
 
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-4 text-black dark:text-white">
                                     {{ field.user_detail.fullName }}
-<span class="hidden invisible">{{ field.user_detail.id_gender == 1 ? 'Pria' : 'Wanita' }}</span>
+<span class="hidden invisible text-black dark:text-white">{{ field.user_detail.id_gender == 1 ? 'Pria' : 'Wanita' }}</span>
                                 </td>
-                                
+
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-32 bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                                            <div class="h-2 rounded-full transition-all duration-700"
+                                            <div class="h-2 rounded-full transition-all duration-700 text-black dark:text-white"
                                                 :class="field.profile_completion.percentage === 100 ? 'bg-emerald-500' : 'bg-orange-400'"
                                                 :style="{ width: field.profile_completion.percentage + '%' }"></div>
                                         </div>
-                                        <span class="text-xs font-bold">{{ Math.round(field.profile_completion.percentage) }}%</span>
+                                        <span class="text-xs font-bold text-black dark:text-white">{{ Math.round(field.profile_completion.percentage) }}%</span>
                                     </div>
                                     <p v-if="field.profile_completion.percentage < 100" class="text-[10px] text-red-500 mt-1 italic font-normal">
                                         Data kurang: {{ field.profile_completion.empty_fields.join(', ') }}
@@ -347,11 +347,11 @@ const sendReminder = ($id) => {
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-32 bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                                            <div class="h-2 rounded-full transition-all duration-700"
+                                            <div class="h-2 rounded-full transition-all duration-700 text-black dark:text-white"
                                                 :class="field.document_completion.percentage === 100 ? 'bg-emerald-500' : 'bg-orange-400'"
                                                 :style="{ width: field.document_completion.percentage + '%' }"></div>
                                         </div>
-                                        <span class="text-xs font-bold">{{ Math.round(field.document_completion.percentage) }}%</span>
+                                        <span class="text-xs font-bold text-black dark:text-white">{{ Math.round(field.document_completion.percentage) }}%</span>
                                     </div>
                                     <p v-if="field.document_completion.percentage < 100" class="text-[10px] text-red-500 mt-1 italic font-normal">
                                         Data kurang: {{ field.document_completion.empty_fields.join(', ') }}
@@ -359,7 +359,7 @@ const sendReminder = ($id) => {
                                 </td>
 
 
-                            
+
                             </tr>
                         </tbody>
                     </DataTable>
@@ -396,11 +396,11 @@ const sendReminder = ($id) => {
     background-position: -200% 0;
   }
 }
-    
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; 
+    max-height: 500px;
     overflow: hidden;
 }
 
@@ -430,10 +430,10 @@ const sendReminder = ($id) => {
     color: #ffffff !important;
     margin-top: 1rem;
 }
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
 .dark .datatable  .dt-paging {
     color: #ffffff !important;
 }

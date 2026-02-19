@@ -172,10 +172,10 @@ const dtOptions = {
         },
         {
             // Langsung akses user_detail (tanpa kata 'jadwal')
-            data: 'user_detail.fullName',
+            data: 'jadwalPelaksanaan',
             className: 'text-black dark:text-white capitalize',
             render: (data, type, row) => {
-                return row.user_detail.fullName || '-';
+                return row.jadwalPelaksanaan || '-';
             },
             defaultContent: '-'
         },
@@ -542,7 +542,7 @@ const url = route('bs.add-transaction');
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
                 <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
                     <h3 class="text-lg font-bold text-black dark:text-white">Pencairan Dana Nasabah</h3>
-   
+
                 </div>
 
 
@@ -579,7 +579,7 @@ const url = route('bs.add-transaction');
             <div class="flex items-center gap-2">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
                 <select @change="handleCategoryFilter"
-                    class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+                    class="border border-gray-200 dark:border-gray-600 text-black dark:text-white rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900  focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
                     <option value="">Semua</option>
                     <option value="Selesai">Selesai</option>
                     <option value="Belum Dibayar">Belum Dibayar</option>
@@ -604,7 +604,7 @@ const url = route('bs.add-transaction');
                             <thead>
                                 <tr>
                                     <th             class="text-black dark:text-white capitalize">No</th>
-                                    <th class="text-black dark:text-white capitalize">Nasabah</th>
+                                    <th class="text-black dark:text-white capitalize">Jadwal Pelaksanaan</th>
                                     <th class="text-black dark:text-white capitalize">Total Saldo</th>
                                     <th class="text-black dark:text-white capitalize">Status</th>
                                     <th class="text-black dark:text-white capitalize">Aksi</th>

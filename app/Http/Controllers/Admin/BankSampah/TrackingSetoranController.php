@@ -20,18 +20,18 @@ class TrackingSetoranController extends Controller
     {
 
         $stepDivisiMap = [
-            'Pemilahan'   => 'Nasabah',
-            'Penimbangan' => 'Petugas',
+            'Pemilahan'   => 'Pemilah',
+            'Penimbangan' => 'Penimbang',
             'Pencatatan'  => 'Sekretaris',
             'Verifikasi'  => 'Ketua RW',
             'Pencairan'   => 'Bendahara',
         ];
 
         $nasabahList = PencatatanSetoran::whereHas('user_detail', function ($query) {
-                $query->where('id_rt', Auth::user()->user_detail->id_rt);
-                $query->where('status', 'Disetujui');
-                $query->where('id_roles', 3);
-            })->with(['transaction'])->get();
+            $query->where('id_rt', Auth::user()->user_detail->id_rt);
+            $query->where('status', 'Disetujui');
+            $query->where('id_roles', 3);
+        })->with(['transaction', 'user_detail'])->get();
 
 
 
@@ -47,8 +47,6 @@ class TrackingSetoranController extends Controller
 
         $nasabahList = $nasabahList->map(function ($n) use ($petugas, $stepDivisiMap) {
 
-
-
             $workflow = [];
 
             foreach ($stepDivisiMap as $step => $divisi) {
@@ -60,15 +58,8 @@ class TrackingSetoranController extends Controller
                 ];
             }
 
-
-
-
             $n->nasabah = $n->user_detail->fullName;
-                $n->jadwalPelaksanaan = $n->jadwal->tanggal_setoran;
-
-
-
-
+            $n->jadwalPelaksanaan = $n->jadwal->tanggal_setoran;
 
             if ($n && $n->count()) {
 
@@ -92,8 +83,6 @@ class TrackingSetoranController extends Controller
                     ->firstWhere('divisi', 'Penimbang');
 
 
-
-
                 $workflow['Pencatatan']['petugas'] = [$sekretaris->fullName];
                 $workflow['Pemilahan']['petugas'] = [$pemilah->fullName];
                 $workflow['Penimbangan']['petugas'] = [$penimbang->fullName];
@@ -114,11 +103,10 @@ class TrackingSetoranController extends Controller
             }
 
 
-
-       if ($n->user_detail->status_transaction === 'Disetujui') {
-            $workflow['Verifikasi']['completed'] = true;
-            $workflow['Verifikasi']['petugas'] = [UserDetail::where('id_roles', 1)->first()->fullName];
-        }
+            if ($petugas->firstWhere('status_transaction', 'Disetujui')) {
+                $workflow['Verifikasi']['completed'] = true;
+                $workflow['Verifikasi']['petugas'] = [UserDetail::where('id_roles', 1)->first()->fullName];
+            }
 
 
 

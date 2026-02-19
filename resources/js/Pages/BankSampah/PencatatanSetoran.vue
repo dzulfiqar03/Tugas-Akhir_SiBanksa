@@ -297,8 +297,8 @@ const breadcrumbItems = [
             <!-- HEADER -->
                       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Sampah</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar harga dan kategori sampah Anda.</p>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Penyetoran Sampah</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Kelola pencatatan setoran nasabah anda.</p>
                 </div>
                 <button @click="openCreateForm"
                     class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">

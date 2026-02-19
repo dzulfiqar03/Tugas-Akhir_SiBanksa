@@ -20,8 +20,8 @@ class TrackingSetoranController extends Controller
     {
 
         $stepDivisiMap = [
-            'Pemilahan'   => 'Nasabah',
-            'Penimbangan' => 'Petugas',
+            'Pemilahan'   => 'Pemilah',
+            'Penimbangan' => 'Penimbang',
             'Pencatatan'  => 'Sekretaris',
             'Verifikasi'  => 'Ketua RW',
             'Pencairan'   => 'Bendahara',
@@ -59,23 +59,9 @@ class TrackingSetoranController extends Controller
                 ];
             }
 
-
-
-
             $n->nasabah = $n->fullName;
 
-
-
-
-                $n->jadwalPelaksanaan = $n->jadwal->tanggal_setoran;
-
-
-
-
-
-
-
-
+            $n->jadwalPelaksanaan = $n->jadwal->tanggal_setoran;
 
             if ($n && $n->count()) {
 
@@ -122,10 +108,10 @@ class TrackingSetoranController extends Controller
 
 
 
-       if ($n->status_transaction === 'Disetujui') {
-            $workflow['Verifikasi']['completed'] = true;
-            $workflow['Verifikasi']['petugas'] = [UserDetail::where('id_roles', 1)->first()->fullName];
-        }
+            if ($petugas->firstWhere('status_transaction', 'Disetujui')) {
+                $workflow['Verifikasi']['completed'] = true;
+                $workflow['Verifikasi']['petugas'] = [UserDetail::where('id_roles', 1)->first()->fullName];
+            }
 
 
 

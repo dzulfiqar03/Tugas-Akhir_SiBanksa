@@ -222,9 +222,9 @@ const dtOptions = {
         },
 
          {
-            title: 'jadwal',
+            title: 'Jadwal',
             data: 'jadwalPelaksanaan',
-
+            className: 'text-center w-10 text-black dark:text-white'
         },
 
         {
@@ -236,6 +236,7 @@ const dtOptions = {
         {
             title: 'Aksi',
             data: null,
+            className: 'text-center w-10 text-black dark:text-white',
             render: (data, type, row) => {
                 return `
                     <button class="bg-blue-500 hover:bg-blue-600 text-white text-[10px] uppercase font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95 shadow-lg shadow-blue-500/20" onclick="window.location.href='/nasabah/${row.id}'">

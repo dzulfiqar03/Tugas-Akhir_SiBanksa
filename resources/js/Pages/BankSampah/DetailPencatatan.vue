@@ -80,13 +80,14 @@ columns: [
         {
             data: null,
             title:'No',
+            className:'text-black dark:text-gray-300',
             render: (data, type, row, meta) => meta.row + 1
         },
         {
             // Langsung akses user_detail (tanpa kata 'nasabah')
             data: 'setoran.jadwal.tanggal_setoran',
             title:'Tanggal Setoran',
-            className:'capitalize',
+            className:'capitalize text-black dark:text-gray-300',
             render: (data, type, row) => {
                 return row.setoran?.jadwal?.tanggal_setoran || '-';
             },
@@ -96,7 +97,7 @@ columns: [
             // Langsung akses user_detail (tanpa kata 'nasabah')
             data: 'sampah.nama_sampah',
             title:'Sampah',
-            className:'capitalize',
+            className:'capitalize text-black dark:text-gray-300',
             render: (data, type, row) => {
                 return row.sampah?.nama_sampah || '-';
             },
@@ -107,7 +108,7 @@ columns: [
             // Langsung akses user_detail (tanpa kata 'nasabah')
             data: 'subtotal',
             title:'Sub Total',
-            className:'capitalize',
+            className:'capitalize text-black dark:text-gray-300',
             render: (data, type, row) => {
 
         const formatted = new Intl.NumberFormat('id-ID', {
@@ -123,7 +124,7 @@ columns: [
             // Langsung akses user_detail (tanpa kata 'nasabah')
             data: 'jumlah',
             title:'Jumlah',
-            className:'capitalize',
+            className:'capitalize text-black dark:text-gray-300',
             render: (data, type, row) => {
                 return row.jumlah || '-';
             },
@@ -134,7 +135,7 @@ columns: [
             data: null,
             title:'Aksi',
             orderable: false,
-            className: 'no-print text-center'
+            className: 'no-print text-center text-black dark:text-gray-300'
         }
     ],
     layout: {
@@ -306,7 +307,7 @@ const breadcrumbItems = [
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
         <div class="space-y-6">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                <h2 class="text-2xl font-bold mb-6 dark:text-white">Detail Nasabah</h2>
+                <h2 class="text-2xl font-bold mb-6 text-black dark:text-white">Detail Nasabah</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="space-y-1">
