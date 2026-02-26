@@ -55,10 +55,10 @@ class DataResources extends JsonResource
                     ],
 
                     [
-                        'nama'  => 'Penjadwalan',
+                        'nama' => 'Janji Setor',
+                        'route' => route(name: 'rw.janji-setor'),
+                        'uri' => 'rw.janji-setor',
                         'icon'  => 'fa fa-calendar',
-                        'route' => route('rw.jadwal-pelaksanaan'),
-                        'uri' => 'rw.jadwal-pelaksanaan',
                     ],
                     [
                         'nama'  => 'Chat',

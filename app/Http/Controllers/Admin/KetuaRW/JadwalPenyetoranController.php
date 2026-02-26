@@ -41,7 +41,7 @@ class JadwalPenyetoranController extends Controller
 
         $jadwal = $this->janjiSetorServices->getAllJanji();
         $idUser = Auth::user()->user_detail->id;
-        return Inertia::render('Warga/JadwalPenyetoran', [
+        return Inertia::render('KetuaRW/JadwalPenyetoran', [
             'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,

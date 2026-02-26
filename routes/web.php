@@ -92,6 +92,11 @@ Route::middleware(['conn'])->group(function () {
 
                 Route::put('/KetuaRW/chat/read{id}', [KetuaRWChatController::class, 'readChat'])->name('rw.read-chat');
                 Route::post('/KetuaRW/chatbot/create{id}', [KetuaRWChatController::class, 'store'])->name('rw.add-chatbot');
+
+                Route::get('/KetuaRW/JanjiSetor', [JadwalPenyetoranController::class, 'index'])->name('rw.janji-setor');
+                Route::post('/KetuaRW/JanjiSetor/Create', [JadwalPenyetoranController::class, 'store'])->name('rw.add-janjiSetor');
+                Route::put('/KetuaRW/JanjiSetor/Update/{janjiSetor}', [JadwalPenyetoranController::class, 'update'])->name('rw.update-janjiSetor');
+                Route::delete('/KetuaRW/JanjiSetor/Delete/{janjiSetor}', [JadwalPenyetoranController::class, 'destroy'])->name('rw.delete-janjiSetor');
             });
 
             Route::middleware(['roles:Bank Sampah'])->group(function () {
@@ -167,8 +172,8 @@ Route::middleware(['conn'])->group(function () {
 
                 Route::get('/Warga/JanjiSetor', [JadwalPenyetoranController::class, 'index'])->name('warga.janji-setor');
                 Route::post('/Warga/JanjiSetor/Create', [JadwalPenyetoranController::class, 'store'])->name('warga.add-janjiSetor');
-                Route::put('/Warga/JanjiSetor/Update/{Jadwal}', [JadwalPenyetoranController::class, 'update'])->name('warga.update-janjiSetor');
-                Route::delete('/Warga/JanjiSetor/Delete/{Jadwal}', [JadwalPenyetoranController::class, 'destroy'])->name('warga.delete-janjiSetor');
+                Route::put('/Warga/JanjiSetor/Update/{janjiSetor}', [JadwalPenyetoranController::class, 'update'])->name('warga.update-janjiSetor');
+                Route::delete('/Warga/JanjiSetor/Delete/{janjiSetor}', [JadwalPenyetoranController::class, 'destroy'])->name('warga.delete-janjiSetor');
 
 
                 Route::get('/Warga/tracking', [WargaTrackingSetoranController::class, 'index'])->name('warga.tracking-setoran');

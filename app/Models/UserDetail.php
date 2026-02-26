@@ -7,6 +7,7 @@ use App\Models\BankSampah\Kepengurusan;
 use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\BankSampah\Sampah;
 use App\Models\Transaction\UserTransaction;
+use App\Models\Warga\JanjiSetor;
 use Illuminate\Database\Eloquent\Model;
 
 class UserDetail extends Model
@@ -96,5 +97,10 @@ class UserDetail extends Model
      public function user_chat()
     {
         return $this->hasMany(UserChat::class, 'id_userdetail', 'id');
+    }
+
+    public function janjisetor()
+    {
+        return $this->hasMany(JanjiSetor::class, 'id_userdetail', 'id');
     }
 }

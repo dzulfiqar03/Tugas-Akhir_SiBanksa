@@ -37,6 +37,10 @@ const formAction = computed(() => {
         return route('add-kepengurusan');
     }else if (currentRoute === 'pencatatan-setoran') {
         return route('add-setoran');
+    }else if (currentRoute === 'warga.janji-setor') {
+        return route('warga.add-janjiSetor');
+    }else if (currentRoute === 'rw.janji-setor') {
+        return route('rw.add-janjiSetor');
     }else if (currentRoute === 'data-pelaporanRW') {
         if (props.formName === 'formDocument') {
             return route('add-document');
@@ -64,7 +68,7 @@ const hasErrors = computed(() => props.errors && Object.keys(props.errors).lengt
 
 <template>
     <form :action="formAction"  @submit.prevent="$emit('submit')" :id="formName" class="w-full">
-        
+
         <div v-if="hasErrors" class="px-3 pt-3">
              <div x-data="{ open: false }" id="error-message"
        class=" overflow-hidden border border-red-200 rounded-lg bg-white dark:bg-gray-900 shadow-sm transition-all duration-300">
@@ -101,7 +105,7 @@ const hasErrors = computed(() => props.errors && Object.keys(props.errors).lengt
        </div>
    </div>
 
-            
+
         </div>
 
         <div class="flex flex-col p-3 gap-3">
@@ -109,11 +113,11 @@ const hasErrors = computed(() => props.errors && Object.keys(props.errors).lengt
                 {{ titleForm }}
             </h3>
 
-            <slot /> 
+            <slot />
 
-            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'profile.edit' && currentRoute != 'data-transaksi' && currentRoute != 'data-pelaporanRW'  && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah'  && currentRoute != 'data-kepengurusan' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'" class="flex justify-end gap-3 mt-4">
-                <button 
-                    type="submit" 
+            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'profile.edit' && currentRoute != 'data-transaksi' && currentRoute != 'data-pelaporanRW'  && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah'  && currentRoute != 'data-kepengurusan' && currentRoute != 'warga.janji-setor' && currentRoute != 'rw.janji-setor' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'" class="flex justify-end gap-3 mt-4">
+                <button
+                    type="submit"
                     :disabled="processing"
                     class="px-4 py-2 bg-emerald-600 text-white rounded-lg"
                 >

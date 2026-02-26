@@ -52,6 +52,20 @@ class FormResources extends JsonResource
             }
         }
 
+        $optionJadwalJanji = [];
+        if (Auth::check()) {
+            $jadwalJanji = JadwalPelaksanaan::whereHas('user_detail', function ($query) {
+                $query->where('id_rt', auth()->user()->user_detail->id_rt);
+            })
+                ->get();
+            foreach ($jadwalJanji as $sch) {
+                $optionJadwalJanji[] = [
+                    'id' => $sch->id,
+                    'tanggal' => $sch->tanggal_setoran
+                ];
+            }
+        }
+
         return [
             'nasabah' => [
                 [
@@ -98,6 +112,22 @@ class FormResources extends JsonResource
                     'type' => 'file',
                     'placeholder' => '',
                 ],
+
+                'janji_setor' => [
+                    [
+                        'title' => 'Janji Penyetoran',
+                        'name' => 'waktu_janji',
+                        'type' => 'time',
+                        'placeholder' => 'Masukkan Waktu Penyetoran',
+                    ],
+
+                    [
+                        'title' => 'Jadwal',
+                        'name' => 'id_jadwal',
+                        'type' => 'select',
+                        'options' => $optionJadwalJanji,
+                    ],
+                ]
             ],
 
             'userAuth' => [
@@ -121,25 +151,25 @@ class FormResources extends JsonResource
                     'placeholder' => 'Re-Masukkan password',
                 ],
 
-                
+
 
             ],
-             'userBank' => [
+            'userBank' => [
 
-                 [
+                [
                     'title' => 'Bank',
                     'name' => 'id_bank',
                     'type' => 'select',
                     'options' => $optionBank,
                 ],
-               [
+                [
                     'title' => 'Nomor Rekening',
                     'name' => 'nomor_rekening',
                     'type' => 'text',
                     'placeholder' => 'Masukkan Nomor Rekening',
                 ],
 
-             ],
+            ],
 
             'sampah' => [
 
@@ -175,131 +205,6 @@ class FormResources extends JsonResource
                         'options' => ['Daur Ulang', 'Non Daur Ulang'],
                     ],
                 ],
-
-                'formJenisSampah' => [
-                    [
-                        'id' => 0,
-                        'namaSampah' => 'Jelantah',
-                        'satuan' => 'liter',
-                        'harga' => '5000',
-                        'berat' => 1,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-                    [
-                        'id' => 1,
-                        'namaSampah' => 'Kertas',
-                        'satuan' => 'kg',
-                        'harga' => '7000',
-                        'berat' => 2,
-                        'kategori' => 'Non Daur Ulang'
-                    ],
-
-                    [
-                        'id' => 2,
-                        'namaSampah' => 'Duplek',
-                        'satuan' => 'kg',
-                        'harga' => '4000',
-                        'berat' => 1.5,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-
-                    [
-                        'id' => 3,
-                        'namaSampah' => 'Kardus',
-                        'satuan' => 'kg',
-                        'harga' => '6000',
-                        'berat' => 2.3,
-                        'kategori' => 'Daur Ulang'
-                    ],
-                    [
-                        'id' => 4,
-                        'namaSampah' => 'Kresek',
-                        'satuan' => 'kg',
-                        'harga' => '2000',
-                        'berat' => 1,
-                        'kategori' => 'Daur Ulang'
-
-                    ],
-
-                    [
-                        'id' => 5,
-                        'namaSampah' => 'Botol Plastik',
-                        'satuan' => 'kg',
-                        'harga' => '2500',
-                        'berat' => 3,
-                        'kategori' => 'Daur Ulang'
-
-                    ],
-                    [
-                        'id' => 6,
-                        'namaSampah' => 'Botol Plastik (Non Botol)',
-                        'satuan' => 'kg',
-                        'harga' => '2800',
-                        'berat' => 4,
-                        'kategori' => 'Daur Ulang'
-
-                    ],
-
-                    [
-                        'id' => 7,
-                        'namaSampah' => 'Kaca',
-                        'satuan' => 'kg',
-                        'harga' => '8500',
-                        'berat' => 2,
-                        'kategori' => 'Daur Ulang'
-
-                    ],
-
-                    [
-                        'id' => 8,
-                        'namaSampah' => 'Kaleng',
-                        'satuan' => 'kg',
-                        'harga' => '4500',
-                        'berat' => 4,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-
-                    [
-                        'id' => 9,
-                        'namaSampah' => 'Besi',
-                        'satuan' => 'kg',
-                        'harga' => '9500',
-                        'berat' => 1,
-                        'kategori' => 'Non Daur Ulang'
-                    ],
-                    [
-                        'id' => 10,
-                        'namaSampah' => 'Kompor',
-                        'satuan' => 'kg',
-                        'harga' => '10500',
-                        'berat' => 2.2,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-                    [
-                        'id' => 11,
-                        'namaSampah' => 'Kresek Bening',
-                        'satuan' => 'kg',
-                        'harga' => '1500',
-                        'berat' => 1.2,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-                    [
-                        'id' => 12,
-                        'namaSampah' => 'Aluminium',
-                        'satuan' => 'kg',
-                        'harga' => '9500',
-                        'berat' => 3.4,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-                ]
-
-
             ],
 
             'bankSampah' => [
@@ -325,6 +230,7 @@ class FormResources extends JsonResource
 
             ],
 
+
             'Dokumen' => [
                 [
                     'title' => 'Dokumen',
@@ -348,7 +254,7 @@ class FormResources extends JsonResource
                 ],
             ],
 
-             'location' => [
+            'location' => [
                 [
                     'title' => 'Nama Jalan',
                     'name' => 'amenity',
@@ -356,28 +262,28 @@ class FormResources extends JsonResource
                     'placeholder' => 'Masukkan Nama Jalam (misal: Bangka)',
                 ],
 
-                 [
+                [
                     'title' => 'Nomor / Blok Alamat',
                     'name' => 'house_number',
                     'type' => 'text',
                     'placeholder' => 'Masukkan Nomor Alamat (misal: 7B atau B27)',
                 ],
 
-                 [
+                [
                     'title' => 'Kota',
                     'name' => 'city',
                     'type' => 'text',
                     'placeholder' => 'Masukkan Kota',
                 ],
-                
-                 [
+
+                [
                     'title' => 'Provinsi',
                     'name' => 'state',
                     'type' => 'text',
                     'placeholder' => 'Masukkan Provinsi',
                 ],
 
-                 [
+                [
                     'title' => 'Negara',
                     'name' => 'country',
                     'type' => 'text',
@@ -390,7 +296,7 @@ class FormResources extends JsonResource
                     'placeholder' => 'Masukkan Kode Pos',
                 ],
 
-            ]
+            ],
         ];
     }
 }

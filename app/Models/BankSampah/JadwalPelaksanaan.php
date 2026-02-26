@@ -4,6 +4,7 @@ namespace App\Models\BankSampah;
 
 use App\Models\DocumentArchiver;
 use App\Models\UserDetail;
+use App\Models\Warga\JanjiSetor;
 use App\Models\Warga\UserQueue;
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,5 +31,10 @@ class JadwalPelaksanaan extends Model
     public function user_queue()
     {
         return $this->hasMany(UserQueue::class, 'id_jadwal', 'id');
+    }
+
+    public function janjisetor()
+    {
+        return $this->hasOne(JanjiSetor::class, 'id_jadwal', 'id');
     }
 }

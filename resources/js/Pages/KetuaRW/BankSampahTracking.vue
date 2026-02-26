@@ -578,9 +578,9 @@ const viewDetail = (id) => {
                                 <th class="px-6 py-4"></th>
                                 <th class="px-6 py-4">RT</th>
                                 <th class="px-6 py-4">Nama Lengkap</th>
+                                <th class="px-6 py-4">Status</th>
                                 <th class="px-6 py-4">Kelengkapan Profil</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Status Keaktifan</th>
                                 <th class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
