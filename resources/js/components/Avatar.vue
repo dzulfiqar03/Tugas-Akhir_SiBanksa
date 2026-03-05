@@ -1,7 +1,7 @@
 <template>
   <div class="rounded-full border p-3 flex gap-3 border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-800 dark:bg-white/3">
-    <div class="m-auto">
-      <h3 class="text-base font-medium text-black dark:text-gray-400 dark:text-white/90">
+    <div class="m-auto lg:flex hidden">
+      <h3 class="text-base  font-medium text-black dark:text-gray-400 dark:text-white/90">
         {{ userDetail?.userName || 'Guest' }}
       </h3>
     </div>
@@ -12,9 +12,9 @@
       </div>
 
       <div v-else class="profile-circle">
-        <img 
-          class="w-8 h-8 rounded-full" 
-          src="https://ui-avatars.com/api/?name=Guest&background=random" 
+        <img
+          class="w-8 h-8 rounded-full"
+          src="https://ui-avatars.com/api/?name=Guest&background=random"
           alt="Guest"
         >
       </div>
@@ -41,10 +41,10 @@ const initials = computed(() => {
 
   const name = userDetail.value.fullName;
   const words = name.split(' ');
-  
+
   const firstInitial = words[0]?.substring(0, 1) || '';
   const secondInitial = words[1]?.substring(0, 1) || '';
-  
+
   return (firstInitial + secondInitial).toUpperCase();
 });
 </script>

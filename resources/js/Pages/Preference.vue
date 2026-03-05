@@ -1,5 +1,5 @@
 <template>
-        <Head title="Data Nasabah" />
+        <Head title="Preferences" />
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumbItems="breadcrumbItems" >
 
 <div class=" w-full  space-y-4">

@@ -51,7 +51,7 @@ class ProfileController extends Controller
 
         $nasabah = User::with(['user_detail', 'user_detail.sampah', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan', 'user_detail.location', 'user_detail.location.open_street'])->find(Auth::user()->id);
 
-        $nasabahAll = UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->where('id_rt', Auth::user()->user_detail->id_rt)->get();
+        $nasabahAll = $id_role === 1? UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->where('id_roles', 2)->get() : UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->where('id_rt', Auth::user()->user_detail->id_rt)->get();
 
         $total_setoran = $nasabah->user_detail->pencatatan->sum('total_setoran');
         $fields = [

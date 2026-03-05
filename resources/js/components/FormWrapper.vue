@@ -108,7 +108,7 @@ const hasErrors = computed(() => props.errors && Object.keys(props.errors).lengt
 
         </div>
 
-        <div class="flex flex-col p-3 gap-3">
+        <div class="flex flex-col p-3 gap-2">
             <h3 v-if="!isAuthPage" class="text-lg font-semibold">
                 {{ titleForm }}
             </h3>

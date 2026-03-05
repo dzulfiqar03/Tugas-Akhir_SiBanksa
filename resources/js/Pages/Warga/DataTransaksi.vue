@@ -85,6 +85,27 @@ const renamedFileList = computed(() => {
 
 });
 
+const totalSaldo = computed(() => {
+    return props.nasabah.reduce((acc, item) => {
+        return acc + item.pencatatan_items.reduce((a, b) => {
+            return a + parseFloat(b.subtotal)
+        }, 0)
+    }, 0)
+})
+
+/*
+|--------------------------------------------------------------------------
+| FORMAT RUPIAH
+|--------------------------------------------------------------------------
+*/
+
+const formatRupiah = (value) => {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(value)
+}
 
 const editData = (item) => {
         const row = JSON.parse(decodeURIComponent(escape(atob(item))));
@@ -408,7 +429,7 @@ const kirimBukti = (id) => {
 };
 
 const breadcrumbItems = [
-    { label: 'Dashboard', url: route('dashboard') },
+    { label: 'Dashboard', url: route('warga.dashboard') },
     { label: 'Transaksi', url:  route('data-transaksi') },
 ];
 
@@ -539,10 +560,15 @@ const url = route('bs.add-transaction');
         <template v-else>
             <div class="grid gap-4">
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
-                <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
-                    <h3 class="text-lg font-bold text-black dark:text-white">Pencairan Dana Nasabah</h3>
+            <div class=" rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
+                <div class=" justify-between items-center gap-4">
 
+                <p class="text-sm dark:text-white text-black opacity-80">
+                    Total Saldo Anda
+                </p>
+                <h2 class="text-3xl text-emerald-500  font-bold mt-2">
+                    {{ formatRupiah(totalSaldo) }}
+                </h2>
                 </div>
 
 

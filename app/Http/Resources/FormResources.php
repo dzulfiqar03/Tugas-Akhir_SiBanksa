@@ -113,21 +113,6 @@ class FormResources extends JsonResource
                     'placeholder' => '',
                 ],
 
-                'janji_setor' => [
-                    [
-                        'title' => 'Janji Penyetoran',
-                        'name' => 'waktu_janji',
-                        'type' => 'time',
-                        'placeholder' => 'Masukkan Waktu Penyetoran',
-                    ],
-
-                    [
-                        'title' => 'Jadwal',
-                        'name' => 'id_jadwal',
-                        'type' => 'select',
-                        'options' => $optionJadwalJanji,
-                    ],
-                ]
             ],
 
             'userAuth' => [
@@ -297,6 +282,22 @@ class FormResources extends JsonResource
                 ],
 
             ],
+
+             'janji_setor' => [
+                    [
+                        'title' => 'Janji Penyetoran',
+                        'name' => 'waktu_janji',
+                        'type' => 'time',
+                        'placeholder' => 'Masukkan Waktu Penyetoran',
+                    ],
+
+                    [
+                        'title' => 'Jadwal',
+                        'name' => 'id_jadwal',
+                        'type' => 'select',
+                        'options' => $optionJadwalJanji,
+                    ],
+                ]
         ];
     }
 }

@@ -70,7 +70,7 @@ class KelolaBankSampahController extends Controller
                     'filled'       => $filledCount,
                     'total'        => count($fields),
                 ];
-                
+
 
                 $user->statistik = [
                     'total_nasabah' => count($nasabahList),
@@ -79,7 +79,7 @@ class KelolaBankSampahController extends Controller
 
                 return $user;
             });
-            
+
 
 
         $bankSampahLog = $this->kelolaBankSampahServices->getBankSampahlog();
@@ -113,7 +113,7 @@ class KelolaBankSampahController extends Controller
             'formName' => $formName,
             'bankSampahLog' => $bankSampahLog,
             'initialNotifications' => $notifications,
-            'unreadCount' => Auth::user()->unreadNotifications->count(),
+            'unreadCount' => Auth::user()->unreadNotifications->count()
 
 
         ]);

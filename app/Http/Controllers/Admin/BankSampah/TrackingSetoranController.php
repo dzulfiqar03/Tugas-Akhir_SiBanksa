@@ -110,69 +110,8 @@ class TrackingSetoranController extends Controller
 
 
 
-            // if ($n->id_roles === 3) {
-            //     foreach ($stepDivisiMap as $step => $divisi) {
-
-            //         $workflow[$step] = [
-            //             'completed' => false,
-            //             'petugas'   => [],
-            //             'divisi'    => $divisi,
-            //         ];
-            //     }
-
-
-            //     if ($n->pencatatan && $n->pencatatan->count()) {
-
-            //         $workflow['Pencatatan']['completed'] = true;
-            //         $workflow['Pemilahan']['completed'] = true;
-            //         $workflow['Penimbangan']['completed'] = true;
-
-            //         $sekretaris = $petugas
-            //             ->pluck('kepengurusan')
-            //             ->flatten()
-            //             ->firstWhere('divisi', 'Sekretaris');
-
-            //         $pemilah = $petugas
-            //             ->pluck('kepengurusan')
-            //             ->flatten()
-            //             ->firstWhere('divisi', 'Pemilah');
-
-            //         $penimbang = $petugas
-            //             ->pluck('kepengurusan')
-            //             ->flatten()
-            //             ->firstWhere('divisi', 'Penimbang');
-
-
-
-
-            //         $workflow['Pencatatan']['petugas'] = [$sekretaris->fullName];
-            //         $workflow['Pemilahan']['petugas'] = [$pemilah->fullName];
-            //         $workflow['Penimbangan']['petugas'] = [$penimbang->fullName];
-            //     }
-
-            //     if ($n->pencairan && $n->pencairan->count()) {
-
-            //         $workflow['Pencairan']['completed'] = true;
-
-            //         $bendahara = $petugas
-            //             ->pluck('kepengurusan')
-            //             ->flatten()
-            //             ->firstWhere('divisi', 'Bendahara');
-
-            //         if ($bendahara) {
-            //             $workflow['Pencairan']['petugas'] = [$bendahara->fullName];
-            //         }
-            //     }
-            // } else {
-            //     if ($n->status_transaction === 'Disetujui') {
-            //         $workflow['Verifikasi']['completed'] = true;
-            //         $workflow['Verifikasi']['petugas'] = [UserDetail::where('id_roles', 1)->first()->fullName];
-            //     }
-            // }
-
-
             $n->workflow = $workflow;
-
+            
             return $n;
         });
 

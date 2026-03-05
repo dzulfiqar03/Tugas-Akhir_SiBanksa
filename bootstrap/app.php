@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->redirectGuestsTo(fn () => null);
+
         $middleware->alias([
             'roles' => \App\Http\Middleware\RoleMiddleware::class,
             'conn' => \App\Http\Middleware\ConnMiddleware::class

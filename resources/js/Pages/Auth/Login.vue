@@ -31,7 +31,7 @@ const submit = () => {
 <template>
     <GuestLayout>
         <Head title="Sign In" />
-        
+
             <div x-data="{ showUsername: false }">
                   <div class=" mb-5 justify-center sm:mb-8">
 
@@ -46,7 +46,7 @@ const submit = () => {
 
 
 
-                                <a href="{{ route('register') }}"
+                                <Link href="/register"
                                     class="group relative flex items-center justify-start gap-0 hover:gap-3 overflow-hidden rounded-full bg-gray-100 px-4 py-3 text-sm font-medium text-gray-700 w-max transition-all duration-300 hover:bg-gray-200 hover:pl-6 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -57,7 +57,7 @@ const submit = () => {
                                     <span @click="showUsername = !showUsername" class="overflow-hidden pl-3">
                                         Register
                                     </span>
-                                </a>
+                                </Link>
                             </div>
                         </div>
 
@@ -69,31 +69,31 @@ const submit = () => {
                 </div>
             </div>
 
-        <FormWrapper 
-            formName="formLogin" 
-            :errors="form.errors" 
+        <FormWrapper
+            formName="formLogin"
+            :errors="form.errors"
             :processing="form.processing"
             @submit="submit"
         >
-        <div v-for="(fields, group) in (formdata.data || formdata)" :key="group">   
+        <div v-for="(fields, group) in (formdata.data || formdata)" :key="group">
                          <div v-for="field in fields" :key="field.name" class="flex flex-col gap-3">
-                            
+
                     <template v-if="['email', 'password'].includes(field.name)" >
 
            <div v-if="['password'].includes(field.name)"></div>
-                <InputLabel :for="field.name" :value="field.title" />                        
+                <InputLabel :for="field.name" :value="field.title" />
                         <div class="">
-                            <input 
+                            <input
                                 :type="field.name === 'password' ? (showPassword ? 'text' : 'password') : field.type"
                                 v-model="form[field.name]"
                                 :placeholder="field.placeholder"
                                 class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                 :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
                             />
-                            
-                            <button 
+
+                            <button
                                 v-if="field.name === 'password'"
-                                type="button" 
+                                type="button"
                                 @click="showPassword = !showPassword"
                                 class="absolute  -translate-y-1/2 dark:text-gray-400 text-black"
                             >
@@ -131,16 +131,16 @@ const submit = () => {
 </Link>
             </div>
 
-            <button 
-                type="submit" 
+            <button
+                type="submit"
                 :disabled="form.processing"
                 class="w-full mt-6 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-lg shadow-emerald-500/20"
             >
                 {{ form.processing ? 'Signing In...' : 'Sign In' }}
             </button>
-            
+
             <p class="text-center mt-6 text-sm text-gray-500">
-                Don't have an account? 
+                Don't have an account?
                 <Link href="/register" class="text-emerald-600 font-bold">Register</Link>
             </p>
         </FormWrapper>

@@ -60,26 +60,26 @@ const dtOptions = {
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
-  
+
 columns: [
-        { 
-            data: null, 
-            render: (data, type, row, meta) => meta.row + 1 
-        }, 
-        { 
+        {
+            data: null,
+            render: (data, type, row, meta) => meta.row + 1
+        },
+        {
             // Langsung akses user_detail (tanpa kata 'jadwal')
             data: 'tanggal_setoran',
             render: (data, type, row) => {
                 return row.tanggal_setoran || '-';
             },
-            defaultContent: '-' 
+            defaultContent: '-'
         },
-       
-        { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
-        } 
+
+        {
+            data: null,
+            orderable: false,
+            className: 'no-print text-center'
+        }
     ],
     layout: {
         topStart: null,
@@ -165,7 +165,7 @@ columns: [
             <span class="font-light">Si</span>
             Banksa
         </h1>
-                        
+
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
@@ -220,8 +220,8 @@ const handleSearch = (e) => {
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
     // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
-    const regex = val ? `^${val}$` : ''; 
-    
+    const regex = val ? `^${val}$` : '';
+
     dtInstance.value.dt
         .column(2)
         .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
@@ -338,7 +338,7 @@ const breadcrumbItems = [
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data jadwal</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar jadwal Anda.</p>
                 </div>
-                <button @click="openCreateForm" 
+                <button @click="openCreateForm"
                     class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
                     {{ showForm ? 'Batal' : 'Tambah Data' }}
@@ -348,23 +348,23 @@ const breadcrumbItems = [
             <Transition name="accordion">
                 <div v-if="showForm" class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">{{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
-                    
-                              <FormWrapper 
-            formName="formJadwal" 
-            :errors="form.errors" 
+
+                              <FormWrapper
+            formName="formJadwal"
+            :errors="form.errors"
             :processing="form.processing"
             @submit="handleSubmit"
         >
-                                                    
+
 
   <div v-for="field in formdata.bankSampah" :key="field.name">
     <input type="hidden" name="id_userdetail" v-model="form.id_userdetail">
                                     <div v-if="field.type === 'date'"  class="col-span-full">
 
 
-        
-   
-                                                                                <InputLabel :for="field.name" :value="field.title" />                        
+
+
+                                                                                <InputLabel :for="field.name" :value="field.title" />
 
                                           <input :type="field.type" :id="field.name"
                                             :name="field.name" v-model="form[field.name]"
@@ -373,18 +373,18 @@ const breadcrumbItems = [
 
                                             class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
                                     </div>
-                   
 
 
 
 
-                            
+
+
 
                             </div>
 
-                           
-                      
-                        
+
+
+
                         <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
                             <button type="submit" class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50" :disabled="form.processing">
                                 <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Jadwal' : 'Simpan Jadwal' }}
@@ -392,7 +392,7 @@ const breadcrumbItems = [
                         </div>
                    </FormWrapper>
                 </div>
-            </transition>
+            </Transition>
 
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                                 <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
@@ -411,12 +411,12 @@ const breadcrumbItems = [
             <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text" 
+                <input @keyup="handleSearch" type="text"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
 
-            
+
 
             <div class="flex items-center gap-2  pl-3">
                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
@@ -428,15 +428,15 @@ const breadcrumbItems = [
                 </select>
             </div>
             </div>
-           
+
         </div>
 
-                <DataTable 
+                <DataTable
                     ref="dtInstance"
-                    :data="jadwal" 
+                    :data="jadwal"
                     :options="dtOptions"
 class="w-full display stripe hover cell-border">
-         
+
                     <thead>
                         <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
                              <th>No</th>
@@ -444,14 +444,14 @@ class="w-full display stripe hover cell-border">
                             <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi</th>
                         </tr>
                     </thead>
-                    
+
                     <template #column-0="data">
                         <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
                     </template>
 
-                    <template #column-2="data"> 
+                    <template #column-2="data">
                         <div class="flex justify-center gap-1">
-                    
+
                             <button @click="editData(data.rowData)" class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -464,7 +464,7 @@ class="w-full display stripe hover cell-border">
 
             </div>
 
-            
+
         </div>
     </AuthenticatedLayout>
 </template>
@@ -473,11 +473,11 @@ class="w-full display stripe hover cell-border">
 .dark td{
     color:white;
 }
-    
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; 
+    max-height: 500px;
     overflow: hidden;
 }
 
@@ -507,10 +507,10 @@ class="w-full display stripe hover cell-border">
     color: #ffffff !important;
     margin-top: 1rem;
 }
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
 .dark .datatable  .dt-paging {
     color: #ffffff !important;
 }

@@ -407,7 +407,7 @@ const breadcrumbItems = [
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-  <div v-for="(field, index) in formdata.nasabah.janji_setor" :key="index">
+  <div v-for="(field, index) in formdata.janji_setor" :key="index">
     <InputLabel :for="field.name" :value="field.title" />
 
     <template v-if="field.name === 'id_jadwal'">

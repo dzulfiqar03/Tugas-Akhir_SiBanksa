@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 const darkMode = ref(false);
 
@@ -29,36 +29,25 @@ watch(darkMode, (newValue) => {
 
             <div class="text-center px-4">
                 <div class="mb-8 animate-bounce">
-                    <svg
-                        class="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                        />
-                    </svg>
+                   <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22v-2m0-16V2" />
+</svg>
                 </div>
 
-                <h1 class="text-6xl font-bold text-gray-800 dark:text-white mb-4">404</h1>
+                <h1 class="text-6xl font-bold text-gray-800 dark:text-white mb-4">419</h1>
                 <h2 class="text-2xl font-semibold text-gray-600 dark:text-gray-300 mb-4">
-                    No Internet Connection
+                    Session Expired !!!
                 </h2>
                 <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                    It looks like you're offline. Please check your internet connection and try again.
+                    It looks like you're session is expired, please do login again.
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link
-                        href="/"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 dark:shadow-none transition-all active:scale-95"
-                    >
-                        Try Again
-                    </Link>
+                     <button @click="router.get(route('login'))"
+                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 dark:shadow-none transition-all active:scale-95">Log Out
+
+                    </button>
 
                     <button
                         @click="darkMode = !darkMode"

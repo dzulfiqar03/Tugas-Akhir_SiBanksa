@@ -11,6 +11,7 @@ use App\Models\BankSampah\PencatatanSetoranItems;
 use App\Models\Transaction\UserTransaction;
 use App\Models\UserBank;
 use App\Models\UserDetail;
+use App\Services\BankSampah\NasabahServices;
 use App\Services\BankSampah\TransactionServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +24,7 @@ class DataTransaksiController extends Controller
      * Display a listing of the resource.
      */
 
-    public function __construct(protected UserDetail $userDetail, protected PencatatanSetoranItems $pencatatanSetoranItems, protected TransactionServices $transactionServices) {}
+    public function __construct(protected NasabahServices $nasabahServices, protected UserDetail $userDetail, protected PencatatanSetoranItems $pencatatanSetoranItems, protected TransactionServices $transactionServices) {}
     public function index()
     {
 
@@ -31,6 +32,7 @@ class DataTransaksiController extends Controller
         $form = (new FormResources(null))->toArray(request());
 
         $formName = 'formTransaksi';
+        $nasabahAll = $this->nasabahServices->getAllNasabah();
         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,
@@ -54,14 +56,14 @@ class DataTransaksiController extends Controller
 
 
         $nasabahList =  PencatatanSetoran::with(['user_detail', 'pencatatan_items'])
-               ->whereHas('user_detail', function ($query) {
-        $query->where('id_rt', Auth::user()->user_detail->id_rt);
-    })
-    ->whereHas('user_detail.userbank')
-    ->whereDoesntHave('user_detail.user_transaction', function ($query) {
+            ->whereHas('user_detail', function ($query) {
+                $query->where('id_rt', Auth::user()->user_detail->id_rt);
+            })
+            ->whereHas('user_detail.userbank')
+            ->whereDoesntHave('user_detail.user_transaction', function ($query) {
 
-        $query->whereColumn('pencatatan_setoran_id', 'pencatatan_setoran.id');
-    })
+                $query->whereColumn('pencatatan_setoran_id', 'pencatatan_setoran.id');
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -71,7 +73,7 @@ class DataTransaksiController extends Controller
 
                 $detail = $user->user_detail;
 
-                $userBank = UserBank::where('id_userdetail', $detail->id)->get();
+                $userBank = UserBank::where('id_userdetail', $detail->id)->with('bank')->get();
                 // Tambahkan ke object user
                 $user->user_bank = $userBank;
 
@@ -93,13 +95,12 @@ class DataTransaksiController extends Controller
             'reporting' => $reporting,
             'IDRW' => $IDRW,
             'IDRT' => $userRT,
-            'nasabah' => $nasabah
-
-
+            'nasabah' => $nasabah,
+            'nasabahAll' => $nasabahAll,
         ]);
     }
 
-    /**
+    /*
      * Show the form for creating a new resource.
      */
     public function create()

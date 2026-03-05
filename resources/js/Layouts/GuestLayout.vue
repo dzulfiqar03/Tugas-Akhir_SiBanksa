@@ -1,7 +1,8 @@
 <template>
 
   <Preloader />
-  <div>
+
+
     <div class="min-h-screen flex items-center justify-center
                 bg-gray-100 dark:bg-gray-900 p-4 transition-colors">
 
@@ -19,12 +20,14 @@
         {{ isDark ? '☀️' : '🌙' }}
       </button>
     </div>
-  </div>
+
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import Preloader from '@/Components/Preloader.vue';
+import { ref, onMounted, watch, computed } from 'vue'
+import Preloader from '@/components/Preloader.vue';
+import SessionExpired from '@/components/SessionExpired.vue';
+
 const isDark = ref(false)
 
 onMounted(() => {
@@ -43,6 +46,8 @@ watch(isDark, (val) => {
   localStorage.setItem('darkMode', val)
   document.documentElement.classList.toggle('dark', val)
 })
+
+
 
 const toggleTheme = () => {
   isDark.value = !isDark.value

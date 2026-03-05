@@ -16,10 +16,12 @@ const form = useForm({
     id_rt: '',
     id_roles: 2,
     bankSampah: {
-    address: null
+    address: 'default address',
+    id_rt: '',
     },
     nasabah: {
-    address: null
+    address: 'default address',
+    id_rt: '',
     },
     id_gender: '',
     status: "Pengajuan Verifikasi"

@@ -39,6 +39,7 @@ const props = defineProps({
         user: Object,
         transaction:Array,
         nasabah:Array,
+        nasabahAll:Array,
                 reporting:Array,
         countTransaction:Number,
                 IDRW:Number,
@@ -179,7 +180,24 @@ const dtOptions = {
             },
             defaultContent: '-'
         },
+       {
+    data: 'user_bank',
+    className: 'text-black dark:text-white capitalize',
 
+    render: (data, type, row) => {
+        return row.user_bank[0].nomor_rekening;
+    },
+
+},
+
+   {
+    data: 'user_bank',
+    className: 'text-black dark:text-white capitalize',
+
+    render: (data, type, row) => {
+        return row.user_bank[0].bank.short_name || '-';
+    }
+},
 
         {
     data: 'pencatatan_items',
@@ -211,6 +229,8 @@ const dtOptions = {
             },
             className: 'text-center'
         },
+
+
         {
             // Kolom 4: Aksi
             data: null,
@@ -377,6 +397,141 @@ return row.user_transaction.length === 0? !row.user_bank || row.user_bank.length
 };
 
 
+const dtOptions2 = {
+    pageLength: 5,
+    responsive: true,
+    lengthMenu: [5, 10, 25, 50],
+
+
+    layout: {
+        topStart: null,
+        topEnd: null,
+        bottomStart: null,
+        bottomEnd: 'paging'
+    },
+     buttons: [
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
+                        className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+                        title: 'Data Transaksi Setoran',
+                        exportOptions: {
+                            columns: ':not(.no-print)'
+                        },
+                        customize: function (doc) {
+                            // Atur margin halaman PDF
+                            doc.pageMargins = [40, 60, 40, 40];
+
+                            // Tambahkan logo + namaSampah di atas tabel
+                            doc.content.splice(0, 0, {
+                                columns: [
+                                   {
+                                        text: 'SI BANKSA',
+                                        alignment: 'left',
+                                        fontSize: 16,
+                                        bold: true,
+                                        margin: [0, 20, 0, 0]
+                                    },
+                                    {
+                                        text: 'Bank Sampah - Data Sampah',
+                                        alignment: 'right',
+                                        fontSize: 16,
+                                        bold: true,
+                                        margin: [0, 20, 0, 0]
+                                    }
+                                ],
+                                columnGap: 10
+                            });
+
+                            // Tambahkan garis pemisah
+                            doc.content.splice(1, 0, {
+                                canvas: [
+                                    {
+                                        type: 'line',
+                                        x1: 0,
+                                        y1: 0,
+                                        x2: 515,
+                                        y2: 0,
+                                        lineWidth: 1,
+                                        lineColor: '#cccccc'
+                                    }
+                                ],
+                                margin: [0, 10, 0, 10]
+                            });
+
+                            // Atur gaya tabel (opsional)
+                            doc.styles.tableHeader.fillColor = '#f1f1f1';
+                            doc.styles.tableHeader.color = '#333333';
+                            doc.defaultStyle.fontSize = 10;
+                        }
+                    },
+
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
+                        className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fa-solid fa-print mr-2"></i> Print',
+                        className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+                        title: '', // kosongin biar gak dobel namaSampah default
+                        customize: function (win) {
+                            $(win.document.body)
+                                .css('font-family', 'Poppins, sans-serif')
+                                .prepend(`
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                                <h1 class="py-5 text-2xl font-semibold text-gray-800 dark:text-gray-100 transition-all duration-300 font-[Poppins] text-center w-full"
+            >
+            <span class="font-light">Si</span>
+            Banksa
+        </h1>
+
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
+                        <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
+                    </div>
+                </div>
+                <hr style="border: 1px solid #ccc; margin-bottom: 20px;">
+            `);
+
+                            // Styling tambahan (opsional)
+                            $(win.document.body).find('table')
+                                .addClass('compact')
+                                .css({
+                                    'font-size': '12px',
+                                    'width': '100%',
+                                    'border-collapse': 'collapse'
+                                });
+
+                            $(win.document.body).find('table th')
+                                .css({
+                                    'background-color': '#f1f1f1',
+                                    'color': '#333',
+                                    'padding': '6px',
+                                    'border': '1px solid #ddd'
+                                });
+
+                            $(win.document.body).find('table td')
+                                .css({
+                                    'padding': '6px',
+                                    'border': '1px solid #ddd'
+                                });
+                        }
+                    }
+
+                ],
+    language: {
+            info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+            paginate: {
+                previous: "← Sebelumnya",
+                next: "Berikutnya →"
+            },
+            emptyTable: "Tidak ada data tersedia"
+        }
+};
 
 const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
 const nextPage = () => dtInstance.value.dt.page('next').draw('page');
@@ -586,7 +741,10 @@ const url = route('bs.add-transaction');
             <div class="grid gap-4">
 
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
-                <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                <div class="flex flex-wrap justify-between items-center gap-4 "
+                :class="[
+                    showForm?'mb-4':'mb-0'
+                ]">
                     <h3 class="text-lg font-bold text-black dark:text-white">Pencairan Dana Nasabah</h3>
                     <button v-if="showForm" @click="showForm = !showForm" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm transition">
                         <i class="fas mr-2" :class="showForm ? 'fa-minus' : 'fa-plus'"></i>
@@ -664,7 +822,7 @@ const url = route('bs.add-transaction');
             <div class="grid grid-cols-1 lg:grid-cols-7 gap-4">
 
                 <div class="lg:col-span-5 bg-white dark:bg-gray-800 rounded-xl shadow p-5 overflow-hidden">
-                    <h3 class="mb-4 font-bold dark:text-white text-sm uppercase tracking-wider">Riwayat Transaksi</h3>
+                    <h3 class="mb-4 font-bold text-gray-500 dark:text-white text-sm uppercase tracking-wider">Riwayat Transaksi</h3>
                     <div class="overflow-x-auto">
 
                                                                      <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
@@ -717,6 +875,8 @@ const url = route('bs.add-transaction');
                                 <tr>
                                     <th             class="text-black dark:text-white capitalize">No</th>
                                     <th class="text-black dark:text-white capitalize">Nasabah</th>
+                                                                        <th class="text-black dark:text-white capitalize">Nomor Rekening</th>
+                                                                                                                                                <th class="text-black dark:text-white capitalize">Bank</th>
                                     <th class="text-black dark:text-white capitalize">Total Saldo</th>
                                     <th class="text-black dark:text-white capitalize">Status</th>
                                     <th class="text-black dark:text-white capitalize">Aksi</th>
@@ -729,26 +889,26 @@ const url = route('bs.add-transaction');
                 </div>
 
                 <div class="lg:col-span-2 bg-gray-50 dark:bg-gray-700 rounded-xl shadow p-5">
-                    <h3 class="mb-4 font-bold text-center border-b dark:border-gray-600 pb-2 dark:text-white text-sm uppercase">Pilih Nasabah</h3>
+                    <h3 class="mb-4 font-bold text-center border-b dark:border-gray-600 pb-2 dark:text-white text-black text-sm uppercase">Pilih Nasabah</h3>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-xs">
+                        <DataTable :options="dtOptions2" class="w-full text-xs">
                             <thead>
                                 <tr class="text-left border-b dark:border-gray-600">
-                                    <th class="pb-2">Profil</th>
-                                    <th class="pb-2">Nama</th>
-                                    <th class="pb-2">Aksi</th>
+                                    <th class="pb-2 text-black dark:text-white">Profil</th>
+                                    <th class="pb-2 text-black dark:text-white">Nama</th>
+                                    <th class="pb-2 text-black dark:text-white">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="user in nasabah"
+                                <tr v-for="user in props.nasabahAll" :key="user.id"
                                     @click="viewDetail(user.user_detail.id_user)"
-                                    class="cursor-pointer hover:bg-emerald-50 dark:hover:bg-gray-600 transition border-b dark:border-gray-600 last:border-0"
+                                    class="cursor-pointer hover:bg-emerald-50 text-black dark:text-white dark:hover:bg-gray-600 transition border-b dark:border-gray-600 last:border-0"
                                 >
                                     <td class="py-2">
 
 
     <div class="border-gray-100 w-max dark:border-gray-800">
-      <div v-if="user" class="profile-circle py-1 px-2 rounded-full border border-gray-600 text-gray-800 dark:text-white">
+      <div v-if="user" class="profile-circle py-1 px-2  rounded-full border border-gray-600 text-gray-800 dark:text-white">
         {{ initials(user.user_detail?.fullName) }}
       </div>
 
@@ -761,13 +921,13 @@ const url = route('bs.add-transaction');
       </div>
     </div>
                                     </td>
-                                    <td class="py-2 font-medium dark:text-gray-200">{{ user.user_detail.fullName }}</td>
+                                    <td class="py-2 font-medium text-black dark:text-white">{{ user.user_detail.fullName }}</td>
                                     <td class="py-2 text-right">
                                         <i class="fas fa-chevron-right text-gray-400"></i>
                                     </td>
                                 </tr>
                             </tbody>
-                        </table>
+                        </DataTable>
                     </div>
                 </div>
 

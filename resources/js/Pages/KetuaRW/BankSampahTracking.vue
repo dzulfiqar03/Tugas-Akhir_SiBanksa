@@ -61,7 +61,7 @@ const sendReminder = ($id) => {
     }).then((result) => {
         if (result.isConfirmed) {
             router.post(route('banksampah.send-reminder', $id), {
-                message: `Profil dan Dokumen Anda Belum Lengkap, Segera Lengkapi Profil: ${props.notNullProfile}`
+                message: `Profil dan Dokumen Anda Belum Lengkap, Segera Lengkapi Profil`
             }, {
                 onSuccess: () => Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success')
             });

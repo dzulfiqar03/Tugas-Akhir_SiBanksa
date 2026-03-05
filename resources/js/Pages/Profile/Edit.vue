@@ -19,9 +19,11 @@ const props = defineProps({
         type: String,
     },
     formdata: Object,
-    nasabah:Array,nasabahAll:Array,
+    nasabah:Array,
+    nasabahAll:Array,
         sidebardata: Object,
-        pageName: String
+        pageName: String,
+        id_role: Number,
 });
 
 const showForm = ref('BankSampah'); // Toggle: 'BankSampah' atau 'Nasabah'
@@ -289,15 +291,39 @@ const renderNasabahMarkers = () => {
   })
 }
 
-onMounted(() => {
-  map = L.map('map').setView([-7.1680294, 112.6596363], 20)
+onMounted(async () => {
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map)
+  // Tunggu render pertama
+  await nextTick()
 
-  renderNasabahMarkers();
-});
+  // Tunggu layout selesai preloader (1900ms)
+  setTimeout(async () => {
+
+    await nextTick()
+
+    const mapElement = document.getElementById('map')
+
+    if (!mapElement) {
+      console.error('Map container not found after render')
+      return
+    }
+
+    map = L.map(mapElement).setView([-7.1680294, 112.6596363], 20)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map)
+
+    renderNasabahMarkers()
+
+  }, 2000) // sedikit lebih lama dari 1900
+})
+
+const breadcrumbItems = [
+    { label: 'Dashboard', url: props.id_role === 1? route('rw.dashboard'): route('dashboard') },
+    { label: 'Profile', url: null },
+];
+
 </script>
 
 <template>
@@ -657,8 +683,8 @@ onMounted(() => {
 
     <div :class="[
         !isPreviewOpen ?'rounded-xl':'rounded-l-xl',
-    ]" class="flex-1 h-[60vh] md:h-full overflow-hidden shadow-inner border border-gray-200">
-        <div id="map" class="h-full w-full"></div>
+    ]" class="flex-1 h-[60vh] md:h-full overflow-hidden shadow-inner -z-0 border border-gray-200">
+        <div  id="map" class="h-full w-full"></div>
     </div>
 
     <div ref="detailMap"  v-if="isPreviewOpen" class="w-full transition-all h-[40vh] md:h-full duration-700 md:w-1/3 bg-white dark:bg-gray-800 rounded-r-xl shadow-sm overflow-y-auto p-4">

@@ -64,7 +64,7 @@ const sections = computed(() => {
     } else {
         grouped = { 'MAIN': [],'MANAJEMEN': [], 'LAINNYA': [] };
         menus.value.forEach(menu => {
-                                    if (['Profile','Tracking Setoran'].includes(menu.nama)) grouped['MAIN'].push(menu);
+                                    if (['Dashboard','Tracking Setoran'].includes(menu.nama)) grouped['MAIN'].push(menu);
 
             else if (menu.data || ['Bank Sampah', 'Nasabah', 'Transaksi Setoran', 'Janji Setor'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
             else grouped['LAINNYA'].push(menu);
@@ -104,8 +104,40 @@ const sendLogout= () => {
                 <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-500 text-white font-bold shadow-md shrink-0">
                     S
                 </div>
-                <h1 v-show="sidebarExpanded || isOpen" class="text-xl font-semibold tracking-wide text-gray-800 dark:text-gray-100 font-[Poppins] truncate">
-                    <span class="font-light">SI </span>BANKSA
+                <h1 v-show="sidebarExpanded || isOpen" class="text-xl flex font-semibold tracking-wide text-gray-800 dark:text-gray-100 font-[Poppins] truncate">
+                    <span class="font-light mr-1">SI </span><span>B</span>
+
+                    <div class="m-auto">
+
+
+
+<div class="house-spin-container">
+  <div class="loader-content">
+    <svg class="house-svg" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <path
+        class="house-solid-fill"
+        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"
+      />
+
+      <path
+        class="house-outline-bg"
+        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"
+      />
+
+      <path
+        class="house-outline-active"
+        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"
+      />
+    </svg>
+
+    <div class="banksa-logo">$</div>
+  </div>
+</div>
+
+                    </div>
+
+
+            <span>NKSA</span>
                 </h1>
             </div>
 
@@ -188,3 +220,39 @@ const sendLogout= () => {
         </nav>
     </aside>
 </template>
+
+<style scoped>
+
+.loader-content {
+  position: relative;
+  width: 19px;
+  height: 15px;
+  background: transparent;
+}
+
+.house-svg {
+  width: 19px;
+  height: 15px;
+  fill: none;
+}
+
+.house-solid-fill {
+  fill: #059669; /* Hijau solid */
+  stroke: none;
+}
+
+@keyframes house-spin {
+  from { stroke-dashoffset: 62; }
+  to { stroke-dashoffset: 0; }
+}
+
+.banksa-logo {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.3);
+  font-weight: 800;
+  color: #ffffff;
+  z-index: 10;
+}
+</style>
