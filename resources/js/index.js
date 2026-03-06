@@ -7,12 +7,12 @@ import Alpine from "alpinejs";
 import flatpickr from "flatpickr";
 import Dropzone from "dropzone";
 
-import chart01 from "./components/charts/chart-01";
-import chart02 from "./components/charts/chart-02";
-import chart03 from "./components/charts/chart-03";
-import map01 from "./components/map-01";
-import "./components/calendar-init.js";
-import "./components/image-resize";
+import chart01 from "./Components/charts/chart-01";
+import chart02 from "./Components/charts/chart-02";
+import chart03 from "./Components/charts/chart-03";
+import map01 from "./Components/map-01";
+import "./Components/calendar-init.js";
+import "./Components/image-resize";
 
 
 window.Alpine = Alpine;

@@ -1,20 +1,18 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useForm, router, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Swal from 'sweetalert2';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import DataTablesCore from 'datatables.net';
+import Buttons from 'datatables.net-buttons';
+import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5';
+import ButtonsPrint from 'datatables.net-buttons/js/buttons.print';
 import 'datatables.net-dt/css/dataTables.dataTables.css';
-import InputLabel from '@/Components/InputLabel.vue';
-import FormWrapper from '@/Components/FormWrapper.vue';
-import DataTable from 'datatables.net-vue3'
-import DataTablesCore from 'datatables.net'
-import Buttons from 'datatables.net-buttons'
-import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
-import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
-import Responsive from 'datatables.net-responsive-dt'
+import Responsive from 'datatables.net-responsive-dt';
+import DataTable from 'datatables.net-vue3';
+import Swal from 'sweetalert2';
+import { computed, ref } from 'vue';
 
-import 'datatables.net-dt/css/dataTables.dataTables.css'
-import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
+import 'datatables.net-dt/css/dataTables.dataTables.css';
+import 'datatables.net-responsive-dt/css/responsive.dataTables.css';
 
 // Register
 DataTable.use(DataTablesCore)
@@ -79,12 +77,12 @@ const combinedData = computed(() => {
     return dataAwal.map(item => {
         const user = item.user_detail;
         const userId = user?.id;
-        
-        const allDocs = (user?.document || []).filter(doc => 
+
+        const allDocs = (user?.document || []).filter(doc =>
             Number(doc.id_userdetail) === Number(userId)
         );
 
-        const allImgs = (user?.image || []).filter(img => 
+        const allImgs = (user?.image || []).filter(img =>
             Number(img.id_userdetail) === Number(userId)
         );
 
@@ -92,7 +90,7 @@ const combinedData = computed(() => {
        const dataStat = dataBankSampah.find(stat => stat.id === item.id);
         const stats = dataStat?.statistik || {};
 
-          
+
 
         return {
             ...item,
@@ -149,8 +147,8 @@ const formatChildRow = (d) => {
                 </td>
                 <td class="py-3 px-4">
                     <div class="flex items-center gap-3">
-                        ${type === 'Dokumen' 
-                            ? '<i class="fas fa-file-pdf text-red-500 text-lg"></i>' 
+                        ${type === 'Dokumen'
+                            ? '<i class="fas fa-file-pdf text-red-500 text-lg"></i>'
                             : `<img src="/storage/photo/evidenceUser/BankSampah/RT0${d.id_rt}/${f.original_photoname}" class="w-8 h-8 rounded object-cover border">`
                         }
                         <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">
@@ -160,11 +158,11 @@ const formatChildRow = (d) => {
                 </td>
                 <td class="py-3 px-4 text-right">
                     <div class="flex justify-end gap-2">
-                        <button onclick="window.handleOpenPreview('${type === 'Dokumen' ? f.original_filesname : f.original_photoname}', '${d.id_rt}', '${type === 'Dokumen' ? 'Dokumen' : 'Evidence'}')" 
+                        <button onclick="window.handleOpenPreview('${type === 'Dokumen' ? f.original_filesname : f.original_photoname}', '${d.id_rt}', '${type === 'Dokumen' ? 'Dokumen' : 'Evidence'}')"
                                 class="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-md text-xs font-bold transition">
                             <i class="fas fa-eye mr-1"></i> LIHAT
                         </button>
-                        
+
                     </div>
                 </td>
             </tr>
@@ -173,9 +171,9 @@ const formatChildRow = (d) => {
 
     return `
         <div class="p-6 bg-white accordion-wrapper dark:bg-gray-900 border-l-4 border-emerald-500 shadow-inner">
-            
+
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                
+
                 <div class="overflow-hidden">
                     <div class="flex items-center justify-between mb-4">
                         <h5 class="text-sm font-black text-gray-700 dark:text-gray-200 uppercase tracking-wide">
@@ -248,31 +246,31 @@ const dtOptions = {
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
-  
+
 columns: [
-        { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
+        {
+            data: null,
+            orderable: false,
+            className: 'no-print text-center'
         } ,
-         { 
+         {
             data: 'user_detail.fullName',
             className:'capitalize dark:text-white text-black',
             render: (data, type, row) => {
                 return row.user_detail?.fullName || '-';
             },
-            defaultContent: '-' 
+            defaultContent: '-'
         },
-       
-        { 
+
+        {
             data: 'user_detail.id_rt',
             className:'capitalize dark:text-white text-black',
             render: (data, type, row) => {
                 return row.user_detail?.id_rt || '-';
             },
-            defaultContent: '-' 
+            defaultContent: '-'
         },
-         { 
+         {
             data: 'stats',
             className:'capitalize',
             render: (data, type, row) => {
@@ -285,13 +283,13 @@ columns: [
                      <span class="bg-emerald-500 w-full px-4 rounded-xl text-sm">Disetujui: ${row.nasabah_terverifikasi}</span>
                     <span class="bg-red-500 w-full px-4 rounded-xl text-sm">Ditolak: ${row.nasabah_ditolak}</span>
                     <span class="bg-gray-500 w-full px-4 rounded-xl text-sm">Pending: ${row.nasabah_pending}</span>
-                   
+
                     </div>
                     </div>
-                                  
+
                 `;
             },
-            defaultContent: '-' 
+            defaultContent: '-'
         },
 {
     data: 'total_setoran_rt',
@@ -301,13 +299,13 @@ columns: [
         return `<strong class="text-emerald-600">Rp ${new Intl.NumberFormat('id-ID').format(total)}</strong>`;
     }
 },
-        { 
-            data: null, 
-            orderable: false, 
-            className: 'no-print text-center' 
+        {
+            data: null,
+            orderable: false,
+            className: 'no-print text-center'
         } ,
-       
-      
+
+
     ],
     layout: {
         topStart: null,
@@ -393,7 +391,7 @@ columns: [
             <span class="font-light">Si</span>
             Banksa
         </h1>
-                        
+
                     </div>
                     <div style="text-align: right;">
                         <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
@@ -448,8 +446,8 @@ const handleSearch = (e) => {
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
     // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
-    const regex = val ? `^${val}$` : ''; 
-    
+    const regex = val ? `^${val}$` : '';
+
     dtInstance.value.dt
         .column(2)
         .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
@@ -503,7 +501,7 @@ const updateVerification = (item) => {
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Kelola Bank Sampah</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola bank sampah di RW anda.</p>
                 </div>
-               
+
             </div>
 
 
@@ -524,7 +522,7 @@ const updateVerification = (item) => {
                <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                  <div class="flex items-end gap-2">
                 <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text" 
+                <input @keyup="handleSearch" type="text"
                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                     placeholder="Ketik...">
             </div>
@@ -539,7 +537,7 @@ const updateVerification = (item) => {
                 <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
         </div>
     </template>
-                   
+
                 </select>
             </div>
 
@@ -553,13 +551,13 @@ const updateVerification = (item) => {
                 </select>
             </div>
             </div>
-           
+
         </div>
             <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
                     <DataTable
                     :data="combinedData"
                         ref="dtInstance"
-                        :options="dtOptions" 
+                        :options="dtOptions"
                     class="w-full display stripe hover cell-border dark:text-white">
                         <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
                             <tr>
@@ -574,22 +572,22 @@ const updateVerification = (item) => {
                         </thead>
 
 
-                           <template #column-0="data"> 
+                           <template #column-0="data">
                                 <div class="flex justify-center gap-2">
-                                      
 
-                                        <button  @click="onRowClick" 
+
+                                        <button  @click="onRowClick"
      class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
-                                 <i  
+                                 <i
                  class="fas fa-plus-circle text-emerald-500 cursor-pointer"></i>
                             </button>
-    
+
                                     </div>
                     </template>
- 
-                      
 
-                        <template #column-5="data"> 
+
+
+                        <template #column-5="data">
                         <div v-if="data.rowData.user_detail.status_transaction === 'Belum Disetujui'" class="flex justify-center gap-1">
                       <button
                                             @click="updateVerification(data.rowData)"
@@ -600,30 +598,30 @@ const updateVerification = (item) => {
 
                           <div v-else class="flex justify-center gap-1">
                       <button
-                                        
+
                                             class="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 hover:bg-gray-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
                                             <i class="fas fa-bell"></i> Transaksi sudah dibuka
                                         </button>
                         </div>
                     </template>
 
-                    
-               
+
+
                    </DataTable>
 </div>
 
             </div>
 
-       
+
         </div>
     </AuthenticatedLayout>
 
-       <div v-if="isPreviewOpen" 
+       <div v-if="isPreviewOpen"
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
      @click.self="closePreview">
-    
+
     <div class="relative max-w-4xl w-full flex flex-col items-center">
-        <button @click="closePreview" 
+        <button @click="closePreview"
                 class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -631,10 +629,10 @@ const updateVerification = (item) => {
         </button>
 
        <template v-if="docType === 'Dokumen'">
-               <div class="w-full h-[80vh] md:h-[85vh]"> 
-        <embed 
-            :src="selectedImageUrl" 
-            type="application/pdf" 
+               <div class="w-full h-[80vh] md:h-[85vh]">
+        <embed
+            :src="selectedImageUrl"
+            type="application/pdf"
             class="w-full h-full rounded-lg shadow-inner"
         />
     </div>
@@ -645,7 +643,7 @@ const updateVerification = (item) => {
                     <img :src="selectedImageUrl" class="max-w-full max-h-full object-contain" alt="Preview Image">
                 </div>
             </template>
-             
+
         <p class="mt-4 text-white text-sm font-medium">Klik di mana saja untuk menutup</p>
     </div>
 </div>
@@ -675,11 +673,11 @@ const updateVerification = (item) => {
     background-position: -200% 0;
   }
 }
-    
+
 .accordion-enter-active,
 .accordion-leave-active {
     transition: all 0.3s ease-in-out;
-    max-height: 500px; 
+    max-height: 500px;
     overflow: hidden;
 }
 
@@ -708,10 +706,10 @@ const updateVerification = (item) => {
     color: #ffffff !important;
     margin-top: 1rem;
 }
-.dark .dataTables_wrapper .dataTables_length, 
-.dark .dataTables_wrapper .dataTables_filter, 
-.dark .datatable .dt-info, 
-.dark .dataTables_wrapper .dataTables_processing, 
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
 .dark .datatable  .dt-paging {
     color: #ffffff !important;
 }

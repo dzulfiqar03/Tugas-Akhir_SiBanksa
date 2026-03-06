@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     formName: String,
@@ -27,37 +27,37 @@ const formAction = computed(() => {
         return route('login');
     } else if (currentRoute === 'data-sampah') {
         return route('add-sampah');
-    }  else if (currentRoute === 'data-nasabah') {
+    } else if (currentRoute === 'data-nasabah') {
         return route('add-nasabah');
-    }else if (currentRoute === 'jadwal-pelaksanaan') {
+    } else if (currentRoute === 'jadwal-pelaksanaan') {
         return route('add-jadwalBankSampah');
-    }else if (currentRoute === 'data-transaksi') {
+    } else if (currentRoute === 'data-transaksi') {
         return route('bs.add-transaction');
-    }else if (currentRoute === 'data-kepengurusan') {
+    } else if (currentRoute === 'data-kepengurusan') {
         return route('add-kepengurusan');
-    }else if (currentRoute === 'pencatatan-setoran') {
+    } else if (currentRoute === 'pencatatan-setoran') {
         return route('add-setoran');
-    }else if (currentRoute === 'warga.janji-setor') {
+    } else if (currentRoute === 'warga.janji-setor') {
         return route('warga.add-janjiSetor');
-    }else if (currentRoute === 'rw.janji-setor') {
+    } else if (currentRoute === 'rw.janji-setor') {
         return route('rw.add-janjiSetor');
-    }else if (currentRoute === 'data-pelaporanRW') {
+    } else if (currentRoute === 'data-pelaporanRW') {
         if (props.formName === 'formDocument') {
             return route('add-document');
-        } else{
+        } else {
             return route('add-evidence');
         }
-    }else if (currentRoute === 'data-kelola') {
+    } else if (currentRoute === 'data-kelola') {
         return route('add-setoran');
-    }else if (currentRoute === 'tracking-setoran') {
+    } else if (currentRoute === 'tracking-setoran') {
         return route('');
-    }else {
+    } else {
         // Default action
         return route('data-sampah');
     }
 });
 
- const currentRoute = route().current();
+const currentRoute = route().current();
 
 
 const open = ref(false);
@@ -67,43 +67,46 @@ const hasErrors = computed(() => props.errors && Object.keys(props.errors).lengt
 </script>
 
 <template>
-    <form :action="formAction"  @submit.prevent="$emit('submit')" :id="formName" class="w-full">
+    <form :action="formAction" @submit.prevent="$emit('submit')" :id="formName" class="w-full">
 
         <div v-if="hasErrors" class="px-3 pt-3">
-             <div x-data="{ open: false }" id="error-message"
-       class=" overflow-hidden border border-red-200 rounded-lg bg-white dark:bg-gray-900 shadow-sm transition-all duration-300">
+            <div x-data="{ open: false }" id="error-message"
+                class=" overflow-hidden border border-red-200 rounded-lg bg-white dark:bg-gray-900 shadow-sm transition-all duration-300">
 
-       <div v-on:click="open = !open"
-           class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+                <div v-on:click="open = !open"
+                    class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
 
-           <div class="flex items-center gap-2">
-               <div class="flex items-center justify-center w-5 h-5 rounded-full bg-red-100 dark:bg-red-500/20">
-                   <span id="error-count"
-                       class="text-[10px] font-bold text-red-600 animate-pulse dark:text-red-400">{{Object.keys(props.errors).length }}</span>
-               </div>
-               <span class="text-xs font-semibold text-red-700 dark:text-red-400">Ada kesalahan
-                   input</span>
-           </div>
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="flex items-center justify-center w-5 h-5 rounded-full bg-red-100 dark:bg-red-500/20">
+                            <span id="error-count"
+                                class="text-[10px] font-bold text-red-600 animate-pulse dark:text-red-400">{{ Object.keys(props.errors).length
+                                }}</span>
+                        </div>
+                        <span class="text-xs font-semibold text-red-700 dark:text-red-400">Ada kesalahan
+                            input</span>
+                    </div>
 
-           <svg class="w-4 h-4 text-red-400 transition-transform duration-300" :class="open ? 'rotate-180' : ''"
-               fill="none" stroke="currentColor" viewBox="0 0 24 24">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-           </svg>
-       </div>
+                    <svg class="w-4 h-4 text-red-400 transition-transform duration-300"
+                        :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
 
-       <div v-if="open" x-collapse class="px-3 pb-3 border-t border-red-50 dark:border-red-500/10">
-           <div class="max-h-24 overflow-y-auto pt-2 custom-scrollbar">
-               <ul id="error-list" class="space-y-1">
+                <div v-if="open" x-collapse class="px-3 pb-3 border-t border-red-50 dark:border-red-500/10">
+                    <div class="max-h-24 overflow-y-auto pt-2 custom-scrollbar">
+                        <ul id="error-list" class="space-y-1">
 
-                       <li v-for="(msg, key) in errors" :key="key" class="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2">
-                           <span class="w-1 h-1 bg-red-400 rounded-full"></span>
-                           {{ msg }}
-                       </li>
+                            <li v-for="(msg, key) in errors" :key="key"
+                                class="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2">
+                                <span class="w-1 h-1 bg-red-400 rounded-full"></span>
+                                {{ msg }}
+                            </li>
 
-               </ul>
-           </div>
-       </div>
-   </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
 
         </div>
@@ -115,12 +118,9 @@ const hasErrors = computed(() => props.errors && Object.keys(props.errors).lengt
 
             <slot />
 
-            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'profile.edit' && currentRoute != 'data-transaksi' && currentRoute != 'data-pelaporanRW'  && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah'  && currentRoute != 'data-kepengurusan' && currentRoute != 'warga.janji-setor' && currentRoute != 'rw.janji-setor' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'" class="flex justify-end gap-3 mt-4">
-                <button
-                    type="submit"
-                    :disabled="processing"
-                    class="px-4 py-2 bg-emerald-600 text-white rounded-lg"
-                >
+            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'profile.edit' && currentRoute != 'data-transaksi' && currentRoute != 'data-pelaporanRW' && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah' && currentRoute != 'data-kepengurusan' && currentRoute != 'warga.janji-setor' && currentRoute != 'rw.janji-setor' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'"
+                class="flex justify-end gap-3 mt-4">
+                <button type="submit" :disabled="processing" class="px-4 py-2 bg-emerald-600 text-white rounded-lg">
                     {{ processing ? 'Menyimpan...' : 'Simpan' }}
                 </button>
             </div>
