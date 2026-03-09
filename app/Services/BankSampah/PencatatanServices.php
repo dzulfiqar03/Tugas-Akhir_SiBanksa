@@ -2,6 +2,7 @@
 
 namespace App\Services\BankSampah;
 
+use App\Http\Controllers\UserLogController;
 use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\BankSampah\PencatatanSetoranItems;
 use Illuminate\Support\Facades\Auth;
@@ -17,18 +18,32 @@ class PencatatanServices
         //
     }
 
-    public function createPencatatanSetoran(array $data)
+    public function createPencatatanSetoran(array $data, $ip, $userAgent)
     {
 
 
         try {
-            $newSetoran =  DB::transaction(function () use ($data) {
+            $newSetoran =  DB::transaction(function () use ($data, $ip, $userAgent) {
                 // 1. Simpan ke tabel Induk (pencatatan_setoran)
                 $setoran = PencatatanSetoran::create([
                     'id_jadwal'     => $data['id_jadwal'],
                     'id_userdetail' => $data['id_userdetail'],
                     'total_setoran' => 0, // Akan di-update setelah loop item
                 ]);
+
+                 app(UserLogController::class)->log(
+            'SETORAN MASUK',
+            $ip,
+            $userAgent,
+            $data['id_userdetail']
+        );
+
+         app(UserLogController::class)->log(
+            'SETORAN TERCATAT',
+            $ip,
+            $userAgent,
+            Auth::user()->user_detail->id
+        );
 
                 $grandTotal = 0;
 

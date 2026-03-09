@@ -42,7 +42,7 @@ class KelolaBankSampahServices
         $nasabah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.pencatatan'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 3);
-            })->whereHas('pencatatan.pencatatan_items')->orderBy(
+            })->whereHas('user_detail.pencatatan.pencatatan_items')->orderBy(
                 $this->userDetail::select('id_rt')
                     ->whereColumn('user_details.id_user', 'users.id'),
                 'ASC'
@@ -212,8 +212,8 @@ class KelolaBankSampahServices
         if ($userAccount) {
             // Kirim notifikasi ke AKUN USER, bukan ke DETAIL
             $userAccount->notify(new BankSampahReminder(
-                $userAccount->id, 
-                $request->message, 
+                $userAccount->id,
+                $request->message,
                 '/bank-sampah/transaksi'
             ));
         }

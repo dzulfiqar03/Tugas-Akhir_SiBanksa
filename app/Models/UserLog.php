@@ -26,6 +26,6 @@ class UserLog extends Model
 
     public function user_detail()
     {
-        return $this->hasMany(UserDetail::class, 'id_userdetail', 'id');
+        return $this->belongsTo(UserDetail::class, 'id_userdetail', 'id');
     }
 }

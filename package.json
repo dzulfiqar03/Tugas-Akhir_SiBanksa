@@ -34,8 +34,10 @@
     },
     "dependencies": {
         "@headlessui/vue": "^1.7.23",
+        "@popperjs/core": "^2.11.8",
         "@tailwindcss/cli": "^4.1.17",
         "@vueuse/core": "^14.1.0",
+        "chart.js": "^4.5.1",
         "datatables.net": "^2.3.6",
         "datatables.net-buttons-dt": "^3.2.6",
         "datatables.net-dt": "^2.3.6",
@@ -45,6 +47,8 @@
         "jszip": "^3.10.1",
         "leaflet": "^1.9.4",
         "pdfmake": "^0.3.3",
-        "sweetalert2": "^11.26.17"
+        "sweetalert2": "^11.26.17",
+        "v-calendar": "^3.1.2",
+        "vue-chartjs": "^5.3.3"
     }
 }
