@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Admin\BankSampah;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
@@ -41,22 +41,22 @@ class DashboardController extends Controller
 
         $getSaldo = 0;
         $getSampah = 0;
-        $role === 'Bank Sampah' ?
-            $getSaldo = auth()->user()->user_detail->sampah->sum('saldo')
 
-            : '';
+            $getSaldo = auth()->user()->user_detail->sampah->sum('saldo');
 
-        $role === 'Bank Sampah' ?
+
+
+
             $getSampah = PencatatanSetoranItems::whereHas('setoran.user_detail', function ($query) {
                 $query->where('id_rt', auth()->user()->user_detail->id_rt);
-            })->where('created_at', '>=', now()->startOfMonth())->sum('jumlah')
-            : '';
+            })->where('created_at', '>=', now()->startOfMonth())->sum('jumlah');
+
 
         $setoran = PencatatanSetoranItems::whereHas('setoran.user_detail', function ($query) {
             $query->where('id_rt', auth()->user()->user_detail->id_rt);
         })->get();
 
-        if ($role === 'Bank Sampah') {
+
             $bankSampahList = $this->kelolaBankSampahServices->getAllNasabah();
 
             $allBankSampah = $bankSampahList
@@ -74,7 +74,7 @@ class DashboardController extends Controller
 
                     return $user;
                 });
-        }
+
         $sampahPeringkat = PencatatanSetoranItems::with('sampah') // Pastikan ada relasi ke tabel sampah
             ->select('sampah_id', DB::raw('SUM(jumlah) as total_berat'))
             ->groupBy('sampah_id')

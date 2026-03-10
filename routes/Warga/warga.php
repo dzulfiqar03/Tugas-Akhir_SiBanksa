@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\Warga\DashboardController;
 use App\Http\Controllers\Admin\Warga\DataTransaksiController as WargaDataTransaksiController;
 use App\Http\Controllers\Admin\Warga\JadwalPenyetoranController;
 use App\Http\Controllers\Admin\Warga\TrackingSetoranController as WargaTrackingSetoranController;

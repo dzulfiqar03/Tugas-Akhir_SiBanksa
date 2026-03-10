@@ -48,8 +48,6 @@ const props = defineProps({
 console.log(props.nasabah)
 // State
 const showForm = ref(false);
-const showDetail = ref(false);
-const selectedNasabah = ref(null);
 const isEdit = ref(false);
 
 const form = useForm({
@@ -64,11 +62,6 @@ const form = useForm({
 
 
 });
-
-const viewDetail = (id) => {
-    // Navigasi ke halaman detail nasabah
-    router.get(route('show-nasabah', id));
-};
 
 const renamedFileList = computed(() => {
     form.fileDoc.map((file, index) => {
@@ -91,11 +84,6 @@ const totalSaldo = computed(() => {
     }, 0)
 })
 
-/*
-|--------------------------------------------------------------------------
-| FORMAT RUPIAH
-|--------------------------------------------------------------------------
-*/
 
 const formatRupiah = (value) => {
     return new Intl.NumberFormat('id-ID', {
@@ -165,20 +153,7 @@ const kirimWA = (base64) => {
     });
 }
 
-const kirimWA2 = (row) => {
-    const nomorWA = "6281216299698"; // Ganti dengan nomor admin/bank sampah
-    const nama = row;
 
-    // Template pesan
-    const pesan = `Halo Admin, saya ${nama}. Saya ingin mengonfirmasi setoran sampah saya sebesar Rp. Mohon segera diproses ya!`;
-
-    // Encode pesan agar aman di URL
-    const link = `https://wa.me/${nomorWA}?text=${encodeURIComponent(pesan)}`;
-
-    // Buka tab baru
-    window.open(link, '_blank');
-};
-window.handleWA = kirimWA;
 
 const dtOptions = {
     pageLength: 5,
@@ -396,9 +371,6 @@ const dtOptions = {
 };
 
 
-
-const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
-const nextPage = () => dtInstance.value.dt.page('next').draw('page');
 const handleSearch = (e) => {
     dtInstance.value.dt.search(e.target.value).draw();
 };
@@ -421,110 +393,12 @@ const exportData = (index) => {
     dtInstance.value.dt.button(index).trigger();
 };
 
-const kirimBukti = (id) => {
-    // Logika kirim bukti pembayaran
-    console.log("Kirim bukti untuk ID:", id);
-};
-
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('warga.dashboard') },
     { label: 'Transaksi', url: route('data-transaksi') },
 ];
 
-const sendReminder = ($id) => {
-    Swal.fire({
-        title: 'Kirim Pengingat?',
-        text: "Ketua RW akan menerima notifikasi mengenai pelaporan anda",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Kirim!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            router.post(route('laporsetoran.send-reminder', $id), {
 
-                message: `Bank Sampah RT0${props.IDRT} menyelesaikan pelaporan dan mengajukan pembukaan rekening pencairan setoran`
-            }, {
-                onSuccess: () => Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success')
-            });
-        }
-    });
-};
-
-
-const initials = (fullName) => {
-    if (!fullName) return '??';
-
-    const name = fullName;
-    const words = name.split(' ');
-
-    const firstInitial = words[0]?.substring(0, 1) || '';
-    const secondInitial = words[1]?.substring(0, 1) || '';
-
-    return (firstInitial + secondInitial).toUpperCase();
-};
-
-const updateVerification = (item) => {
-    Swal.fire({
-        title: 'Lakukan Pembukaan Transaksi?',
-        text: "Bank sampah RT0" + item.user_detail.id_rt + " akan dapat melakukan transaksi dan notifikasi mengenai pelaporan anda",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Kirim!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            router.post(route('rw.open-transaction', item.user_detail.id), {
-
-                message: `Pembukaan Transaksi berhasil dibuka dan notifikasi berhasil dikirim ke Bank Sampah RT0${item.user_detail.id_rt}`
-            }, {
-                onSuccess: () => { Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload() }
-            });
-        }
-    });
-};
-
-
-const handleSubmit = () => {
-
-    const url = route('bs.add-transaction');
-    const method = 'post';
-
-    form[method](url, {
-        forceFormData: true,
-        onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data transaksi telah diproses.', 'success');
-            showForm.value = false;
-            form.reset();
-        },
-        onError: function (xhr) {
-            if (xhr.status === 422) {
-                const errors = xhr.responseJSON.errors;
-                let errorHtml = '';
-                let totalErrorCount = 0;
-                Object.keys(errors).forEach(key => {
-                    errors[key].forEach(msg => {
-                        errorHtml += ` <li class="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2">
-                           <span class="w-1 h-1 bg-red-400 rounded-full"></span>
-                           ${msg}
-                       </li>`;
-                        totalErrorCount++;
-                    });
-                    $(`[name="${key}"]`).addClass('border-red-500 ring-1 ring-red-500');
-
-                });
-
-                $('#error-count').text(totalErrorCount);
-                $('#error-list').html(errorHtml);
-                $('#error-message').removeClass('hidden').fadeIn();
-                Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
-            } else {
-                Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
-            }
-        },
-
-    });
-};
 </script>
 
 <template>

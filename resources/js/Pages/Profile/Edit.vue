@@ -157,9 +157,6 @@ const editButton = () => {
     });
 };
 
-
-
-
 const bank = ref();
 const bankIdentify = (e) => {
 

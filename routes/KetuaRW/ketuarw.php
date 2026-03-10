@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\BankSampah\DataNasabahController;
 use App\Http\Controllers\Admin\BankSampah\JadwalPelaksanaanController;
 use App\Http\Controllers\Admin\BankSampah\TrackingSetoranController;
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\KetuaRW\DashboardController;
 use App\Http\Controllers\Admin\KetuaRW\JadwalController;
 use App\Http\Controllers\Admin\KetuaRW\KelolaBankSampahController;
 use App\Http\Controllers\Admin\BankSampah\DataTransaksiController;

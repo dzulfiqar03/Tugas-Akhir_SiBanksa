@@ -56,10 +56,10 @@ class DataTransaksiController extends Controller
         $nasabahList =  PencatatanSetoran::with(['user_detail', 'pencatatan_items'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_rt', Auth::user()->user_detail->id_rt);
-            })->whereHas('user_detail.userbank')    ->whereHas('user_detail.user_transaction', function ($query) {
+            })->whereHas('user_detail.userbank')->whereHas('user_detail.user_transaction', function ($query) {
 
-        $query->whereColumn('pencatatan_setoran_id', 'pencatatan_setoran.id');
-    })
+                $query->whereColumn('pencatatan_setoran_id', 'pencatatan_setoran.id');
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 

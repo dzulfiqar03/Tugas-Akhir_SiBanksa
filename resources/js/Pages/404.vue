@@ -47,7 +47,7 @@ watch(darkMode, (newValue) => {
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link href="/"
+                    <Link href="javascript:location.reload()"
                         class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 dark:shadow-none transition-all active:scale-95">
                         Try Again
                     </Link>

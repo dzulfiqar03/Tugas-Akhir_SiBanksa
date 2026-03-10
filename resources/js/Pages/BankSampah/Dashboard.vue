@@ -47,6 +47,7 @@ const props = defineProps({
     online_saat_ini: Number,
     jadwal: Array,
     nasabah: Array,
+    sampahPeringkat: Array,
 });
 
 
@@ -94,15 +95,32 @@ const processedData = computed(() => {
     return sortedData.slice(0, filterLimit.value);
 });
 
-const leaderboardChartData = computed(() => ({
-    labels: processedData.value.map(d => d.name),
-    datasets: [{
-        label: filterCategory.value === 'balance' ? 'Saldo (Rp)' : 'Berat Sampah (Kg)',
-        data: processedData.value.map(d => filterCategory.value === 'balance' ? d.balance : d.weight),
-        backgroundColor: processedData.value.map(d => d.name === user.value.name ? '#064e4b' : '#10b981'),
-        borderRadius: 6,
-    }]
-}));
+
+const leaderboardChartData = computed(() => {
+
+    if (filterCategory.value === 'weight') {
+        return {
+            labels: props.sampahPeringkat.map(d => d.nama_sampah),
+            datasets: [{
+                label: 'Total Berat Sampah (Kg)',
+                data: props.sampahPeringkat.map(d => d.total_berat),
+                backgroundColor: '#10b981', // Hijau emerald
+                borderRadius: 6,
+                className: 'capitalize'
+            }]
+        };
+    }
+
+    return {
+        labels: processedData.value.map(d => d.name),
+        datasets: [{
+            label: 'Saldo Nasabah (Rp)',
+            data: processedData.value.map(d => d.balance),
+            backgroundColor: processedData.value.map(d => d.name === user.value.name ? '#064e4b' : '#10b981'),
+            borderRadius: 6,
+        }]
+    };
+});
 
 const saldoPerformance = computed(() => {
     const currentUserData = rawNasabahData.value.find(d => d.name === user.value.name);
@@ -315,15 +333,26 @@ const initials = (fullName) => {
 const viewPencatatan = () => {
     router.get(route('pencatatan-setoran'));
 };
-
+const viewNasabahPage = () => {
+    router.get(route('data-nasabah'));
+};
 const viewPencairan = () => {
     router.get(route('data-transaksi'));
 };
+
+
 const viewDetail = (id) => {
     router.get(route('show-nasabah', id));
 };
 
-
+const formatShortDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    // getMonth() dimulai dari 0, jadi perlu +1
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${year}`;
+};
 </script>
 
 <template>
@@ -453,9 +482,9 @@ const viewDetail = (id) => {
                         </div>
                         <div
                             class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-                            <p class="text-xs text-gray-500 mb-1 font-medium">Total Online</p>
-                            <p class="text-xl font-bold text-gray-800 dark:text-gray-100">{{ online_saat_ini }}</p>
-                            <p class="text-[10px] text-red-500 mt-2">{{ total_nasabah - online_saat_ini }} Offline</p>
+                            <p class="text-xs text-gray-500 mb-1 font-medium">Total Nasabah</p>
+                            <p class="text-xl font-bold text-gray-800 dark:text-gray-100">{{ total_nasabah }} Nasabah
+                            </p>
                         </div>
                         <div
                             class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -563,27 +592,39 @@ const viewDetail = (id) => {
                         class="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold text-gray-800 dark:text-gray-100">Daftar Nasabah</h3>
-                            <button class="text-xs text-emerald-600 font-bold">Lihat Semua</button>
+                            <button @click="viewNasabahPage()" class="text-xs text-emerald-600 font-bold">Lihat
+                                Semua</button>
                         </div>
                         <div class="space-y-4">
                             <button v-for="(user, index) in nasabah" :key="index" @click="viewDetail(user.id)"
-                                class="flex items-start gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors w-full cursor-pointer">
-                                <div class="border-gray-100 w-max dark:border-gray-800">
-                                    <div v-if="user"
-                                        class="profile-circle py-1 px-2  rounded-full border border-gray-600 text-gray-800 dark:text-white">
-                                        {{ initials(user.user_detail?.fullName) }}
-                                    </div>
+                                class="flex items-start justify-between gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors w-full cursor-pointer">
+                                <div class="flex space-x-3 w-full">
+                                    <div class="border-gray-100 w-max dark:border-gray-800">
+                                        <div v-if="user"
+                                            class="profile-circle w-8 h-8 py-1 px-2  rounded-full border border-gray-600 text-gray-800 dark:text-white">
+                                            {{ initials(user.user_detail?.fullName) }}
+                                        </div>
 
-                                    <div v-else class="profile-circle">
-                                        <img class="w-8 h-8 rounded-full"
-                                            src="https://ui-avatars.com/api/?name=Guest&background=random" alt="Guest">
+                                        <div v-else class="profile-circle">
+                                            <img class="w-8 h-8 rounded-full"
+                                                src="https://ui-avatars.com/api/?name=Guest&background=random"
+                                                alt="Guest">
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col items-start w-full">
+                                        <p class="text-sm text-start text-gray-700 dark:text-gray-300">{{
+                                            user.user_detail?.fullName }}</p>
+                                        <p class="text-[10px] text-gray-500">
+                                            {{ formatShortDate(user.user_detail?.created_at) }}
+                                        </p>
                                     </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm text-start text-gray-700 dark:text-gray-300">{{
-                                        user.user_detail?.fullName }}</p>
-                                    <p class="text-[10px] text-gray-500">{{ user.user_detail.created_at }}</p>
-                                </div>
+
+
+                                <span
+                                    class="text-[10px] w-full bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg font-bold">
+                                    {{ user.user_detail?.status }}
+                                </span>
                             </button>
                         </div>
                     </div>

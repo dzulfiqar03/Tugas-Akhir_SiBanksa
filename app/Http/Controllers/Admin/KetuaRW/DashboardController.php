@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Admin\KetuaRW;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
+use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\BankSampah\PencatatanSetoranItems;
+use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\UserLog;
 use App\Services\BankSampah\JadwalServices;
@@ -37,44 +39,31 @@ class DashboardController extends Controller
             ];
         });
 
-        $role = auth()->user()->user_detail->roles->role;
 
-        $getSaldo = 0;
-        $getSampah = 0;
-        $role === 'Bank Sampah' ?
-            $getSaldo = auth()->user()->user_detail->sampah->sum('saldo')
+        $setoran = PencatatanSetoranItems::all();
+        $user = Auth::user();
+        $detail = $user->user_detail;
+        $unitBankSampah = User::whereHas('user_detail', function ($q) use ($detail) {
+            $q->where('id_roles', 2)->where('fullName', 'LIKE', '%Petugas Bank Sampah%'); // Role 2 = Bank Sampah
+        })->with('user_detail')->get();
 
-            : '';
+        $allNasabah = User::whereHas('user_detail', function ($q) use ($detail) {
+            $q->where('id_roles', 3); // Role 3 = Nasabah
+        })->with(['user_detail.sampah', 'user_detail.pencatatan'])->get();
 
-        $role === 'Bank Sampah' ?
-            $getSampah = PencatatanSetoranItems::whereHas('setoran.user_detail', function ($query) {
-                $query->where('id_rt', auth()->user()->user_detail->id_rt);
-            })->where('created_at', '>=', now()->startOfMonth())->sum('jumlah')
-            : '';
+        $processedNasabah = $allNasabah->map(function ($n) {
+            $d = $n->user_detail;
+            return [
+                'id' => $n->id,
+                'name' => $d->fullName,
+                'balance' => (float) $d->pencatatan->sum('total_setoran'),
+                'weight' => (float) PencatatanSetoranItems::sum('jumlah'),
+                'parent_id' => $d->id_rt, // PENTING: Untuk filter per unit di Vue
+                'created_at' => $d->created_at,
+                'status' => $d->status
+            ];
+        });
 
-        $setoran = PencatatanSetoranItems::whereHas('setoran.user_detail', function ($query) {
-            $query->where('id_rt', auth()->user()->user_detail->id_rt);
-        })->get();
-
-        if ($role === 'Bank Sampah') {
-            $bankSampahList = $this->kelolaBankSampahServices->getAllNasabah();
-
-            $allBankSampah = $bankSampahList
-                ->map(function ($user) {
-
-                    $detail = $user->user_detail;
-
-                    $user->balance = $detail->pencatatan->sum('total_setoran');
-                    $user->name = $detail->fullName;
-                    $user->weight = PencatatanSetoranItems::whereHas('setoran.user_detail', function ($query) use ($detail) {
-                        $query->where('id_rt', $detail->id_rt);
-                        $query->where('id_userdetail', $detail->id);
-                    })->sum('jumlah');
-
-
-                    return $user;
-                });
-        }
         $sampahPeringkat = PencatatanSetoranItems::with('sampah') // Pastikan ada relasi ke tabel sampah
             ->select('sampah_id', DB::raw('SUM(jumlah) as total_berat'))
             ->groupBy('sampah_id')
@@ -87,6 +76,21 @@ class DashboardController extends Controller
                     'total_berat' => (float) $item->total_berat
                 ];
             });
+
+        // 3. Statistik Global RW
+        $totalSaldoRW = $processedNasabah->sum('balance');
+        $totalBeratRW = PencatatanSetoranItems::sum('jumlah');
+
+        $sampahPeringkat = PencatatanSetoranItems::with('sampah')
+            ->select('sampah_id', DB::raw('SUM(jumlah) as total_berat'))
+
+            ->groupBy('sampah_id')
+            ->orderBy('total_berat', 'desc')
+            ->get()
+            ->map(fn($item) => [
+                'nama_sampah' => $item->sampah->nama_sampah ?? 'Lainnya',
+                'total_berat' => (float) $item->total_berat
+            ]);
 
         $bankSampah = $this->kelolaBankSampahServices->getBankSampah(auth()->user()->id);
         $id_rt = $bankSampah->user_detail->id_rt;
@@ -109,17 +113,20 @@ class DashboardController extends Controller
 
         $lastActivity = Auth::user()->user_detail->user_log()->limit(4)->latest();
         $user = Auth::user();
-        $jadwal = $this->jadwalServices->getAllJadwal();
+        $jadwal = JadwalPelaksanaan::with('user_detail')->get();
         $nasabah = $this->nasabahServices->getAllNasabah()->take(5);
-        return Inertia::render('BankSampah/Dashboard', [
+        $nasabahAll = UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->get();
+
+        return Inertia::render('KetuaRW/Dashboard', [
             'initialNotifications' => $notifications,
             'unreadCount' => $user->unreadNotifications->count(),
             'sidebardata' => $menu,
             'user' => $user,
             'breadcrumbItems' => $breadcrumbItems,
-            'saldo' => $getSaldo,
-            'jmlSampah' => $getSampah,
-            'allBankSampah' => $allBankSampah ?? null,
+            'unitBankSampah' => $unitBankSampah, // Kirim daftar 6 bank sampah
+            'allBankSampah' => $processedNasabah, // Ini data semua nasabah untuk leaderboard
+            'saldo' => $totalSaldoRW,
+            'jmlSampah' => $totalBeratRW,
             'jadwal' => $jadwal,
             'nasabah' => $nasabah,
             'lastActivity' => $lastActivity->get()->map(function ($log) {
@@ -144,6 +151,7 @@ class DashboardController extends Controller
             'total_nasabah' => $total_nasabah,
             'online_saat_ini' => $online_saat_ini,
             'sampahPeringkat' => $sampahPeringkat,
+            'nasabahAll' => $nasabahAll
         ]);
     }
 
