@@ -1,18 +1,17 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { Head, router, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import Swal from 'sweetalert2'
+import { Head, router } from '@inertiajs/vue3'
 import jszip from 'jszip'
 import * as pdfMake from 'pdfmake/build/pdfmake'
 import * as pdfFonts from 'pdfmake/build/vfs_fonts'
+import Swal from 'sweetalert2'
 // ================= DATATABLES =================
-import DataTable from 'datatables.net-vue3'
 import DataTablesCore from 'datatables.net'
 import Buttons from 'datatables.net-buttons'
 import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
 import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
 import Responsive from 'datatables.net-responsive-dt'
+import DataTable from 'datatables.net-vue3'
 
 // CSS (WAJIB)
 import 'datatables.net-dt/css/dataTables.dataTables.css'

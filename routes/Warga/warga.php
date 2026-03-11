@@ -24,6 +24,7 @@ Route::middleware(['roles:Warga'])->prefix('Warga')->name('warga.')->group(funct
         });
 
     Route::get('/tracking', [WargaTrackingSetoranController::class, 'index'])->name('tracking-setoran');
+    Route::get('/show-setoran/{id}', [WargaTrackingSetoranController::class, 'show'])->name('detail-setoran');
 
     Route::controller(WargaChatController::class)
         ->prefix('chat')

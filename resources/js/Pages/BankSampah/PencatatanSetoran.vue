@@ -1,15 +1,15 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { Head, useForm, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { Head, router, useForm, usePage } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
 
 // ================= DATATABLES =================
-import DataTable from 'datatables.net-vue3'
 import DataTablesCore from 'datatables.net'
 import Buttons from 'datatables.net-buttons'
 import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
 import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
 import Responsive from 'datatables.net-responsive-dt'
+import DataTable from 'datatables.net-vue3'
 
 // CSS (WAJIB)
 import 'datatables.net-dt/css/dataTables.dataTables.css'
@@ -116,6 +116,9 @@ const handleSubmit = () => {
     });
 };
 
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+const userDetail = computed(() => user.value?.user_detail || {});
 
 const selectedJadwalFilter = ref('');
 
@@ -222,8 +225,246 @@ const dtOptions = computed(() => {
             bottomEnd: 'paging'
         },
         buttons: [
-            { extend: 'pdfHtml5', title: 'Data Setoran ' + activeCategory.value, exportOptions: { columns: ':visible' } },
-            { extend: 'excelHtml5', title: 'Data Setoran ' + activeCategory.value, exportOptions: { columns: ':visible' } }
+
+            // 1. PDF SINKRONISASI
+            {
+                extend: 'pdfHtml5',
+                text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
+                className: 'bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+                title: 'Laporan Setoran ' + activeCategory.value + ' SiBanksa RT-0' + (page.props.auth.user.user_detail?.id_rt || '-') + ' Tanggal ' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
+                exportOptions: {
+                    columns: ':not(.no-print)'
+                },
+                action: async function (e, dt, button, config) {
+                    const self = this;
+                    Swal.fire({
+                        title: 'Memproses PDF...',
+                        text: `Menyiapkan laporan ${activeCategory.value}...`,
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    config.customize = function (doc) {
+                        Swal.close();
+                        const tableNode = doc.content.find(c => c.table);
+                        if (tableNode) {
+                            const colCount = tableNode.table.body[0].length;
+                            tableNode.table.widths = [100, ...Array(colCount - 1).fill('*')];
+                            tableNode.table.body.forEach((row, rowIndex) => {
+                                row.forEach((cell, i) => {
+                                    if (rowIndex === 0) {
+                                        cell.fillColor = '#10b981';
+                                        cell.color = 'white';
+                                        cell.bold = true;
+                                        cell.alignment = 'center';
+                                    }
+                                    if (rowIndex > 0 && i === 0) {
+                                        let txt = typeof cell === 'object' ? (cell.text || "") : cell.toString();
+                                        cell.text = txt.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                                    }
+                                });
+                            });
+                            tableNode.layout = 'lightHorizontalLines';
+                        }
+
+                        // Header & Footer (Sesuai Referensi)
+                        const idRT = page.props.auth.user?.user_detail.id_rt || '-';
+                        doc.content.splice(0, 1, {
+                            columns: [
+                                { stack: [{ text: 'SiBanksa', fontSize: 20, bold: true, color: '#10b981' }, { text: 'Sistem Informasi Bank Sampah Digital', fontSize: 8, color: '#6b7280' }] },
+                                { stack: [{ text: 'LAPORAN SETORAN NASABAH', fontSize: 14, bold: true, alignment: 'right' }, { text: `UNIT RT-0${idRT}`, fontSize: 9, alignment: 'right', color: '#9ca3af' }], width: '*' }
+                            ]
+                        }, { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1, lineColor: '#10b981' }], margin: [0, 5, 0, 15] });
+
+                        doc.content.push({ text: '\n\n' }, {
+                            columns: [{ text: '', width: '*' }, {
+                                width: 200, stack: [
+                                    { text: `Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, alignment: 'center' },
+                                    { text: 'Petugas Operasional,', alignment: 'center', margin: [0, 5, 0, 45] },
+                                    { text: `( Ketua Bank Sampah RT-0${idRT} )`, alignment: 'center', bold: true },
+                                    { text: 'ID Petugas: SBK-RT0' + idRT, alignment: 'center', fontSize: 8, color: '#9ca3af' }
+                                ]
+                            }]
+                        });
+                    };
+                    setTimeout(() => $.fn.dataTable.ext.buttons.pdfHtml5.action.call(self, e, dt, button, config), 300);
+                }
+            },
+
+            // 2. EXCEL SINKRONISASI (Header Hijau & Border)
+            {
+                extend: 'excelHtml5',
+                text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
+                className: 'bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+                title: 'Laporan Setoran ' + activeCategory.value + ' SiBanksa RT-0' + (page.props.auth.user.user_detail?.id_rt || '-') + ' Tanggal ' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
+                exportOptions: { columns: ':not(.no-print)' },
+                customize: function (xlsx) {
+                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    // Beri warna hijau emerald (#10b981) pada header (baris 1)
+                    // '51' adalah style default datatables untuk bold white text
+
+                    $('row c', sheet).attr('s', '25');
+                    $('row:first c', sheet).attr('s', '51');
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i class="fa-solid fa-print mr-2"></i> Print',
+                className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+                title: '',
+                exportOptions: {
+                    columns: ':not(.no-print)'
+                },
+                action: async function (e, dt, button, config) {
+                    const self = this;
+
+                    Swal.fire({
+                        title: 'Memproses Cetak...',
+                        text: `Menyiapkan dokumen laporan lengkap`,
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    config.customize = function (win) {
+                        Swal.close();
+
+                        // 1. Ambil data dari tabel yang terfilter
+                        const data = dt.rows({ filter: 'applied' }).data().toArray();
+                        const columns = filteredJenisSampah.value; // Daftar jenis sampah dinamis
+
+                        // 2. Generate Header Dinamis
+                        const headerHtml = `
+                <th style="padding: 10px; border-bottom: 2px solid #f3f4f6; text-align: center; width: 30px;">No</th>
+                <th style="padding: 10px; border-bottom: 2px solid #f3f4f6; text-align: left;">Nama Nasabah</th>
+                ${columns.map(s => `
+                    <th style="padding: 10px; border-bottom: 2px solid #f3f4f6; text-align: center;">
+                        ${s.nama_sampah}<br><span style="font-size: 8px;">(${s.satuan})</span>
+                    </th>
+                `).join('')}
+                <th style="padding: 10px; border-bottom: 2px solid #f3f4f6; text-align: right;">Total (Rp)</th>
+            `;
+
+                        // 3. Generate Baris Dinamis
+                        const tableRows = data.map((row, index) => {
+                            const semuaSetoran = row.pencatatan || [];
+
+                            // Hitung berat per jenis sampah untuk kolom dinamis
+                            const dynamicCells = columns.map(s => {
+                                let totalBerat = 0;
+                                const setoranTersaring = semuaSetoran.filter(nota => {
+                                    if (!selectedJadwalFilter.value) return true;
+                                    return Number(nota.id_jadwal) === Number(selectedJadwalFilter.value);
+                                });
+
+                                setoranTersaring.forEach(nota => {
+                                    const items = nota.pencatatan_items || [];
+                                    const found = items.find(item => Number(item.sampah_id) === Number(s.id));
+                                    if (found) totalBerat += parseFloat(found.jumlah || 0);
+                                });
+
+                                return `<td style="padding: 8px; text-align: center; font-size: 12px; color: ${totalBerat > 0 ? '#1f2937' : '#d1d5db'};">
+                        ${totalBerat > 0 ? `<b>${totalBerat}</b>` : '0'}
+                    </td>`;
+                            }).join('');
+
+                            // Hitung Grand Total Saldo
+                            const grandTotal = semuaSetoran.reduce((acc, nota) => {
+                                if (selectedJadwalFilter.value && Number(nota.id_jadwal) !== Number(selectedJadwalFilter.value)) {
+                                    return acc;
+                                }
+                                return acc + parseFloat(nota.total_setoran || 0);
+                            }, 0);
+
+                            return `
+                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                        <td style="padding: 8px; text-align: center; color: #9ca3af; font-size: 12px;">${index + 1}</td>
+                        <td style="padding: 8px; font-weight: 600; color: #1f2937; text-transform: capitalize; font-size: 12px;">
+                            ${row.fullName}
+                        </td>
+                        ${dynamicCells}
+                        <td style="padding: 8px; text-align: right; font-weight: bold; color: #10b981; font-size: 12px;">
+                            ${grandTotal.toLocaleString('id-ID')}
+                        </td>
+                    </tr>
+                `;
+                        }).join('');
+
+                        const namaBulan = new Date().toLocaleString('id-ID', { month: 'long' }).toUpperCase();
+                        // 4. Inject ke Dokumen Print
+                        $(win.document.body)
+                            .css('font-family', 'Poppins, sans-serif')
+                            .prepend(`
+                <div style="padding: 20px; border-top: 8px solid #10b981; background: white;">
+                    <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                    <i class="fas fa-recycle text-[20rem]"></i>
+                </div>
+                      <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div
+                            class="w-16 h-16 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                    <div>
+                        <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #1f2937;">SiBanksa</h1>
+                        <p style="margin: 0; font-size: 10px; color: #6b7280; font-weight: bold; letter-spacing: 1px;">SISTEM INFORMASI BANK SAMPAH</p>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <h2 style="margin: 0; font-size: 28px; color: #d1d5db; letter-spacing: 4px;">SETORAN BULAN ${namaBulan}</h2>
+                                                <p style="margin: 0; font-size: 10px; color: #10b981; font-weight: bold;">KATEGORI: ${activeCategory.value.toUpperCase()}</p>
+
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 40px; font-size: 14px;">
+                <div>
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">DITERIMA DARI:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${page.props.auth.user.user_detail.fullName}</p>
+                    <p style="color: #6b7280; margin: 0;">${page.props.auth.user.user_detail.roles.role} SiBanksa</p>
+                    <p style="color: #6b7280; margin: 0;">RT: ${page.props.auth.user.user_detail?.id_rt || '-'} / RW: 01</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">Dicetak Pada:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${new Date().toLocaleDateString('id-ID')}</p>
+                    <p style="color: #6b7280; margin: 0;">Lokasi: Unit Bank Sampah RT-0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                </div>
+            </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                        <thead>
+                            <tr style="background: #f9fafb; color: #6b7280; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                ${headerHtml}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: 40px;">
+                        <div style="text-align: center; width: 200px;">
+                            <p style="font-size: 11px; margin-bottom: 50px;">
+                                Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br>
+                                <b>Verifikator</b>
+                            </p>
+                            <div style="border-bottom: 1px solid #d1d5db; width: 160px; margin: 0 auto 5px;"></div>
+                            <p style="font-weight: bold; text-transform: uppercase; font-size: 11px; margin: 0;">Ketua Bank Sampah RT-0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                            <p style="font-size: 9px; color: #9ca3af; margin: 0;">ID: SBK-RT0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+                        $(win.document.body).find('table').last().hide();
+                    };
+
+                    setTimeout(() => {
+                        $.fn.dataTable.ext.buttons.print.action.call(self, e, dt, button, config);
+                    }, 300);
+                }
+            }
+
         ],
         language: {
             info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",

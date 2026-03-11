@@ -1,7 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { Head, router, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { Head, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 
 const props = defineProps({
@@ -131,9 +130,9 @@ const breadcrumbItems = [
                                     <div class="flex items-center gap-3">
                                         <div class="h-2 w-32 rounded-full bg-gray-200 dark:bg-gray-700">
                                             <div class="h-2 rounded-full transition-all duration-700" :class="percentageSuccessProfile ===
-                                                    100
-                                                    ? 'bg-emerald-500'
-                                                    : 'bg-orange-400'
+                                                100
+                                                ? 'bg-emerald-500'
+                                                : 'bg-orange-400'
                                                 " :style="{
                                                     width:
                                                         percentageSuccessProfile +

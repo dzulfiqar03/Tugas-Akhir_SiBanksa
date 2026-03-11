@@ -103,114 +103,236 @@ const dtOptions = {
             extend: 'pdfHtml5',
             text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
             className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: 'Data Sampah',
+            pageSize: 'A4',
+            title: 'Laporan Sampah SiBanksa RT' + (page.props.auth.user.user_detail?.id_rt || '-') + ' Tanggal ' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
+
             exportOptions: {
-                columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
+                columns: ':not(.no-print)'
             },
-            customize: function (doc) {
-                // Atur margin halaman PDF
-                doc.pageMargins = [40, 60, 40, 40];
+            action: async function (e, dt, button, config) {
+                const self = this;
 
-                // Tambahkan logo + namaSampah di atas tabel
-                doc.content.splice(0, 0, {
-                    columns: [
-                        {
-                            text: 'SI BANKSA',
-                            alignment: 'left',
-                            fontSize: 16,
-                            bold: true,
-                            margin: [0, 20, 0, 0]
-                        },
-                        {
-                            text: 'Bank Sampah - Data Sampah',
-                            alignment: 'right',
-                            fontSize: 16,
-                            bold: true,
-                            margin: [0, 20, 0, 0]
-                        }
-                    ],
-                    columnGap: 10
+                Swal.fire({
+                    title: 'Memproses PDF...',
+                    text: `Menyiapkan lampiran`,
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
                 });
 
-                // Tambahkan garis pemisah
-                doc.content.splice(1, 0, {
-                    canvas: [
-                        {
-                            type: 'line',
-                            x1: 0,
-                            y1: 0,
-                            x2: 515,
-                            y2: 0,
-                            lineWidth: 1,
-                            lineColor: '#cccccc'
-                        }
-                    ],
-                    margin: [0, 10, 0, 10]
-                });
+                config.customize = function (doc) {
+                    Swal.close();
 
-                // Atur gaya tabel (opsional)
-                doc.styles.tableHeader.fillColor = '#f1f1f1';
-                doc.styles.tableHeader.color = '#333333';
-                doc.defaultStyle.fontSize = 10;
-            }
+
+                    const tableNode = doc.content.find(c => c.table);
+                    if (tableNode) {
+                        tableNode.table.widths = [25, '*', 100, 80, 100];
+
+                        tableNode.table.body.forEach((row, rowIndex) => {
+                            row.forEach((cell, i) => {
+                                if (row[i] === undefined || row[i] === null) {
+                                    row[i] = { text: '' };
+                                }
+
+                                // 2. Terapkan Capitalize (Kecuali baris header indeks 0)
+                                if (rowIndex > 0) {
+                                    let originalText = "";
+
+                                    if (typeof row[i] === 'object') {
+                                        originalText = row[i].text || "";
+                                    } else {
+                                        originalText = row[i].toString();
+                                    }
+
+                                    const capitalizedText = originalText.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+
+                                    if (typeof row[i] === 'object') {
+                                        row[i].text = capitalizedText;
+                                    } else {
+                                        row[i] = capitalizedText;
+                                    }
+                                }
+                            });
+                        });
+
+                        tableNode.layout = 'lightHorizontalLines';
+                    }
+
+                    const userDetail = page.props.auth.user?.user_detail;
+                    doc.content.splice(0, 1, {
+                        columns: [
+                            { stack: [{ text: 'SiBanksa', fontSize: 22, bold: true, color: '#10b981' }, { text: 'Sistem Informasi Bank Sampah Digital', fontSize: 8, color: '#6b7280' }] },
+                            { stack: [{ text: 'LAPORAN SAMPAH', fontSize: 16, bold: true, alignment: 'right' }, { text: `UNIT RT-0${userDetail?.id_rt || '-'}`, fontSize: 10, alignment: 'right', color: '#9ca3af' }], width: '*' }
+                        ]
+                    }, { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1, lineColor: '#10b981' }], margin: [0, 5, 0, 15] });
+
+                    doc.content.push({ text: '\n\n' }, {
+                        columns: [{ text: '', width: '*' }, {
+                            width: 180, stack: [
+                                { text: `Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, alignment: 'center' },
+                                { text: 'Verifikator Lapangan', alignment: 'center', margin: [0, 5, 0, 40] },
+                                { text: `( Ketua Bank Sampah RT-0${userDetail?.id_rt || '-'} )`, alignment: 'center', bold: true },
+                                { text: 'ID: SBK-RT0' + (userDetail?.id_rt || '-'), alignment: 'center', fontSize: 8, color: '#9ca3af' }
+                            ]
+                        }]
+                    });
+
+                    doc.styles.tableHeader = { fillColor: '#10b981', color: 'white', bold: true, alignment: 'center' };
+                }
+                setTimeout(() => {
+                    $.fn.dataTable.ext.buttons.pdfHtml5.action.call(self, e, dt, button, config);
+                }, 300);
+
+            },
         },
 
         {
             extend: 'excelHtml5',
             text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
-            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
+            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+            title: 'Laporan Sampah SiBanksa RT-0' + (page.props.auth.user.user_detail?.id_rt || '-') + ' Tanggal ' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
+            exportOptions: { columns: ':not(.no-print)' },
+            action: async function (e, dt, button, config) {
+                const self = this;
+
+                Swal.fire({
+                    title: 'Memproses Excel...',
+                    text: `Menyiapkan lampiran`,
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                config.customize = function (xlsx) {
+                    Swal.close();
+                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
+
+
+                    // 2. Styling Seluruh Table
+                    $('row c', sheet).attr('s', '25');
+                    $('row:first c', sheet).attr('s', '51');
+
+
+                }
+                 setTimeout(() => {
+                    $.fn.dataTable.ext.buttons.excelHtml5.action.call(self, e, dt, button, config);
+                }, 300);
+            }
         },
         {
             extend: 'print',
             text: '<i class="fa-solid fa-print mr-2"></i> Print',
             className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: '', // kosongin biar gak dobel namaSampah default
-            customize: function (win) {
-                $(win.document.body)
-                    .css('font-family', 'Poppins, sans-serif')
-                    .prepend(`
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                                <h1 class="py-5 text-2xl font-semibold text-gray-800 dark:text-gray-100 transition-all duration-300 font-[Poppins] text-center w-full"
-            >
-            <span class="font-light">Si</span>
-            Banksa
-        </h1>
+            title: '', // Kosongkan title default karena kita akan custom di action
+             exportOptions: {
+                columns: ':not(.no-print)'
+            },
+            action: async function (e, dt, button, config) {
+                const self = this;
 
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
-                        <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
+                Swal.fire({
+                    title: 'Memproses Print Lampiran',
+                    text: `Menyiapkan lampiran`,
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                config.customize = function (win) {
+                    Swal.close();
+
+                    const tableRows = props.sampah?.map((item, index) => `
+        <tr style="border-bottom: 1px solid #f3f4f6; font-style: italic;">
+            <td  style="padding: 12px; font-weight: 600; color: #1f2937; text-transform: uppercase;">
+                ${index + 1}
+            </td>
+            <td  style="padding: 12px; font-weight: 600; color: #1f2937; text-transform: uppercase;">
+                ${item.nama_sampah}
+            </td>
+            <td class="capitalize" style="padding: 12px; text-align: center;">
+                ${item.satuan}
+            </td>
+            <td class="capitalize" style="padding: 12px; text-align: left;">
+                ${item.harga}
+            </td>
+            <td class="capitalize" style="padding: 12px; text-align: left;">
+                ${item.kategori}
+            </td>
+        </tr>
+    `).join('');
+
+
+                    $(win.document.body)
+                        .css('font-family', 'Poppins, sans-serif')
+                        .prepend(`
+        <div style="padding: 40px; border-top: 10px solid #10b981; background: white;">
+            <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                    <i class="fas fa-recycle text-[20rem]"></i>
+                </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div
+                            class="w-16 h-16 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                    <div>
+                        <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #1f2937;">SiBanksa</h1>
+                        <p style="margin: 0; font-size: 10px; color: #6b7280; font-weight: bold; letter-spacing: 1px;">SISTEM INFORMASI BANK SAMPAH</p>
                     </div>
                 </div>
-                <hr style="border: 1px solid #ccc; margin-bottom: 20px;">
-            `);
+                <div style="text-align: right;">
+                    <h2 style="margin: 0; font-size: 28px; color: #d1d5db; letter-spacing: 4px;">SAMPAH</h2>
+                </div>
+            </div>
 
-                // Styling tambahan (opsional)
-                $(win.document.body).find('table')
-                    .addClass('compact')
-                    .css({
-                        'font-size': '12px',
-                        'width': '100%',
-                        'border-collapse': 'collapse'
-                    });
+            <div style="display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 40px; font-size: 14px;">
+                <div>
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">DITERIMA DARI:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${page.props.auth.user.user_detail.fullName}</p>
+                    <p style="color: #6b7280; margin: 0;">${page.props.auth.user.user_detail.roles.role} SiBanksa</p>
+                    <p style="color: #6b7280; margin: 0;">RT: ${page.props.auth.user.user_detail?.id_rt || '-'} / RW: 01</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">Dicetak Pada:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${new Date().toLocaleDateString('id-ID')}</p>
+                    <p style="color: #6b7280; margin: 0;">Lokasi: Unit Bank Sampah RT-0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                </div>
+            </div>
 
-                $(win.document.body).find('table th')
-                    .css({
-                        'background-color': '#f1f1f1',
-                        'color': '#333',
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
+                <thead>
+                    <tr style="background: #f9fafb; color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                                                <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">No</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Sampah</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: center;">Satuan</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Harga</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Kategori</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
 
-                $(win.document.body).find('table td')
-                    .css({
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
+            </table>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 40px;">
+                            <div style="text-align: center; width: 220px;">
+                                <p style="font-size: 11px; margin-bottom: 60px;">Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br><b>Verifikator</b></p>
+                                <div style="border-bottom: 1px solid #d1d5db; width: 180px; margin: 0 auto 5px;"></div>
+                                <p style="font-weight: bold; font-size: 12px; text-transform: uppercase;">( Ketua Bank Sampah RT-0${page.props.auth.user.user_detail?.id_rt || '-'} )</p>
+                                <p style="font-size: 9px; color: #9ca3af;">ID: SBK-RT0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                            </div>
+                        </div>
+        </div>
+    `);
+
+                    // Sembunyikan tabel asli bawaan DataTables agar tidak dobel
+                    $(win.document.body).find('table').last().hide();
+                }
+
+                setTimeout(() => {
+                    $.fn.dataTable.ext.buttons.print.action.call(self, e, dt, button, config);
+                }, 300);
             }
         }
-
     ],
     language: {
         info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",

@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { Head } from '@inertiajs/vue3'
+import { Head , router} from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 
 const props = defineProps({
@@ -86,6 +86,10 @@ const breadcrumbItems = [
     { label: 'Dashboard', url: route('warga.dashboard') },
     { label: 'Tracking Setoran', url: route('warga.tracking-setoran') },
 ];
+
+const handlePage = (id) => {
+    router.get(route('warga.detail-setoran', { id }));
+};
 </script>
 
 <template>
@@ -114,7 +118,7 @@ const breadcrumbItems = [
                 </label>
 
                 <select v-model="selectedId"
-                    class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:text-white">
+                    class="w-full border rounded-lg px-4 py-2 bg-white text-gray-700 dark:bg-gray-700 dark:text-white">
                     <option v-for="item in nasabahList" :key="item.id" :value="item.id">
                         {{ item.jadwalPelaksanaan }}
                     </option>
@@ -256,7 +260,7 @@ const breadcrumbItems = [
                                 </p>
                             </div>
 
-                            <button @click="selectedId = item.id"
+                            <button @click="handlePage(item.id)"
                                 class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 text-xs rounded-lg transition">
                                 Lihat
                             </button>

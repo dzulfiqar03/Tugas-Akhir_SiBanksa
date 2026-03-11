@@ -28,10 +28,7 @@ class TrackingSetoranController extends Controller
         ];
 
         $nasabahList = PencatatanSetoran::where('id_userdetail', Auth::user()->user_detail->id)
-            ->with(['transaction', 'jadwal'])->get();
-
-
-
+            ->with(['transaction', 'jadwal'])->limit(5)->latest()->get();
 
 
         $petugas = UserDetail::where('id_rt', Auth::user()->user_detail->rt->id)
@@ -40,8 +37,6 @@ class TrackingSetoranController extends Controller
             ->with('kepengurusan')
             ->get()
             ->keyBy('id');
-
-
 
 
         $nasabahList = $nasabahList->map(function ($n) use ($petugas, $stepDivisiMap) {
@@ -223,7 +218,38 @@ class TrackingSetoranController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $setoran = PencatatanSetoran::where('id', $id)->with(['pencatatan_items', 'pencatatan_items.sampah', 'jadwal', 'user_detail'])->first();
+
+        $menu = (new DataResources(null))->toArray(request());
+
+        $breadcrumbItems    = [
+            ['label' => 'Dashboard', 'url' => route('dashboard')],
+            ['label' => 'Manajemen Nasabah', 'url' => null],
+            ['label' => 'Data Nasabah', 'url' => route('data-nasabah')],
+            ['label' => 'Detail Nasabah', 'url' => null],
+        ];
+
+
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+
+
+        return inertia('Warga/DetailRiwayatSetoran', [
+            'sidebardata' => $menu,
+            'breadcrumbItems' => $breadcrumbItems,
+            'setoran' => $setoran,
+            'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
+
+
+        ]);
     }
 
     /**

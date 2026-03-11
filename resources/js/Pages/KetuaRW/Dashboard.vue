@@ -173,15 +173,19 @@ const chartOptions = {
 const initials = (name) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : '??';
 const formatShortDate = (date) => date ? new Date(date).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }) : '-';
 
+const selectedDateEvents = ref([]);
+
 const handleDayClick = (day) => {
-    const event = day.attributes.find(a => a.isEvent);
-    if (event) {
-        Swal.fire({
-            title: 'Detail Jadwal Unit',
-            text: event.customData.kegiatan,
-            icon: 'info',
-            confirmButtonColor: '#064e4b'
-        });
+    // Cari semua event pada tanggal yang diklik
+    const events = day.attributes
+        .filter(a => a.isEvent)
+        .map(a => a.customData);
+    
+    selectedDateEvents.value = events;
+
+    // Jika ingin tetap ada popup ringkas untuk user:
+    if (events.length === 0) {
+        selectedDateEvents.value = [];
     }
 };
 
@@ -345,6 +349,11 @@ const breadcrumbItems = [
                                 class="text-lg font-normal opacity-60">Jiwa</span></h2>
                     </div>
                 </div>
+                 <div class="absolute right-0 top-0 opacity-10 pointer-events-none">
+                    <svg width="300" height="200" viewBox="0 0 200 200" fill="none">
+                        <circle cx="160" cy="70" r="100" fill="white" />
+                    </svg>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -465,6 +474,15 @@ const breadcrumbItems = [
                         <Calendar :attributes="calendarAttributes" is-expanded @day-click="handleDayClick"
                             class="border-none shadow-none w-full dark:bg-gray-800"
                             :is-dark="page.props.auth.user.theme === 'dark'" />
+
+                                <div class="mt-4 space-y-2">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Jadwal Pengangkutan /
+                                    Kegiatan</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div

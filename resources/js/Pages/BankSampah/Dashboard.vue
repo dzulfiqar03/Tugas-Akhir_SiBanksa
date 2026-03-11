@@ -632,7 +632,6 @@ const formatShortDate = (dateString) => {
                         class="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold text-gray-800 dark:text-gray-100">Aktivitas Terakhir</h3>
-                            <button class="text-xs text-emerald-600 font-bold">Lihat Semua</button>
                         </div>
                         <div class="space-y-4">
                             <div v-for="(activity, index) in lastActivity" :key="index" class="flex items-start gap-3">

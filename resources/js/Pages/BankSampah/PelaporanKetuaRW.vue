@@ -1,25 +1,25 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useForm, router, Head, usePage } from '@inertiajs/vue3';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Swal from 'sweetalert2';
 import FormWrapper from '@/Components/FormWrapper.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
+import { computed, ref } from 'vue';
 
+import InputLabel from '@/Components/InputLabel.vue';
+import 'datatables.net-dt/css/dataTables.dataTables.css';
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-import InputLabel from '@/Components/InputLabel.vue';
+
+import DataTablesCore from 'datatables.net';
+import Buttons from 'datatables.net-buttons';
+import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5';
+import ButtonsPrint from 'datatables.net-buttons/js/buttons.print';
+import Responsive from 'datatables.net-responsive-dt';
+import DataTable from 'datatables.net-vue3';
+
 import 'datatables.net-dt/css/dataTables.dataTables.css';
-
-import DataTable from 'datatables.net-vue3'
-import DataTablesCore from 'datatables.net'
-import Buttons from 'datatables.net-buttons'
-import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
-import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
-import Responsive from 'datatables.net-responsive-dt'
-
-import 'datatables.net-dt/css/dataTables.dataTables.css'
-import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
+import 'datatables.net-responsive-dt/css/responsive.dataTables.css';
 
 DataTable.use(DataTablesCore)
 DataTable.use(Buttons)
@@ -158,6 +158,8 @@ const onRowClick = (event) => {
         if (icon) icon.style.transform = 'rotate(90deg)';
     }
 };
+
+
 const dtOptions = computed(() => ({
     pageLength: 5,
     responsive: true,
@@ -199,115 +201,295 @@ const dtOptions = computed(() => ({
         {
             extend: 'pdfHtml5',
             text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
+            pageSize: 'A4',
+            title: 'Laporan ' + typeForm.value + ' SiBanksa RT' + (page.props.auth.user.user_detail?.id_rt || '-') + ' Tanggal ' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
             className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: typeForm.value === 'Document' ? 'Data Dokumen Bank Sampah RT0' + " " + props.IDRT : 'Data Evidence Bank Sampah RT0' + " " + props.IDRT,
-            exportOptions: {
-                columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
-            },
-            customize: function (doc) {
-                // Atur margin halaman PDF
-                doc.pageMargins = [40, 60, 40, 40];
+            action: async function (e, dt, button, config) {
+                const self = this; // Simpan konteks DataTables
+                const currentType = typeForm.value;
 
-                // Tambahkan logo + namaSampah di atas tabel
-                doc.content.splice(0, 0, {
-                    columns: [
-                        {
-                            text: 'SI BANKSA',
-                            alignment: 'left',
-                            fontSize: 16,
-                            bold: true,
-                            margin: [0, 20, 0, 0]
-                        },
-                        {
-                            text: typeForm.value === 'Document' ? 'Bank Sampah - Data Dokumen Bank Sampah RT0' + " " + props.IDRT : 'Bank Sampah - Data Evidence Bank Sampah RT0' + " " + props.IDRT,
-                            alignment: 'right',
-                            fontSize: 16,
-                            bold: true,
-                            margin: [0, 20, 0, 0]
-                        }
-                    ],
-                    columnGap: 10
+                Swal.fire({
+                    title: 'Memproses PDF...',
+                    text: `Menyiapkan lampiran ${currentType.toLowerCase()}...`,
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
                 });
 
-                // Tambahkan garis pemisah
-                doc.content.splice(1, 0, {
-                    canvas: [
-                        {
-                            type: 'line',
-                            x1: 0,
-                            y1: 0,
-                            x2: 515,
-                            y2: 0,
-                            lineWidth: 1,
-                            lineColor: '#cccccc'
-                        }
-                    ],
-                    margin: [0, 10, 0, 10]
-                });
+                // 1. Helper Function
+                const getBase64 = (url) => {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.setAttribute("crossOrigin", "anonymous");
+                        img.onload = () => {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = img.width; canvas.height = img.height;
+                            const ctx = canvas.getContext("2d");
+                            ctx.drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL("image/png"));
+                        };
+                        img.onerror = () => resolve(null);
+                        img.src = url;
+                    });
+                };
 
-                // Atur gaya tabel (opsional)
-                doc.styles.tableHeader.fillColor = '#f1f1f1';
-                doc.styles.tableHeader.color = '#333333';
-                doc.defaultStyle.fontSize = 10;
+                // 2. Pre-fetch Data secara selektif
+                const attachmentData = [];
+                for (const group of groupedEvidence.value) {
+                    const files = [];
+                    const isEvidence = currentType === 'Evidence';
+                    const source = isEvidence ? (group.photos || []) : (group.document || []);
+                    const folder = isEvidence ? 'photo/evidenceUser' : 'files/documentUser';
+
+                    for (const f of source) {
+                        const fileName = isEvidence ? f.original_photoname : f.original_filesname;
+                        if (!fileName) continue;
+
+                        const url = `${window.location.origin}/storage/${folder}/BankSampah/RT0${props.IDRT}/${fileName}`;
+                        let b64 = null;
+                        if (isEvidence) b64 = await getBase64(url);
+
+                        files.push({ b64, name: fileName });
+                    }
+                    if (files.length > 0) {
+                        attachmentData.push({ tanggal: group.tanggal_setoran, files });
+                    }
+                }
+
+                config.customize = function (doc) {
+                    Swal.close();
+                    const isEv = currentType === 'Evidence';
+
+                    // --- PROTEKSI TABEL UTAMA (DINAMIS) ---
+                    const tableNode = doc.content.find(c => c.table);
+                    if (tableNode && tableNode.table.body.length > 0) {
+                        // Berikan lebar kolom sesuai jumlah kolom pada tab masing-masing
+                        if (isEv) {
+                            // Tab Evidence punya 3 kolom
+                            tableNode.table.widths = [30, '*', 100];
+                        } else {
+                            // Tab Document punya 4 kolom
+                            tableNode.table.widths = [30, '*', 100, 80];
+                        }
+
+                        tableNode.table.body.forEach((row, i) => {
+                            row.forEach(cell => {
+                                if (!cell) return;
+                                cell.fontSize = 9;
+                                if (i === 0) {
+                                    cell.fillColor = '#10b981';
+                                    cell.color = 'white';
+                                    cell.bold = true;
+                                }
+                            });
+                        });
+                    }
+
+                    // --- HEADER (SAMA) ---
+                    doc.content.splice(0, 1, {
+                        columns: [
+                            { stack: [{ text: 'SiBanksa', fontSize: 18, bold: true, color: '#10b981' }, { text: 'Laporan Digital Bank Sampah', fontSize: 7, color: '#9ca3af' }] },
+                            { stack: [{ text: `LAPORAN ${currentType.toUpperCase()}`, fontSize: 12, bold: true, alignment: 'right' }, { text: `UNIT RT-0${props.IDRT}`, fontSize: 8, alignment: 'right', color: '#6b7280' }], width: '*' }
+                        ],
+                        margin: [0, 0, 0, 15]
+                    });
+
+                    // --- LAMPIRAN ---
+                    if (attachmentData.length > 0) {
+                        doc.content.push({
+                            text: `\nLAMPIRAN ${isEv ? 'FOTO' : 'BERKAS'}:`,
+                            fontSize: 10, bold: true,
+                            color: isEv ? '#065f46' : '#b91c1c',
+                            margin: [0, 10, 0, 5]
+                        });
+
+                        attachmentData.forEach(group => {
+                            doc.content.push({
+                                table: {
+                                    widths: ['*'],
+                                    body: [[{ text: `Jadwal: ${group.tanggal}`, bold: true, fontSize: 8, color: isEv ? '#065f46' : '#b91c1c' }]]
+                                },
+                                layout: { hLineWidth: () => 0, vLineWidth: () => 0, fillColor: isEv ? '#ecfdf5' : '#fef2f2' },
+                                margin: [0, 5, 0, 5]
+                            });
+
+                            if (isEv) {
+                                let columns = [];
+                                group.files.forEach((img, i) => {
+                                    if (img.b64) {
+                                        columns.push({
+                                            stack: [
+                                                { image: img.b64, width: 100, height: 90, alignment: 'center' },
+                                                { text: img.name, fontSize: 5, alignment: 'center', color: '#9ca3af', margin: [0, 2, 0, 0] }
+                                            ],
+                                            width: '*'
+                                        });
+                                    }
+
+                                    if (columns.length === 4 || i === group.files.length - 1) {
+                                        if (columns.length > 0) {
+                                            while (columns.length < 4) columns.push({ text: '', width: '*' });
+                                            doc.content.push({ columns: [...columns], columnGap: 10, margin: [0, 5, 0, 10] });
+                                            columns = [];
+                                        }
+                                    }
+                                });
+                            } else {
+                                // RENDER DOKUMEN (LIST VERTIKAL)
+                                group.files.forEach(f => {
+                                    const fileUrl = `${window.location.origin}/storage/files/documentUser/BankSampah/RT0${props.IDRT}/${f.name}`;
+                                    doc.content.push({
+                                        text: [
+                                            { text: '  • ', color: '#b91c1c', bold: true },
+                                            { text: f.name, color: '#2563eb', decoration: 'underline', link: fileUrl, fontSize: 8 },
+                                            { text: ' (Klik untuk buka)', fontSize: 7, color: '#9ca3af', italics: true }
+                                        ],
+                                        margin: [10, 2, 0, 2]
+                                    });
+                                });
+                            }
+                        });
+                    }
+                };
+
+                setTimeout(() => {
+                    // Ambil instance tombol secara eksplisit
+                    const pdfButton = $.fn.dataTable.ext.buttons.pdfHtml5;
+                    if (typeof pdfButton.action === 'function') {
+                        pdfButton.action.call(self, e, dt, button, config);
+                    } else {
+                        console.error("Fungsi PDF asli tidak ditemukan");
+                        Swal.close();
+                    }
+                }, 300);
             }
         },
 
+        // 2. EXPORT EXCEL
         {
             extend: 'excelHtml5',
             text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
-            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
+            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+            title: 'Dokumen ' + typeForm.value + ' SiBanksa RT' + (page.props.auth.user.user_detail?.id_rt || '-') + ' Tanggal ' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
+            exportOptions: { columns: ':not(.no-print)' },
+            action: async function (e, dt, button, config) {
+                const self = this;
+
+                Swal.fire({
+                    title: 'Memproses Excel...',
+                    text: `Menyiapkan lampiran`,
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                config.customize = function (xlsx) {
+                    Swal.close();
+                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    $('row c', sheet).attr('s', '25'); // Border tipis semua sel
+                    $('row:first c', sheet).attr('s', '51'); // Header Bold & Background
+                    $('row:gt(0) c[r^="B"]', sheet).attr('s', '21'); // Bold Kolom Nama/Jadwal
+                }
+                setTimeout(() => {
+                    $.fn.dataTable.ext.buttons.excelHtml5.action.call(self, e, dt, button, config);
+                }, 300);
+            }
         },
+
+        // 3. PRINT (LENGKAP DENGAN FOTO & NAMA FILE)
         {
             extend: 'print',
             text: '<i class="fa-solid fa-print mr-2"></i> Print',
             className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: '', // kosongin biar gak dobel namaSampah default
-            customize: function (win) {
-                $(win.document.body)
-                    .css('font-family', 'Poppins, sans-serif')
-                    .prepend(`
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                                <h1 class="py-5 text-2xl font-semibold text-gray-800 dark:text-gray-100 transition-all duration-300 font-[Poppins] text-center w-full"
-            >
-            <span class="font-light">Si</span>
-            Banksa
-        </h1>
+            title: '',
+            action: async function (e, dt, button, config) {
+                const self = this;
 
+                Swal.fire({
+                    title: 'Memproses Cetak...',
+                    text: `Menyiapkan lampiran`,
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                config.customize = function (win) {
+                    Swal.close();
+                    const tableRows = groupedEvidence.value.map((item, index) => {
+                        // Logika Lampiran: Jika Document tampilkan Nama File, Jika Evidence tampilkan Foto + Nama
+                        const attachments = typeForm.value === 'Document'
+                            ? item.document.map(d => `
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:10px; color:#dc2626; background:#fef2f2; padding:6px; border-radius:6px; border:1px solid #fee2e2;">
+                            <i class="fas fa-file-pdf"></i>
+                            <span style="font-weight:600;">${d.original_filesname}</span>
+                        </div>
+                    `).join('')
+                            : item.photos.map(p => `
+                        <div style="display:inline-block; text-align:center; margin-right:12px; margin-bottom:12px;">
+                            <img src="/storage/photo/evidenceUser/BankSampah/RT0${props.IDRT}/${p.original_photoname}" 
+                                 style="width:90px; height:90px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb; display:block; margin-bottom:5px;">
+                            <span style="font-size:9px; color:#6b7280; display:block; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                ${p.original_photoname}
+                            </span>
+                        </div>
+                    `).join('');
+
+                        return `
+                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                        <td style="padding:15px; text-align:center; vertical-align:top; font-size:12px; color:#9ca3af;">${index + 1}</td>
+                        <td style="padding:15px; vertical-align:top;">
+                            <div style="font-weight:bold; color:#111827; font-size:14px; margin-bottom:4px; text-transform:uppercase;">${item.name}</div>
+                            <div style="font-size:11px; color:#10b981; font-weight:600; margin-bottom:15px;">Jadwal: ${item.tanggal_setoran}</div>
+                            <div style="display:flex; flex-wrap:wrap;">
+                                ${attachments || '<em style="color:#d1d5db; font-size:11px;">Tidak ada lampiran</em>'}
+                            </div>
+                        </td>
+                        <td style="padding:15px; text-align:center; vertical-align:top;">
+                            <span style="background:#f0fdf4; color:#166534; padding:4px 10px; border-radius:12px; font-size:10px; font-weight:800; border:1px solid #bbf7d0;">
+                                ${typeForm.value === 'Document' ? item.document.length : item.photos.length} FILE
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                    }).join('');
+
+                    $(win.document.body).css('font-family', "'Poppins', sans-serif").prepend(`
+                <div style="padding: 40px; border-top: 12px solid #10b981; background: #fff;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:2px solid #f9fafb; padding-bottom:20px;">
+                        <div>
+                            <h1 style="color:#10b981; margin:0; font-size:28px; font-weight:900;">SiBanksa</h1>
+                            <p style="font-size:11px; color:#6b7280; margin:0; letter-spacing:1px; font-weight:bold;">UNIT BANK SAMPAH DIGITAL RT-0${props.IDRT}</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <h2 style="margin:0; font-size:18px; color:#1f2937;">LAPORAN ${typeForm.value.toUpperCase()}</h2>
+                            <p style="margin:0; font-size:11px; color:#9ca3af;">Dicetak: ${new Date().toLocaleString('id-ID')}</p>
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">${typeForm === 'Document' ? 'Laporan Data Dokumen Bank Sampah RT0' + " " + props.IDRT : 'Laporan Data Evidence Bank Sampah RT0' + "" + props.IDRT}</p>
-                        <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:40px;">
+                        <thead>
+                            <tr style="background:#f9fafb; text-align:left; font-size:11px; color:#4b5563; text-transform:uppercase; letter-spacing:1px;">
+                                <th style="padding:15px; width:40px; text-align:center; border-bottom:2px solid #eee;">No</th>
+                                <th style="padding:15px; border-bottom:2px solid #eee;">Rincian Pelaksanaan & Bukti</th>
+                                <th style="padding:15px; width:100px; text-align:center; border-bottom:2px solid #eee;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                    <div style="display:flex; justify-content:flex-end; margin-top:50px;">
+                        <div style="text-align:center; width:250px;">
+                            <p style="font-size:13px; margin-bottom:80px;">Ketua Bank Sampah RT-0${props.IDRT},</p>
+                            <p style="font-weight:900; font-size:15px; text-decoration:underline; margin:0; text-transform:uppercase;">${page.props.auth.user.user_detail.fullName}</p>
+                            <p style="font-size:11px; color:#9ca3af; margin:0;">NIP: SBK-RT0${props.IDRT}${new Date().getFullYear()}</p>
+                        </div>
                     </div>
                 </div>
-                <hr style="border: 1px solid #ccc; margin-bottom: 20px;">
             `);
 
-                // Styling tambahan (opsional)
-                $(win.document.body).find('table')
-                    .addClass('compact')
-                    .css({
-                        'font-size': '12px',
-                        'width': '100%',
-                        'border-collapse': 'collapse'
-                    });
+                    $(win.document.body).find('table').last().hide();
+                }
 
-                $(win.document.body).find('table th')
-                    .css({
-                        'background-color': '#f1f1f1',
-                        'color': '#333',
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
-
-                $(win.document.body).find('table td')
-                    .css({
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
+                setTimeout(() => {
+                    $.fn.dataTable.ext.buttons.print.action.call(self, e, dt, button, config);
+                }, 300);
             }
         }
-
     ],
     language: {
         info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
@@ -507,8 +689,7 @@ const breadcrumbItems = [
                         Anda.</p>
                 </div>
                 <div class="flex space-x-3">
-                    <button v-if="props.document.length > 0 && props.image.length > 0"
-                        @click="sendReminder(props.IDRW)"
+                    <button v-if="props.document.length > 0 && props.image.length > 0" @click="sendReminder(props.IDRW)"
                         class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
                         <i class="fas fa-bell"></i> Ajukan Persetujuan Ketua RW
                     </button>
@@ -573,7 +754,7 @@ const breadcrumbItems = [
                                         </option>
                                     </select>
                                     <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name
-                                        }}</div>
+                                    }}</div>
                                 </div>
                                 <template v-for="field in formdata.Dokumen" :key="field.name">
 
@@ -602,7 +783,8 @@ const breadcrumbItems = [
                                         <input :type="field.type" :id="field.name" multiple @input="(e) => {
                                             const newFiles = Array.from(e.target.files);
                                             form.fileDoc = [...form.fileDoc, ...newFiles];
-                                        }" :placeholder="field.placeholder" class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm border-gray-200"
+                                        }" :placeholder="field.placeholder"
+                                            class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm border-gray-200"
                                             :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }">
                                         <p v-if="form[field.name]?.length"
                                             class="text-xs text-emerald-600 mt-2 font-medium">
@@ -655,7 +837,7 @@ const breadcrumbItems = [
                                         </option>
                                     </select>
                                     <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name
-                                        }}</div>
+                                    }}</div>
                                 </div>
 
 
@@ -666,7 +848,8 @@ const breadcrumbItems = [
                                         <input :type="field.type" :id="field.name" multiple @input="(e) => {
                                             const newFiles = Array.from(e.target.files);
                                             form.imgEvidence = [...form.imgEvidence, ...newFiles];
-                                        }" :placeholder="field.placeholder" class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 text-black e dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm border-gray-200"
+                                        }" :placeholder="field.placeholder"
+                                            class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 text-black e dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm border-gray-200"
                                             :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }">
                                         <p v-if="form[field.name]?.length"
                                             class="text-xs text-emerald-600 mt-2 font-medium">
@@ -808,7 +991,7 @@ const breadcrumbItems = [
 
                 </div>
 
-                <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
+                <div class=" bg-white dark:bg-gray-800 rounded-xl ">
                     <DataTable v-if="typeForm === 'Document'" :data="groupedEvidence" ref="dtInstance"
                         :options="dtOptions" class="w-full display stripe hover cell-border dark:text-white">
                         <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">

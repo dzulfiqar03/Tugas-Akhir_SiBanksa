@@ -72,7 +72,7 @@ const viewDetail = (id) => {
 
 const combinedData = computed(() => {
     const dataAwal = props.bankSampah || [];
-     const dataBankSampah = props.allBankSampah || [];
+    const dataBankSampah = props.allBankSampah || [];
 
     return dataAwal.map(item => {
         const user = item.user_detail;
@@ -87,7 +87,7 @@ const combinedData = computed(() => {
         );
 
 
-       const dataStat = dataBankSampah.find(stat => stat.id === item.id);
+        const dataStat = dataBankSampah.find(stat => stat.id === item.id);
         const stats = dataStat?.statistik || {};
 
 
@@ -104,11 +104,11 @@ const combinedData = computed(() => {
             total_nasabah: stats?.total_nasabah || 0,
             countOnline: stats?.online_saat_ini || 0,
 
-            statsData : stats,
-                                nasabah_terverifikasi: stats?.nasabah_terverifikasi,
-                    nasabah_ditolak: stats?.nasabah_ditolak || 0,
-                    nasabah_pengajuan: stats?.nasabah_pengajuan,
-                    nasabah_pending: stats?.nasabah_pending,
+            statsData: stats,
+            nasabah_terverifikasi: stats?.nasabah_terverifikasi,
+            nasabah_ditolak: stats?.nasabah_ditolak || 0,
+            nasabah_pengajuan: stats?.nasabah_pengajuan,
+            nasabah_pending: stats?.nasabah_pending,
 
         };
     });
@@ -119,8 +119,8 @@ const selectedImageUrl = ref('');
 const docType = ref('Document');
 
 const openPreview = (fileName, IDRT, type) => {
-    selectedImageUrl.value = type === 'Dokumen'?
-    `/storage/files/documentUser/BankSampah/RT0${IDRT}/${fileName}`:
+    selectedImageUrl.value = type === 'Dokumen' ?
+        `/storage/files/documentUser/BankSampah/RT0${IDRT}/${fileName}` :
         `/storage/photo/evidenceUser/BankSampah/RT0${IDRT}/${fileName}`;
     docType.value = type;
     isPreviewOpen.value = true;
@@ -148,9 +148,9 @@ const formatChildRow = (d) => {
                 <td class="py-3 px-4">
                     <div class="flex items-center gap-3">
                         ${type === 'Dokumen'
-                            ? '<i class="fas fa-file-pdf text-red-500 text-lg"></i>'
-                            : `<img src="/storage/photo/evidenceUser/BankSampah/RT0${d.id_rt}/${f.original_photoname}" class="w-8 h-8 rounded object-cover border">`
-                        }
+                ? '<i class="fas fa-file-pdf text-red-500 text-lg"></i>'
+                : `<img src="/storage/photo/evidenceUser/BankSampah/RT0${d.id_rt}/${f.original_photoname}" class="w-8 h-8 rounded object-cover border">`
+            }
                         <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">
                             ${type === 'Dokumen' ? f.original_filesname : f.original_photoname}
                         </span>
@@ -234,11 +234,11 @@ const onRowClick = (event) => {
     if (row.child.isShown()) {
         row.child.hide();
         tr.classList.remove('shown');
-        if(icon) icon.style.backgroundColor = 'red';
+        if (icon) icon.style.backgroundColor = 'red';
     } else {
         row.child(formatChildRow(row.data())).show();
         tr.classList.add('shown');
-        if(icon) icon.style.backgroundColor = 'black';
+        if (icon) icon.style.backgroundColor = 'black';
     }
 };
 
@@ -247,15 +247,15 @@ const dtOptions = {
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
 
-columns: [
+    columns: [
         {
             data: null,
             orderable: false,
             className: 'no-print text-center'
-        } ,
-         {
+        },
+        {
             data: 'user_detail.fullName',
-            className:'capitalize dark:text-white text-black',
+            className: 'capitalize dark:text-white text-black',
             render: (data, type, row) => {
                 return row.user_detail?.fullName || '-';
             },
@@ -264,15 +264,15 @@ columns: [
 
         {
             data: 'user_detail.id_rt',
-            className:'capitalize dark:text-white text-black',
+            className: 'capitalize dark:text-white text-black',
             render: (data, type, row) => {
                 return row.user_detail?.id_rt || '-';
             },
             defaultContent: '-'
         },
-         {
+        {
             data: 'stats',
-            className:'capitalize',
+            className: 'capitalize',
             render: (data, type, row) => {
                 return `
                 <div class="grid gap-2">
@@ -291,19 +291,19 @@ columns: [
             },
             defaultContent: '-'
         },
-{
-    data: 'total_setoran_rt',
-    defaultContent: 0, // Solusi utama menghilangkan warning
-    render: (data) => {
-        const total = parseFloat(data || 0);
-        return `<strong class="text-emerald-600">Rp ${new Intl.NumberFormat('id-ID').format(total)}</strong>`;
-    }
-},
+        {
+            data: 'total_setoran_rt',
+            defaultContent: 0, // Solusi utama menghilangkan warning
+            render: (data) => {
+                const total = parseFloat(data || 0);
+                return `<strong class="text-emerald-600">Rp ${new Intl.NumberFormat('id-ID').format(total)}</strong>`;
+            }
+        },
         {
             data: null,
             orderable: false,
             className: 'no-print text-center'
-        } ,
+        },
 
 
     ],
@@ -313,128 +313,160 @@ columns: [
         bottomStart: 'info',
         bottomEnd: 'paging'
     },
-     buttons: [
-                    {
-                        extend: 'pdfHtml5',
-                        text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
-                        className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: 'Data Pelaporan',
-                        exportOptions: {
-                            columns: ':not(.no-print)'  // ← semua kolom kecuali yg punya class no-print
-                        },
-                        customize: function (doc) {
-                            // Atur margin halaman PDF
-                            doc.pageMargins = [40, 60, 40, 40];
+    buttons: [
+        // --- 1. TOMBOL PDF ---
+        {
+            extend: 'pdfHtml5',
+            text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
+            pageSize: 'A4',
+            exportOptions: {
+                columns: ':not(.no-print)'
+            },
+            className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+            title: 'Laporan_Pelaporan_SiBanksa_' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
+            action: async function (e, dt, button, config) {
+                const self = this;
+                Swal.fire({ title: 'Memproses PDF...', text: 'Menyiapkan lampiran foto...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-                            // Tambahkan logo + namaSampah di atas tabel
-                            doc.content.splice(0, 0, {
-                                columns: [
-                                   {
-                                        text: 'SI BANKSA',
-                                        alignment: 'left',
-                                        fontSize: 16,
-                                        bold: true,
-                                        margin: [0, 20, 0, 0]
-                                    },
-                                    {
-                                        text: 'Bank Sampah - Data Pelaporan',
-                                        alignment: 'right',
-                                        fontSize: 16,
-                                        bold: true,
-                                        margin: [0, 20, 0, 0]
-                                    }
-                                ],
-                                columnGap: 10
-                            });
+                const getBase64 = (url) => {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.setAttribute("crossOrigin", "anonymous");
+                        img.onload = () => {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = img.width; canvas.height = img.height;
+                            const ctx = canvas.getContext("2d");
+                            ctx.drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL("image/png"));
+                        };
+                        img.onerror = () => resolve(null);
+                        img.src = url;
+                    });
+                };
 
-                            // Tambahkan garis pemisah
-                            doc.content.splice(1, 0, {
-                                canvas: [
-                                    {
-                                        type: 'line',
-                                        x1: 0,
-                                        y1: 0,
-                                        x2: 515,
-                                        y2: 0,
-                                        lineWidth: 1,
-                                        lineColor: '#cccccc'
-                                    }
-                                ],
-                                margin: [0, 10, 0, 10]
-                            });
+                const attachmentData = [];
+                for (const item of combinedData.value) {
+                    const photos = [];
+                    for (const img of item.filtered_images) {
+                        const url = `${window.location.origin}/storage/photo/evidenceUser/BankSampah/RT0${item.id_rt}/${img.original_photoname}`;
+                        const b64 = await getBase64(url);
+                        if (b64) photos.push({ b64, name: img.original_photoname });
+                    }
+                    if (photos.length > 0 || item.filtered_documents.length > 0) {
+                        attachmentData.push({ namaBank: item.fullName, rt: item.id_rt, tanggal: item.tanggal_setoran, photos, docs: item.filtered_documents });
+                    }
+                }
 
-                            // Atur gaya tabel (opsional)
-                            doc.styles.tableHeader.fillColor = '#f1f1f1';
-                            doc.styles.tableHeader.color = '#333333';
-                            doc.defaultStyle.fontSize = 10;
-                        }
-                    },
-
-                    {
-                        extend: 'excelHtml5',
-                        text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
-                        className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="fa-solid fa-print mr-2"></i> Print',
-                        className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                        title: '', // kosongin biar gak dobel namaSampah default
-                        customize: function (win) {
-                            $(win.document.body)
-                                .css('font-family', 'Poppins, sans-serif')
-                                .prepend(`
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                                <h1 class="py-5 text-2xl font-semibold text-gray-800 dark:text-gray-100 transition-all duration-300 font-[Poppins] text-center w-full"
-            >
-            <span class="font-light">Si</span>
-            Banksa
-        </h1>
-
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
-                        <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
-                    </div>
-                </div>
-                <hr style="border: 1px solid #ccc; margin-bottom: 20px;">
-            `);
-
-                            // Styling tambahan (opsional)
-                            $(win.document.body).find('table')
-                                .addClass('compact')
-                                .css({
-                                    'font-size': '12px',
-                                    'width': '100%',
-                                    'border-collapse': 'collapse'
-                                });
-
-                            $(win.document.body).find('table th')
-                                .css({
-                                    'background-color': '#f1f1f1',
-                                    'color': '#333',
-                                    'padding': '6px',
-                                    'border': '1px solid #ddd'
-                                });
-
-                            $(win.document.body).find('table td')
-                                .css({
-                                    'padding': '6px',
-                                    'border': '1px solid #ddd'
-                                });
-                        }
+                config.customize = function (doc) {
+                    Swal.close();
+                    // Styling Tabel Utama
+                    const tableNode = doc.content.find(c => c.table);
+                    if (tableNode) {
+                        tableNode.table.widths = [30, '*', 40, 140, 100];
+                        tableNode.table.body.forEach((row, i) => {
+                            row.forEach(cell => { if (cell) cell.fontSize = 8; if (i === 0) { cell.fillColor = '#10b981'; cell.color = 'white'; } });
+                        });
                     }
 
-                ],
-    language: {
-            info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-            paginate: {
-                previous: "← Sebelumnya",
-                next: "Berikutnya →"
-            },
-            emptyTable: "Tidak ada data tersedia"
+                    // Header & Lampiran
+                    doc.content.splice(0, 1, {
+                        columns: [
+                            { stack: [{ text: 'SiBanksa', fontSize: 18, bold: true, color: '#10b981' }, { text: 'Laporan Monitoring Bank Sampah', fontSize: 7, color: '#9ca3af' }] },
+                            { stack: [{ text: 'DATA PELAPORAN UNIT', fontSize: 12, bold: true, alignment: 'right' }, { text: `Unit RW - Gresik`, fontSize: 8, alignment: 'right' }], width: '*' }
+                        ], margin: [0, 0, 0, 15]
+                    });
+
+                    if (attachmentData.length > 0) {
+                        doc.content.push({ text: '\nLAMPIRAN DOKUMENTASI:', fontSize: 10, bold: true, color: '#065f46', margin: [0, 20, 0, 10] });
+                        attachmentData.forEach(group => {
+                            doc.content.push({
+                                table: { widths: ['*'], body: [[{ text: `${group.namaBank} (RT-0${group.rt})`, bold: true, fontSize: 8, color: '#065f46' }]] },
+                                layout: { hLineWidth: () => 0, vLineWidth: () => 0, fillColor: '#ecfdf5' }, margin: [0, 5, 0, 5]
+                            });
+
+                            // Render List Berkas
+                            group.docs.forEach(d => {
+                                doc.content.push({ text: `• Berkas: ${d.original_filesname}`, fontSize: 7, margin: [10, 0, 0, 2] });
+                            });
+
+                            // Render Grid Foto
+                            let columns = [];
+                            group.photos.forEach((img, i) => {
+                                columns.push({ stack: [{ image: img.b64, width: 90, height: 80, alignment: 'center' }, { text: img.name, fontSize: 5, alignment: 'center', color: '#9ca3af' }], width: '*' });
+                                if (columns.length === 4 || i === group.photos.length - 1) {
+                                    while (columns.length < 4) columns.push({ text: '', width: '*' });
+                                    doc.content.push({ columns: [...columns], columnGap: 10, margin: [0, 5, 0, 10] });
+                                    columns = [];
+                                }
+                            });
+                        });
+                    }
+                };
+                setTimeout(() => { $.fn.dataTable.ext.buttons.pdfHtml5.action.call(self, e, dt, button, config); }, 500);
+            }
+        },
+
+        // --- 2. TOMBOL EXCEL ---
+        {
+            extend: 'excelHtml5',
+            text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
+            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+            title: 'Data_Pelaporan_SiBanksa',
+            exportOptions: { columns: ':not(.no-print)' },
+            customize: function (xlsx) {
+                const sheet = xlsx.xl.worksheets['sheet1.xml'];
+                $('row c', sheet).attr('s', '25'); // Tambah border ke semua cell
+                $('row:first c', sheet).attr('s', '42'); // Header Hijau (Style default DT)
+            }
+        },
+
+        // --- 3. TOMBOL PRINT ---
+        {
+            extend: 'print',
+            text: '<i class="fa-solid fa-print mr-2"></i> Print',
+            className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+            exportOptions: { columns: ':not(.no-print)' },
+            customize: function (win) {
+                $(win.document.body).css('font-family', 'Poppins, sans-serif').prepend(`
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #10b981; padding-bottom:10px; margin-bottom:20px;">
+                    <div><h1 style="color:#10b981; margin:0;">SiBanksa</h1><p style="font-size:10px; color:#666; margin:0;">Sistem Informasi Bank Sampah Keluarga</p></div>
+                    <div style="text-align:right;"><h3 style="margin:0;">LAPORAN MONITORING RW</h3><p style="font-size:10px; margin:0;">Dicetak pada: ${new Date().toLocaleString('id-ID')}</p></div>
+                </div>
+            `);
+
+                // Styling Tabel di Print
+                $(win.document.body).find('table').addClass('compact').css({ 'font-size': '10px', 'color': '#333' });
+                $(win.document.body).find('thead').css({ 'background-color': '#10b981', 'color': '#fff' });
+
+                // Menambahkan Lampiran Foto di akhir halaman print
+                let photoHtml = '<div style="margin-top:30px;"><h3>LAMPIRAN DOKUMENTASI</h3>';
+                combinedData.value.forEach(item => {
+                    if (item.filtered_images.length > 0) {
+                        photoHtml += `<div style="background:#f9fafb; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #e5e7eb;">
+                        <h4 style="margin:0 0 10px 0; color:#065f46;">RT-0${item.id_rt} - ${item.fullName}</h4>
+                        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;">`;
+                        item.filtered_images.forEach(img => {
+                            photoHtml += `<div style="text-align:center;">
+                            <img src="/storage/photo/evidenceUser/BankSampah/RT0${item.id_rt}/${img.original_photoname}" style="width:100%; height:100px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">
+                            <p style="font-size:8px; color:#777; margin-top:4px;">${img.original_photoname}</p>
+                        </div>`;
+                        });
+                        photoHtml += `</div></div>`;
+                    }
+                });
+                photoHtml += '</div>';
+                $(win.document.body).append(photoHtml);
+            }
         }
+    ],
+    language: {
+        info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+        paginate: {
+            previous: "← Sebelumnya",
+            next: "Berikutnya →"
+        },
+        emptyTable: "Tidak ada data tersedia"
+    }
 };
 
 const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
@@ -465,13 +497,13 @@ const exportData = (index) => {
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') },
     { label: 'Manajemen Bank Sampah', url: null },
-    { label: 'Data Pelaporan Bank Sampah', url: route('data-pelaporanBankSampah')  },
+    { label: 'Data Pelaporan Bank Sampah', url: route('data-pelaporanBankSampah') },
 ];
 
 const updateVerification = (item) => {
     Swal.fire({
         title: 'Lakukan Pembukaan Transaksi?',
-        text: "Bank sampah RT0" + item.user_detail.id_rt +  " akan dapat melakukan transaksi dan notifikasi mengenai pelaporan anda",
+        text: "Bank sampah RT0" + item.user_detail.id_rt + " akan dapat melakukan transaksi dan notifikasi mengenai pelaporan anda",
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
@@ -482,7 +514,7 @@ const updateVerification = (item) => {
 
                 message: `Pembukaan Transaksi berhasil dibuka dan notifikasi berhasil dikirim ke Bank Sampah RT0${item.user_detail.id_rt}`
             }, {
-                onSuccess: () => {Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload()}
+                onSuccess: () => { Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload() }
             });
         }
     });
@@ -491,12 +523,13 @@ const updateVerification = (item) => {
 </script>
 
 <template>
+
     <Head :title="'Data Pelaporan Bank Sampah'" />
 
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
-        <div  class="space-y-6">
+        <div class="space-y-6">
 
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manajemen Data Kelola Bank Sampah</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola bank sampah di RW anda.</p>
@@ -505,60 +538,64 @@ const updateVerification = (item) => {
             </div>
 
 
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                                 <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
+            <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
-              <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
-            <button @click="exportData(0)" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                <i class="fas fa-file-pdf"></i> PDF
-            </button>
-            <button @click="exportData(1)" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                <i class="fas fa-file-excel"></i> Excel
-            </button>
-            <button @click="exportData(2)" class="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                <i class="fas fa-print"></i> Print
-            </button>
-        </div>
-               <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
-                 <div class="flex items-end gap-2">
-                <label class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                <input @keyup="handleSearch" type="text"
-                    class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
-                    placeholder="Ketik...">
-            </div>
+                    <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
+                        <button @click="exportData(0)"
+                            class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button @click="exportData(1)"
+                            class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button @click="exportData(2)"
+                            class="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
+                        <div class="flex items-end gap-2">
+                            <label
+                                class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
+                            <input @keyup="handleSearch" type="text"
+                                class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
+                                placeholder="Ketik...">
+                        </div>
 
-            <div class="flex items-center gap-2">
-                <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                <select @change="handleCategoryFilter"
-                    class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
-    <template v-for="field in formdata.nasabah" :key="field.name">
-                    <div v-if="field.name === 'rt'" class="col-span-1">
-                <option value="">Pilih RT</option>
-                <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
-        </div>
-    </template>
+                        <div class="flex items-center gap-2">
+                            <label
+                                class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
+                            <select @change="handleCategoryFilter"
+                                class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
+                                <template v-for="field in formdata.nasabah" :key="field.name">
+                                    <div v-if="field.name === 'rt'" class="col-span-1">
+                                        <option value="">Pilih RT</option>
+                                        <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+                                    </div>
+                                </template>
 
-                </select>
-            </div>
+                            </select>
+                        </div>
 
-            <div class="flex items-center gap-2  pl-3">
-                <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
-                <select @change="handleLengthChange"
-                    class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
-                    <option value="5" selected>5</option>
-                    <option value="10" >10</option>
-                    <option value="25">25</option>
-                </select>
-            </div>
-            </div>
+                        <div class="flex items-center gap-2  pl-3">
+                            <label
+                                class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
+                            <select @change="handleLengthChange"
+                                class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                            </select>
+                        </div>
+                    </div>
 
-        </div>
-            <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
-                    <DataTable
-                    :data="combinedData"
-                        ref="dtInstance"
-                        :options="dtOptions"
-                    class="w-full display stripe hover cell-border dark:text-white">
+                </div>
+                <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
+                    <DataTable :data="combinedData" ref="dtInstance" :options="dtOptions"
+                        class="w-full display stripe hover cell-border dark:text-white">
                         <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
                             <tr>
 
@@ -572,43 +609,42 @@ const updateVerification = (item) => {
                         </thead>
 
 
-                           <template #column-0="data">
-                                <div class="flex justify-center gap-2">
+                        <template #column-0="data">
+                            <div class="flex justify-center gap-2">
 
 
-                                        <button  @click="onRowClick"
-     class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Edit">
-                                 <i
-                 class="fas fa-plus-circle text-emerald-500 cursor-pointer"></i>
-                            </button>
+                                <button @click="onRowClick"
+                                    class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                                    title="Edit">
+                                    <i class="fas fa-plus-circle text-emerald-500 cursor-pointer"></i>
+                                </button>
 
-                                    </div>
-                    </template>
+                            </div>
+                        </template>
 
 
 
                         <template #column-5="data">
-                        <div v-if="data.rowData.user_detail.status_transaction === 'Belum Disetujui'" class="flex justify-center gap-1">
-                      <button
-                                            @click="updateVerification(data.rowData)"
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-bell"></i> Buka Transaksi
-                                        </button>
-                        </div>
+                            <div v-if="data.rowData.user_detail.status_transaction === 'Belum Disetujui'"
+                                class="flex justify-center gap-1">
+                                <button @click="updateVerification(data.rowData)"
+                                    class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                    <i class="fas fa-bell"></i> Buka Transaksi
+                                </button>
+                            </div>
 
-                          <div v-else class="flex justify-center gap-1">
-                      <button
-
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 hover:bg-gray-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-bell"></i> Transaksi sudah dibuka
-                                        </button>
-                        </div>
-                    </template>
-
+                            <div v-else class="flex justify-center gap-1">
+                                <button
+                                    class="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 hover:bg-gray-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                    <i class="fas fa-bell"></i> Transaksi sudah dibuka
+                                </button>
+                            </div>
+                        </template>
 
 
-                   </DataTable>
-</div>
+
+                    </DataTable>
+                </div>
 
             </div>
 
@@ -616,26 +652,24 @@ const updateVerification = (item) => {
         </div>
     </AuthenticatedLayout>
 
-       <div v-if="isPreviewOpen"
-     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-     @click.self="closePreview">
+    <div v-if="isPreviewOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        @click.self="closePreview">
 
-    <div class="relative max-w-4xl w-full flex flex-col items-center">
-        <button @click="closePreview"
+        <div class="relative max-w-4xl w-full flex flex-col items-center">
+            <button @click="closePreview"
                 class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
 
-       <template v-if="docType === 'Dokumen'">
-               <div class="w-full h-[80vh] md:h-[85vh]">
-        <embed
-            :src="selectedImageUrl"
-            type="application/pdf"
-            class="w-full h-full rounded-lg shadow-inner"
-        />
-    </div>
+            <template v-if="docType === 'Dokumen'">
+                <div class="w-full h-[80vh] md:h-[85vh]">
+                    <embed :src="selectedImageUrl" type="application/pdf"
+                        class="w-full h-full rounded-lg shadow-inner" />
+                </div>
             </template>
 
             <template v-else>
@@ -644,34 +678,34 @@ const updateVerification = (item) => {
                 </div>
             </template>
 
-        <p class="mt-4 text-white text-sm font-medium">Klik di mana saja untuk menutup</p>
+            <p class="mt-4 text-white text-sm font-medium">Klik di mana saja untuk menutup</p>
+        </div>
     </div>
-</div>
 </template>
 
 <style>
-.dark td{
-    color:white;
+.dark td {
+    color: white;
 }
+
 .progress-flow {
-  width: 100%;
-  background: linear-gradient(
-    110deg,
-    #3b82f6 25%,
-    #60a5fa 37%,
-    #3b82f6 63%
-  );
-  background-size: 200% 100%;
-  animation: flow 1.2s linear infinite;
+    width: 100%;
+    background: linear-gradient(110deg,
+            #3b82f6 25%,
+            #60a5fa 37%,
+            #3b82f6 63%);
+    background-size: 200% 100%;
+    animation: flow 1.2s linear infinite;
 }
 
 @keyframes flow {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
 }
 
 .accordion-enter-active,
@@ -691,7 +725,7 @@ const updateVerification = (item) => {
     padding-bottom: 0;
 }
 
-.accordion-wrapper > * {
+.accordion-wrapper>* {
     transition: opacity 0.2s;
 }
 
@@ -701,21 +735,39 @@ const updateVerification = (item) => {
     color: white !important;
     border-radius: 8px;
 }
-.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate {
+
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
     font-size: 0.8rem;
     color: #ffffff !important;
     margin-top: 1rem;
 }
+
 .dark .dataTables_wrapper .dataTables_length,
 .dark .dataTables_wrapper .dataTables_filter,
 .dark .datatable .dt-info,
 .dark .dataTables_wrapper .dataTables_processing,
-.dark .datatable  .dt-paging {
+.dark .datatable .dt-paging {
     color: #ffffff !important;
 }
-.dataTables_filter { display: none; } /* Kita pakai custom search di atas */
 
-.slide-fade-enter-active { transition: all 0.3s ease-out; }
-.slide-fade-leave-active { transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1); }
-.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-10px); opacity: 0; }
+.dataTables_filter {
+    display: none;
+}
+
+/* Kita pakai custom search di atas */
+
+.slide-fade-enter-active {
+    transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+    transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+    transform: translateY(-10px);
+    opacity: 0;
+}
 </style>

@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
 import { computed, ref } from 'vue';
 
 import jszip from 'jszip';
@@ -14,6 +15,7 @@ import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5';
 import ButtonsPrint from 'datatables.net-buttons/js/buttons.print';
 import Responsive from 'datatables.net-responsive-dt';
 import DataTable from 'datatables.net-vue3';
+import html2canvas from 'html2canvas';
 
 // CSS (WAJIB)
 import 'datatables.net-dt/css/dataTables.dataTables.css';
@@ -45,37 +47,6 @@ const props = defineProps({
 });
 
 
-console.log(props.nasabah)
-// State
-const showForm = ref(false);
-const isEdit = ref(false);
-
-const form = useForm({
-    id: props.user.id,
-    id_userdetail: props.user.user_detail.id,
-    id_userbank: '',
-    id_jadwal: '',
-    fullName: '',
-    pencatatan_setoran_id: '',
-    bukti_pembayaran: '',
-    fileDoc: []
-
-
-});
-
-const renamedFileList = computed(() => {
-    form.fileDoc.map((file, index) => {
-        const extension = file.name.split('.').pop();
-        return {
-            original: file.name,
-            dynamic: `Dokumen${form.name || 'Dokumen'}_BankSampahRT0${props.IDRT}_${index + 1}.${extension}`,
-            size: file.size,
-
-        };
-    })
-
-});
-
 const totalSaldo = computed(() => {
     return props.nasabah.reduce((acc, item) => {
         return acc + item.pencatatan_items.reduce((a, b) => {
@@ -93,304 +64,119 @@ const formatRupiah = (value) => {
     }).format(value)
 }
 
-const editData = (item) => {
-    const row = JSON.parse(decodeURIComponent(escape(atob(item))));
 
-    console.log(row)
-    isEdit.value = true;
-    form.id = row.user_detail.id_user;
-    form.fullName = row.user_detail.fullName;
-    form.id_userdetail = row.id_userdetail;
-    form.id_jadwal = row.id_jadwal;
-    form.id_userbank = row.user_bank[0].id;
-    form.pencatatan_setoran_id =
-        row.pencatatan_items.find(i => i.pencatatan_setoran_id)?.pencatatan_setoran_id ?? null;
-    form.bukti_pembayaran = '';
-    showForm.value = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-window.uploadBukti = editData
-
-const deleteData = (base64) => {
-    const row = JSON.parse(decodeURIComponent(escape(atob(base64))));
-    Swal.fire({
-        title: 'Hapus data?',
-        text: "Tindakan ini tidak bisa dibatalkan!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Hapus!'
-    }).then((res) => {
-        if (res.isConfirmed) {
-            router.delete(route('bs.delete-transaction', row.id), {
-                onSuccess: () => Swal.fire('Dihapus!', 'Data berhasil dihapus.', 'success')
-            });
-        }
-    });
-};
-
-window.handleDelete = deleteData
-
-const kirimWA = (base64) => {
-    const row = JSON.parse(decodeURIComponent(escape(atob(base64))));
-    Swal.fire({
-        title: 'Lakukan Pembukaan Transaksi?',
-        text: "Bank sampah RT0" + props.IDRT + " akan dapat melakukan transaksi dan notifikasi mengenai pelaporan anda",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Kirim!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            router.post(route('bs.chat-transaction', row.user_detail.id_user), {
-
-                message: `Anda Belum mengisi rekening dan tidak bisa dicairkan, Isi dan lengkapi rekening terlebih dahulu!!`
-            }, {
-                onSuccess: () => { Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload() }
-            });
-        }
-    });
-}
 
 
 
 const dtOptions = {
     pageLength: 5,
     responsive: true,
-    lengthMenu: [5, 10, 25, 50],
+    dom: 'tp', // Sembunyikan semua kontrol bawaan DataTable agar kita bisa buat yang lebih bagus
     columns: [
         {
             data: null,
-            render: (data, type, row, meta) => meta.row + 1
-        },
-        {
-            // Langsung akses user_detail (tanpa kata 'jadwal')
-            data: 'jadwalPelaksanaan',
-            className: 'text-black dark:text-white capitalize',
+            className: 'p-0', // Hapus padding sel tabel agar kartu bisa melebar maksimal
             render: (data, type, row) => {
-                return row.jadwalPelaksanaan || '-';
-            },
-            defaultContent: '-'
-        },
-
-
-        {
-            data: 'pencatatan_items',
-            className: 'text-black dark:text-white capitalize',
-
-            render: (data, type, row) => {
-
-                const total = data.reduce((acc, item) => acc + parseFloat(item.subtotal), 0);
-
-                const formatted = new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR',
-                    minimumFractionDigits: 0
-                }).format(total);
-
-                return `<div class="font-bold text-blue-600">${formatted}</div>`;
-            },
-            defaultContent: 'Rp 0'
-        },
-        {
-            // Kolom 3: Status (Penting untuk filter kategori)
-            data: 'user_bank',
-            className: 'text-black dark:text-white capitalize',
-
-            render: (data, type, row) => {
-                // Menyesuaikan dengan badge di template
-                const status = row.user_bank.length === 0 ? 'Belum' : 'Selesai';
-                return `<span class="px-2 py-1 rounded-full text-[10px] bg-green-100 text-green-700">${status}</span>`;
-            },
-            className: 'text-center'
-        },
-        {
-            // Kolom 4: Aksi
-            data: null,
-            orderable: false,
-            className: 'no-print text-center',
-            render: (data, type, row) => {
+                const total = row.pencatatan_items.reduce((acc, item) => acc + parseFloat(item.subtotal), 0);
+                const isSelesai = row.user_bank.length > 0;
                 const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(row))));
-                return row.user_transaction.length === 0 ? !row.user_bank || row.user_bank.length === 0 ? ` <button
-                                            onclick="window.handleWA('${base64Data}')"
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-bell"></i> Hubungi WA
-                                        </button>`: ` <button
-                                            onclick="window.uploadBukti('${base64Data}')"
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-bell"></i> Kirim Bukti Pembayaran
-                                        </button>`: `
 
-                                        <div class="flex space-x-3">
-                                            <button
-                                            onclick=""
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-check"></i> Transaksi Telah Dilakukan
-                                        </button>
+                // Template Kartu "Feed"
+                return `
+                <div class="group relative bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 mb-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-500">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                        
+                        <div class="flex items-center gap-5 w-full md:w-auto">
+                            <div class="relative">
+                                <div class="w-16 h-16 rounded-[1.5rem] bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-500 rotate-3 group-hover:rotate-0">
+                                    <i class="fas fa-wallet text-2xl"></i>
+                                </div>
+                                <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-white dark:border-gray-800 ${isSelesai ? 'bg-emerald-500' : 'bg-orange-500'}"></div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-lg font-black text-gray-800 dark:text-white tracking-tight leading-tight">${row.jadwalPelaksanaan || 'Setoran Umum'}</h4>
+                                <div class="flex items-center gap-3 mt-1.5">
+                                    <span class="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">TRX-${row.id}</span>
+                                    <span class="text-[11px] font-medium text-gray-400">${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                </div>
+                            </div>
+                        </div>
 
-                                        <button
-                                            onclick="window.handleDelete('${base64Data}')"
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-trash"></i> Hapus Transaksi
-                                        </button>
-                                            </div>`
-            }
+                        <div class="flex flex-1 items-center justify-between md:justify-end gap-12 w-full px-2">
+                            <div class="text-left md:text-right">
+                                <p class="text-[10px] font-black text-gray-300 dark:text-gray-500 uppercase tracking-[0.2em] mb-1">Nominal Saldo</p>
+                                <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">${formatRupiah(total)}</p>
+                            </div>
+                        </div>
 
-        }
-    ],
-
-    layout: {
-        topStart: null,
-        topEnd: null,
-        bottomStart: 'info',
-        bottomEnd: 'paging'
-    },
-    buttons: [
-        {
-            extend: 'pdfHtml5',
-            text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
-            className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: 'Data Transaksi Setoran',
-            exportOptions: {
-                columns: ':not(.no-print)'
-            },
-            customize: function (doc) {
-                // Atur margin halaman PDF
-                doc.pageMargins = [40, 60, 40, 40];
-
-                // Tambahkan logo + namaSampah di atas tabel
-                doc.content.splice(0, 0, {
-                    columns: [
-                        {
-                            text: 'SI BANKSA',
-                            alignment: 'left',
-                            fontSize: 16,
-                            bold: true,
-                            margin: [0, 20, 0, 0]
-                        },
-                        {
-                            text: 'Bank Sampah - Data Sampah',
-                            alignment: 'right',
-                            fontSize: 16,
-                            bold: true,
-                            margin: [0, 20, 0, 0]
-                        }
-                    ],
-                    columnGap: 10
-                });
-
-                // Tambahkan garis pemisah
-                doc.content.splice(1, 0, {
-                    canvas: [
-                        {
-                            type: 'line',
-                            x1: 0,
-                            y1: 0,
-                            x2: 515,
-                            y2: 0,
-                            lineWidth: 1,
-                            lineColor: '#cccccc'
-                        }
-                    ],
-                    margin: [0, 10, 0, 10]
-                });
-
-                // Atur gaya tabel (opsional)
-                doc.styles.tableHeader.fillColor = '#f1f1f1';
-                doc.styles.tableHeader.color = '#333333';
-                doc.defaultStyle.fontSize = 10;
-            }
-        },
-
-        {
-            extend: 'excelHtml5',
-            text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
-            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
-        },
-        {
-            extend: 'print',
-            text: '<i class="fa-solid fa-print mr-2"></i> Print',
-            className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: '', // kosongin biar gak dobel namaSampah default
-            customize: function (win) {
-                $(win.document.body)
-                    .css('font-family', 'Poppins, sans-serif')
-                    .prepend(`
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                                <h1 class="py-5 text-2xl font-semibold text-gray-800 dark:text-gray-100 transition-all duration-300 font-[Poppins] text-center w-full"
-            >
-            <span class="font-light">Si</span>
-            Banksa
-        </h1>
-
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
-                        <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
+                       
                     </div>
                 </div>
-                <hr style="border: 1px solid #ccc; margin-bottom: 20px;">
-            `);
-
-                // Styling tambahan (opsional)
-                $(win.document.body).find('table')
-                    .addClass('compact')
-                    .css({
-                        'font-size': '12px',
-                        'width': '100%',
-                        'border-collapse': 'collapse'
-                    });
-
-                $(win.document.body).find('table th')
-                    .css({
-                        'background-color': '#f1f1f1',
-                        'color': '#333',
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
-
-                $(win.document.body).find('table td')
-                    .css({
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
+                `;
             }
         }
-
     ],
-    language: {
-        info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-        paginate: {
-            previous: "← Sebelumnya",
-            next: "Berikutnya →"
+    buttons: [
+    {
+        extend: 'pdfHtml5',
+        title: 'Laporan Transaksi Bank Sampah',
+        exportOptions: {
+            // Kita definisikan data apa saja yang diambil untuk PDF
+            orthogonal: 'export',
+            format: {
+                body: function (data, row, column, node) {
+                    // Ambil data asli dari objek nasabah, bukan dari HTML yang di-render
+                    const item = props.nasabah[row];
+                    const total = item.pencatatan_items.reduce((a, b) => a + parseFloat(b.subtotal), 0);
+                    
+                    // Sesuaikan kolom PDF (Manual mapping)
+                    if (column === 0) return row + 1;
+                    if (column === 1) return item.jadwalPelaksanaan;
+                    if (column === 2) return formatRupiah(total);
+                    return '';
+                }
+            }
         },
-        emptyTable: "Tidak ada data tersedia"
+        customize: function (doc) {
+            doc.content[1].table.widths = ['10%', '60%', '30%']; // Rapikan lebar kolom PDF
+        }
+    },
+    { extend: 'excelHtml5' },
+    { extend: 'print' }
+]
+};
+
+
+const dtInstance = ref(null);
+
+const handleSearch = (e) => {
+    // Pastikan dtInstance.value ada dan akses objek dt-nya
+    if (dtInstance.value && dtInstance.value.dt) {
+        dtInstance.value.dt.search(e.target.value).draw();
     }
 };
 
 
-const handleSearch = (e) => {
-    dtInstance.value.dt.search(e.target.value).draw();
-};
-
-const handleCategoryFilter = (e) => {
-    const val = e.target.value;
-    // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
-    const regex = val ? `^${val}$` : '';
-
-    dtInstance.value.dt
-        .column(2)
-        .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
-        .draw();
-};
-const handleLengthChange = (e) => {
-    dtInstance.value.dt.page.len(parseInt(e.target.value)).draw();
-};
-
 const exportData = (index) => {
-    dtInstance.value.dt.button(index).trigger();
+    if (!dtInstance.value) return;
+
+    const titles = ['PDF', 'Excel', 'Print'];
+    
+    Swal.fire({
+        title: `Mengekspor ${titles[index]}...`,
+        text: 'Mohon tunggu sebentar',
+        allowOutsideClick: false,
+        timer: 1000, // Beri jeda 1 detik untuk proses
+        didOpen: () => {
+            Swal.showLoading();
+            // Picu tombol asli DataTable berdasarkan urutan index
+            dtInstance.value.dt.button(index).trigger();
+        },
+        willClose: () => {
+            // Opsional: Beri notifikasi sukses setelah loading tutup
+        }
+    });
 };
 
 const breadcrumbItems = [
@@ -399,6 +185,40 @@ const breadcrumbItems = [
 ];
 
 
+const exportAsImage = async () => {
+    // Ambil elemen yang membungkus daftar transaksi (kartu-kartu)
+    const element = document.querySelector('.setoran-container'); 
+    
+    if (!element) return;
+
+    Swal.fire({
+        title: 'Menyiapkan Gambar',
+        text: 'Sedang mengambil screenshot riwayat...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+        const canvas = await html2canvas(element, {
+            backgroundColor: '#ffffff', // Transparan jika dark mode/light mode
+            scale: 2, // Kualitas tinggi (Retina)
+            logging: false,
+            useCORS: true,
+            borderRadius: 40
+        });
+
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.download = `Riwayat_SiBanksa_${new Date().getTime()}.png`;
+        link.href = image;
+        link.click();
+
+        Swal.fire('Berhasil!', 'Gambar telah diunduh.', 'success');
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Gagal', 'Tidak dapat mengambil gambar.', 'error');
+    }
+};
 </script>
 
 <template>
@@ -407,127 +227,133 @@ const breadcrumbItems = [
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
 
         <template v-if="props.nasabah.status === 'Pengajuan Verifikasi'">
-            <div class="card w-full shadow-sm border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-
-                <div class="flex flex-col gap-5 bg-gray-200 dark:bg-gray-800 transition-colors">
-
-                    <h3
-                        class="border-b border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
-                        Anda belum melakukan verifikasi akun !!!
-                    </h3>
-
-                    <span class="w-full font-medium text-gray-700 dark:text-gray-300">
-                        Isi Biodata anda dan keperluan dokumen (Opsional)
-                    </span>
-
-
-
-
-
-
-                </div>
-
-            </div>
-
-
-        </template>
-        <template v-else>
-            <div class="grid gap-4">
-
-                <div class=" rounded-xl shadow-md p-5 border border-gray-200 dark:border-gray-700">
-                    <div class=" justify-between items-center gap-4">
-
-                        <p class="text-sm dark:text-white text-black opacity-80">
-                            Total Saldo Anda
-                        </p>
-                        <h2 class="text-3xl text-emerald-500  font-bold mt-2">
-                            {{ formatRupiah(totalSaldo) }}
-                        </h2>
+            <div class="bg-gradient-to-r from-red-500 to-orange-500 p-[1px] rounded-3xl shadow-lg mb-8">
+                <div class="bg-white dark:bg-gray-900 rounded-[23px] p-6 flex items-center gap-5">
+                    <div class="bg-red-100 dark:bg-red-900/30 p-4 rounded-2xl">
+                        <i class="fas fa-id-card text-2xl text-red-500"></i>
                     </div>
-
-
-
+                    <div class="flex-1">
+                        <h3 class="font-black text-gray-800 dark:text-white uppercase tracking-wider text-sm">Verifikasi
+                            Diperlukan</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Lengkapi profil dan nomor rekening untuk
+                            mengaktifkan fitur pencairan.</p>
+                    </div>
+                    <button
+                        class="bg-red-500 text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-red-600 transition-all">Lengkapi
+                        Sekarang</button>
                 </div>
+            </div>
+        </template>
 
-                <div class="grid grid-cols-1  gap-4">
-
-                    <div class=" bg-white dark:bg-gray-800 rounded-xl shadow p-5 overflow-hidden">
-                        <h3 class="mb-4 font-bold dark:text-white text-sm uppercase tracking-wider">Riwayat Transaksi
-                        </h3>
-                        <div class="overflow-x-auto">
-
-                            <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
-
-                                <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
+        <template v-else>
+            <div class="space-y-8 pb-20">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div
+                        class="lg:col-span-2 relative overflow-hidden bg-[#064e4b] p-8 rounded-[2.5rem] shadow-2xl shadow-emerald-900/40 group">
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-10">
+                                <div class="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/10">
+                                    <i class="fas fa-leaf text-emerald-400 text-xl"></i>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button @click="exportAsImage()"
+                                        class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-emerald-500 transition-all">
+                                        <i class="fas fa-file-pdf text-xs"></i>
+                                    </button>
                                     <button @click="exportData(0)"
-                                        class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                                        <i class="fas fa-file-pdf"></i> PDF
-                                    </button>
-                                    <button @click="exportData(1)"
-                                        class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                                        <i class="fas fa-file-excel"></i> Excel
-                                    </button>
-                                    <button @click="exportData(2)"
-                                        class="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                                        <i class="fas fa-print"></i> Print
+                                        class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-emerald-500 transition-all">
+                                        <i class="fas fa-print text-xs"></i>
                                     </button>
                                 </div>
-                                <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
-                                    <div class="flex items-end gap-2">
-                                        <label
-                                            class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                                        <input @keyup="handleSearch" type="text"
-                                            class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-30 transition-all"
-                                            placeholder="Ketik...">
-                                    </div>
-
-                                    <div class="flex items-center gap-2">
-                                        <label
-                                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                                        <select @change="handleCategoryFilter"
-                                            class="border border-gray-200 dark:border-gray-600 text-black dark:text-white rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900  focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                                            <option value="">Semua</option>
-                                            <option value="Selesai">Selesai</option>
-                                            <option value="Belum Dibayar">Belum Dibayar</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="flex items-center gap-2">
-                                        <label
-                                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
-                                        <select @change="handleLengthChange"
-                                            class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
-                                            <option value="5" selected>5</option>
-                                            <option value="10">10</option>
-                                            <option value="25">25</option>
-                                        </select>
-                                    </div>
-                                </div>
-
                             </div>
-                            <DataTable ref="dtInstance" :data="nasabah" :options="dtOptions"
-                                class="w-full stripe hover">
-                                <thead>
-                                    <tr>
-                                        <th class="text-black dark:text-white capitalize">No</th>
-                                        <th class="text-black dark:text-white capitalize">Jadwal Pelaksanaan</th>
-                                        <th class="text-black dark:text-white capitalize">Total Saldo</th>
-                                        <th class="text-black dark:text-white capitalize">Status</th>
-                                        <th class="text-black dark:text-white capitalize">Aksi</th>
-                                    </tr>
-                                </thead>
-
-
-                            </DataTable>
+                            <p class="text-emerald-300/80 text-xs font-bold uppercase tracking-[0.3em] mb-2">Total Saldo
+                                Terkumpul</p>
+                            <h2 class="text-5xl md:text-6xl text-white font-black tracking-tighter mb-6">
+                                {{ formatRupiah(totalSaldo) }}
+                            </h2>
+                            <div class="flex items-center gap-4 border-t border-white/5 pt-6 mt-6">
+                                <div class="flex -space-x-2">
+                                    <div
+                                        class="w-8 h-8 rounded-full border-2 border-[#064e4b] bg-emerald-500 flex items-center justify-center text-[10px] text-white font-bold">
+                                        RT</div>
+                                    <div
+                                        class="w-8 h-8 rounded-full border-2 border-[#064e4b] bg-blue-500 flex items-center justify-center text-[10px] text-white font-bold">
+                                        {{ props.IDRT }}</div>
+                                </div>
+                                <p class="text-[10px] text-emerald-200/50 uppercase font-bold tracking-widest">Unit Bank
+                                    Sampah Digital</p>
+                            </div>
+                        </div>
+                        <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl"></div>
+                             <div class="absolute right-0 top-32 opacity-10 pointer-events-none">
+                            <svg width="300" height="200" viewBox="0 0 200 200" fill="none">
+                                <circle cx="150" cy="120" r="100" fill="white" />
+                            </svg>
                         </div>
                     </div>
 
+                    <div class="flex flex-col gap-4">
+                        <div
+                            class="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-400 font-bold uppercase tracking-tight">Total Transaksi</p>
+                                <p class="text-xl font-black text-gray-800 dark:text-white">{{ nasabah.length }} Kali
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-emerald-500 p-6 rounded-[2rem] shadow-lg shadow-emerald-500/20 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-white/70 font-bold uppercase tracking-tight">Status Akun</p>
+                                <p class="text-xl font-black text-white">Terverifikasi</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12">
 
 
+                    <div class="mt-12">
+
+
+                        <div class="mt-16 setoran-container">
+                            <div class="flex flex-col md:flex-row items-end justify-between gap-6 mb-10 px-4">
+                                <div class="space-y-1">
+                                    <h3 class="text-3xl font-black text-gray-800 dark:text-white tracking-tighter">
+                                        Riwayat Setoran</h3>
+                                    <p class="text-sm text-gray-400 font-medium">Data setoran sampah dan riwayat
+                                        perolehan saldo anda.</p>
+                                </div>
+
+                                <div class="relative group w-full md:w-80">
+                                    <input @keyup="handleSearch" type="text" placeholder="Cari transaksi..."
+                                        class="w-full pl-14 pr-6 py-4 m-auto rounded-3xl bg-white dark:bg-gray-800 border-none shadow-xl shadow-gray-100 dark:shadow-none focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-bold">
+                                    <i
+                                        class="fas fa-search absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-emerald-500 transition-colors"></i>
+                                </div>
+                            </div>
+
+                            <DataTable ref="dtInstance" :data="nasabah" :options="dtOptions"
+                                class="feed-container w-full">
+                                <thead class="hidden">
+                                    <tr>
+                                        <th>Data</th>
+                                    </tr>
+                                </thead>
+                            </DataTable>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
-
     </AuthenticatedLayout>
 </template>
 
@@ -544,70 +370,56 @@ const breadcrumbItems = [
 </style>
 
 <style>
-.dark td {
-    color: white;
+/* Membunuh total tampilan tabel */
+.feed-container {
+    border: none !important;
+    background: transparent !important;
 }
 
-.accordion-enter-active,
-.accordion-leave-active {
-    transition: all 0.3s ease-in-out;
-    max-height: 500px;
-    overflow: hidden;
+.feed-container.dataTable.no-footer {
+    border-bottom: none !important;
 }
 
-.accordion-enter-from,
-.accordion-leave-to {
-    max-height: 0;
-    opacity: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+.feed-container tbody,
+.feed-container tr,
+.feed-container td {
+    display: block !important;
+    /* Membuat sel tabel bertingkah seperti DIV */
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
 }
 
-.accordion-wrapper>* {
-    transition: opacity 0.2s;
+/* Pagination bergaya Mobile App */
+.dataTables_wrapper .dataTables_paginate {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 40px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: white !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 14px 24px !important;
+    font-weight: 900 !important;
+    font-size: 12px !important;
+    color: #374151 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: #10b981 !important;
-    border: none !important;
+    background: #064e4b !important;
     color: white !important;
-    border-radius: 8px;
+    box-shadow: 0 20px 25px -5px rgba(6, 78, 75, 0.3) !important;
+    transform: translateY(-4px);
 }
 
-.dataTables_wrapper .dataTables_info,
-.dataTables_wrapper .dataTables_paginate {
-    font-size: 0.8rem;
-    color: #6b7280 !important;
-    margin-top: 1rem;
-}
-
-.dark .dataTables_wrapper .dataTables_length,
-.dark .dataTables_wrapper .dataTables_filter,
-.dark .datatable .dt-info,
-.dark .dataTables_wrapper .dataTables_processing,
-.dark .datatable .dt-paging {
-    color: #ffffff !important;
-}
-
-.dataTables_filter {
-    display: none;
-}
-
-/* Kita pakai custom search di atas */
-
-.slide-fade-enter-active {
-    transition: all 0.3s ease-out;
-}
-
-.slide-fade-leave-active {
-    transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-    transform: translateY(-10px);
-    opacity: 0;
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: #1f2937 !important;
+    color: white !important;
 }
 </style>

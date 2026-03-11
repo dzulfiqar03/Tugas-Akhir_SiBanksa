@@ -9,7 +9,7 @@ import {
 } from 'chart.js';
 import { Calendar } from 'v-calendar';
 import 'v-calendar/style.css';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, h, nextTick, onMounted, ref, watch } from 'vue';
 import { Doughnut } from 'vue-chartjs';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -230,6 +230,11 @@ const totalSaldo = computed(() => {
                         <div class="bg-white/20 p-4 rounded-2xl backdrop-blur-md border border-white/30">
                             <i class="fas fa-wallet text-2xl"></i>
                         </div>
+                        <div class="absolute right-0 top-32 opacity-10 pointer-events-none">
+                            <svg width="300" height="200" viewBox="0 0 200 200" fill="none">
+                                <circle cx="150" cy="100" r="100" fill="white" />
+                            </svg>
+                        </div>
                     </div>
 
                     <div class="flex gap-8 border-t border-white/20 pt-6">
@@ -324,7 +329,7 @@ const totalSaldo = computed(() => {
                                     class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
                             </div>
                             <div>
-                                <h3 class="font-bold text-xs dark:text-white leading-none">AI Banksa</h3>
+                                <h3 class="font-bold text-xs text-black dark:text-white leading-none">AI Banksa</h3>
                                 <span class="text-[9px] text-emerald-500">Asisten Digital</span>
                             </div>
                         </div>
@@ -376,6 +381,15 @@ const totalSaldo = computed(() => {
                         <Calendar :attributes="calendarAttributes" is-expanded
                             class="border-none shadow-none w-full dark:bg-gray-800"
                             :is-dark="page.props.auth.user.theme === 'dark'" />
+
+                          <div class="mt-4 space-y-2">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Jadwal Pengangkutan /
+                                    Kegiatan</span>
+                            </div>
+                        </div>
                     </div>
 
 

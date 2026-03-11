@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { onMounted, ref, watch } from 'vue';
 
 const darkMode = ref(false);
@@ -19,6 +19,10 @@ watch(darkMode, (newValue) => {
         document.documentElement.classList.remove('dark');
     }
 });
+
+const goBack = () => {
+    window.history.back();
+};
 </script>
 
 <template>
@@ -47,10 +51,10 @@ watch(darkMode, (newValue) => {
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link href="javascript:location.reload()"
+                    <button @click="goBack()"
                         class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 dark:shadow-none transition-all active:scale-95">
-                        Try Again
-                    </Link>
+                        Refresh
+                    </button>
 
                     <button @click="darkMode = !darkMode"
                         class="text-sm text-gray-400 hover:text-emerald-600 underline">

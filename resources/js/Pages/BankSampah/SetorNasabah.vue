@@ -1,28 +1,26 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useForm, router, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
-import FormWrapper from '@/Components/FormWrapper.vue';
+import { computed, ref } from 'vue';
 
 
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-import InputLabel from '@/Components/InputLabel.vue';
 
 
 // ================= DATATABLES =================
-import DataTable from 'datatables.net-vue3'
-import DataTablesCore from 'datatables.net'
-import Buttons from 'datatables.net-buttons'
-import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
-import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
-import Responsive from 'datatables.net-responsive-dt'
+import DataTablesCore from 'datatables.net';
+import Buttons from 'datatables.net-buttons';
+import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5';
+import ButtonsPrint from 'datatables.net-buttons/js/buttons.print';
+import Responsive from 'datatables.net-responsive-dt';
+import DataTable from 'datatables.net-vue3';
 
 // CSS (WAJIB)
-import 'datatables.net-dt/css/dataTables.dataTables.css'
-import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
+import 'datatables.net-dt/css/dataTables.dataTables.css';
+import 'datatables.net-responsive-dt/css/responsive.dataTables.css';
 
 // Register
 DataTable.use(DataTablesCore)

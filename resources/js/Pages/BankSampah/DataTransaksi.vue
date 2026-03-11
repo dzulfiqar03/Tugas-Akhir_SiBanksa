@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, render } from 'vue';
-import { useForm, router, Head } from '@inertiajs/vue3';
+import { useForm, router, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 import jszip from 'jszip';
@@ -162,6 +162,11 @@ const kirimWA2 = (row) => {
 };
 window.handleWA = kirimWA;
 
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+const userDetail = computed(() => user.value?.user_detail || {});
+
+const dtInstance = ref(null);
 const dtOptions = {
     pageLength: 5,
     responsive: true,
@@ -277,111 +282,317 @@ const dtOptions = {
             extend: 'pdfHtml5',
             text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
             className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: 'Data Transaksi Setoran',
-            exportOptions: {
-                columns: ':not(.no-print)'
-            },
-            customize: function (doc) {
-                // Atur margin halaman PDF
-                doc.pageMargins = [40, 60, 40, 40];
+            pageSize: 'A4',
+            title: 'Laporan Transaksi SiBanksa ' +
+                'RT-0' + (page.props.auth.user.user_detail?.id_rt || '-') + ' ' +
+                new Date().toLocaleDateString('id-ID').replace(/\//g, '-'), customize: function (doc) {
+                    // 1. Hitung Total
+                    const totalSemua = props.nasabah?.reduce((acc, n) => {
+                        const saldo = n.pencatatan_items?.reduce((s, i) => s + (parseFloat(i.subtotal) || 0), 0) || 0;
+                        return acc + saldo;
+                    }, 0) || 0;
 
-                // Tambahkan logo + namaSampah di atas tabel
-                doc.content.splice(0, 0, {
-                    columns: [
-                        {
-                            text: 'SI BANKSA',
-                            alignment: 'left',
-                            fontSize: 16,
-                            bold: true,
-                            margin: [0, 20, 0, 0]
-                        },
-                        {
-                            text: 'Bank Sampah - Data Sampah',
+                    const formattedTotal = new Intl.NumberFormat('id-ID', {
+                        style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+                    }).format(totalSemua);
+
+                    // 2. Cari Tabel Utama
+                    const tableNode = doc.content.find(c => c.table);
+
+                    if (tableNode) {
+                        const rowCount = tableNode.table.body.length;
+                        const colCount = tableNode.table.body[0].length; // Hitung jumlah kolom otomatis
+
+                        // FIXER: Pastikan semua baris yang sudah ada TIDAK memiliki sel undefined
+                        tableNode.table.body.forEach(row => {
+                            for (let i = 0; i < colCount; i++) {
+                                if (typeof row[i] === 'undefined' || row[i] === null) {
+                                    row[i] = { text: '' };
+                                }
+                            }
+                        });
+
+                        // Atur Lebar (Pastikan array ini jumlahnya sama dengan colCount)
+                        // Jika tabelmu punya 6 kolom, gunakan ini:
+                        if (colCount === 6) {
+                            tableNode.table.widths = [25, '*', 100, 60, 80, 50];
+                        }
+
+                        // 3. TAMBAHKAN BARIS TOTAL DENGAN LOGIKA DINAMIS
+                        // Kita buat array kosong, lalu isi sesuai jumlah kolom agar tidak Malformed
+                        let rowTotal = [];
+
+                        // Kolom pertama dengan ColSpan (mengambil jatah kolom 1 sampai kolom n-2)
+                        rowTotal.push({
+                            text: 'TOTAL SETORAN BELUM CAIR',
+                            colSpan: colCount - 2,
                             alignment: 'right',
-                            fontSize: 16,
                             bold: true,
-                            margin: [0, 20, 0, 0]
-                        }
-                    ],
-                    columnGap: 10
-                });
+                            fillColor: '#f9fafb'
+                        });
 
-                // Tambahkan garis pemisah
-                doc.content.splice(1, 0, {
-                    canvas: [
+                        // Isi placeholder kosong untuk kolom yang kena ColSpan
+                        for (let i = 0; i < colCount - 3; i++) {
+                            rowTotal.push({});
+                        }
+
+                        // Kolom Saldo (Kolom ke-5)
+                        rowTotal.push({
+                            text: formattedTotal,
+                            bold: true,
+                            color: '#10b981',
+                            alignment: 'right',
+                            fillColor: '#f0fdf4'
+                        });
+
+                        // Kolom Status (Kolom ke-6 / Terakhir)
+                        rowTotal.push({ text: '', fillColor: '#f9fafb' });
+
+                        // Masukkan ke tabel
+                        tableNode.table.body.push(rowTotal);
+                        tableNode.layout = 'lightHorizontalLines';
+                    }
+
+                    // 4. Header & Tanda Tangan (Sama seperti sebelumnya)
+                    const userDetail = page.props.auth.user?.user_detail;
+                    const idRT = userDetail?.id_rt || '-';
+
+                    doc.content.splice(0, 1,
                         {
-                            type: 'line',
-                            x1: 0,
-                            y1: 0,
-                            x2: 515,
-                            y2: 0,
-                            lineWidth: 1,
-                            lineColor: '#cccccc'
-                        }
-                    ],
-                    margin: [0, 10, 0, 10]
-                });
+                            columns: [
+                                {
+                                    stack: [
+                                        { text: 'SiBanksa', fontSize: 22, bold: true, color: '#10b981' },
+                                        { text: 'Sistem Informasi Bank Sampah Digital', fontSize: 8, color: '#6b7280' },
+                                    ]
+                                },
+                                {
+                                    stack: [
+                                        { text: 'LAPORAN TRANSAKSI', fontSize: 16, bold: true, alignment: 'right' },
+                                        { text: `UNIT RT-0${idRT}`, fontSize: 10, alignment: 'right', color: '#9ca3af' },
+                                    ],
+                                    width: '*'
+                                }
+                            ]
+                        },
+                        { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1, lineColor: '#10b981' }], margin: [0, 5, 0, 15] }
+                    );
 
-                // Atur gaya tabel (opsional)
-                doc.styles.tableHeader.fillColor = '#f1f1f1';
-                doc.styles.tableHeader.color = '#333333';
-                doc.defaultStyle.fontSize = 10;
-            }
+                    doc.content.push(
+                        { text: '\n\n' },
+                        {
+                            columns: [
+                                { text: '', width: '*' },
+                                {
+                                    width: 180,
+                                    stack: [
+                                        { text: `Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, alignment: 'center' },
+                                        { text: 'Verifikator Lapangan', alignment: 'center', margin: [0, 5, 0, 40] },
+                                        { text: `( ${userDetail?.fullName || '..........................'} )`, alignment: 'center', bold: true },
+                                        { text: 'ID: SBK-RT0' + idRT, alignment: 'center', fontSize: 8, color: '#9ca3af' }
+                                    ]
+                                }
+                            ]
+                        }
+                    );
+
+                    doc.styles.tableHeader = { fillColor: '#10b981', color: 'white', bold: true, alignment: 'center' };
+                }
         },
 
         {
             extend: 'excelHtml5',
             text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
-            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
+            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+            title: 'Dokumen Transaksi SiBanksa ' +
+                'RT-0' + (page.props.auth.user.user_detail?.id_rt || '-') + ' ' +
+                new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
+            exportOptions: {
+                columns: ':not(.no-print)'
+            },
+            customize: function (xlsx) {
+                var sheet = xlsx.xl.worksheets['sheet1.xml'];
+
+                // 1. Hitung Total
+                const totalSemua = props.nasabah?.reduce((acc, n) => {
+                    const saldo = n.pencatatan_items?.reduce((s, i) => s + (parseFloat(i.subtotal) || 0), 0) || 0;
+                    return acc + saldo;
+                }, 0);
+
+                // 2. Berikan Border ke Semua Cell yang memiliki data
+                // Kita cari semua tag <c> (cell) dan beri style '25' (border tipis)
+                // Kecuali header yang akan kita beri style berbeda nanti
+                $('row c', sheet).attr('s', '25');
+
+                // 3. Styling Header (Style 51: Bold, Background Grey, Border)
+                $('row:first c', sheet).attr('s', '51');
+
+                // 4. Atur Lebar Kolom
+                var colConf = [
+                    { id: 'A', width: 5 }, { id: 'B', width: 30 },
+                    { id: 'C', width: 20 }, { id: 'D', width: 15 },
+                    { id: 'E', width: 20 }, { id: 'F', width: 15 }
+                ];
+                colConf.forEach((c, i) => {
+                    $(`col[min="${i + 1}"]`, sheet).attr('width', c.width);
+                });
+
+                // 5. Tambahkan Baris Total dengan Border & Warna
+                var lastRow = $('row', sheet).length;
+                var nextRow = lastRow + 1;
+
+                // Style 67: Hijau/Success dengan border, Style 51: Grey/Bold dengan border
+                var totalRow = `
+        <row r="${nextRow}" customHeight="1" ht="30">
+            <c r="A${nextRow}" t="inlineStr" s="51">
+                <is><t>TOTAL KESELURUHAN SETORAN</t></is>
+            </c>
+            <c r="B${nextRow}" s="51"></c>
+            <c r="C${nextRow}" s="51"></c>
+            <c r="D${nextRow}" s="51"></c>
+            <c r="E${nextRow}" t="n" s="67">
+                <v>${totalSemua}</v>
+            </c>
+            <c r="F${nextRow}" s="51"></c>
+        </row>
+    `;
+
+                $('sheetData', sheet).append(totalRow);
+
+                // 6. Merge Cell untuk Label Total
+                if (!$('mergeCells', sheet).length) {
+                    $('worksheet', sheet).prepend('<mergeCells count="1"/>');
+                }
+                $('mergeCells', sheet).append(`<mergeCell ref="A${nextRow}:D${nextRow}"/>`);
+            }
         },
         {
             extend: 'print',
             text: '<i class="fa-solid fa-print mr-2"></i> Print',
             className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: '', // kosongin biar gak dobel namaSampah default
+            title: '',
             customize: function (win) {
+
+                const totalSemuaNasabah = props.nasabah?.reduce((acc, nasabah) => {
+
+                    const saldoNasabah = nasabah.pencatatan_items?.reduce((subAcc, item) => {
+                        return subAcc + (parseFloat(item.subtotal) || 0);
+                    }, 0) || 0;
+
+                    return acc + saldoNasabah;
+                }, 0);
+
+                const formattedTotalSemua = new Intl.NumberFormat('id-ID', {
+                    style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+                }).format(totalSemuaNasabah);
+
+
+                const tableRows = props.nasabah?.map((item, index) => {
+                    // Hitung saldo per individu untuk ditampilkan di kolom "Total Saldo"
+                    const saldoIndividu = item.pencatatan_items?.reduce((acc, p) => acc + (parseFloat(p.subtotal) || 0), 0) || 0;
+
+                    const formattedIndividu = new Intl.NumberFormat('id-ID', {
+                        style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+                    }).format(saldoIndividu);
+
+                    return `
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px; text-align: center;">${index + 1}</td>
+                <td style="padding: 12px; font-weight: 600; text-transform: uppercase;">
+                    ${item.user_detail.fullName}
+                </td>
+                <td style="padding: 12px; text-align: center; font-family: monospace;">
+                    ${item.user_bank[0]?.nomor_rekening || '-'}
+                </td>
+                <td style="padding: 12px;">
+                    ${item.user_bank[0]?.bank?.short_name || '-'}
+                </td>
+                <td style="padding: 12px; text-align: right; font-weight: bold; color: #059669;">
+                    ${formattedIndividu}
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    <span style="padding: 2px 8px; border-radius: 10px; font-size: 10px; ${item.user_transaction?.length > 0 ? 'background:#dcfce7;color:#166534;' : 'background:#fee2e2;color:#991b1b;'}">
+                        ${item.user_transaction?.length > 0 ? 'Selesai' : 'Belum'}
+                    </span>
+                </td>
+            </tr>
+        `;
+                }).join('');
                 $(win.document.body)
                     .css('font-family', 'Poppins, sans-serif')
                     .prepend(`
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                                <h1 class="py-5 text-2xl font-semibold text-gray-800 dark:text-gray-100 transition-all duration-300 font-[Poppins] text-center w-full"
-            >
-            <span class="font-light">Si</span>
-            Banksa
-        </h1>
-
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
-                        <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
+        <div style="padding: 40px; border-top: 10px solid #10b981; background: white;">
+            <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                    <i class="fas fa-recycle text-[20rem]"></i>
+                </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div
+                            class="w-16 h-16 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                    <div>
+                        <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #1f2937;">SiBanksa</h1>
+                        <p style="margin: 0; font-size: 10px; color: #6b7280; font-weight: bold; letter-spacing: 1px;">SISTEM INFORMASI BANK SAMPAH</p>
                     </div>
                 </div>
-                <hr style="border: 1px solid #ccc; margin-bottom: 20px;">
-            `);
+                <div style="text-align: right;">
+                    <h2 style="margin: 0; font-size: 28px; color: #d1d5db; letter-spacing: 4px;">SAMPAH</h2>
+                </div>
+            </div>
 
-                // Styling tambahan (opsional)
-                $(win.document.body).find('table')
-                    .addClass('compact')
-                    .css({
-                        'font-size': '12px',
-                        'width': '100%',
-                        'border-collapse': 'collapse'
-                    });
+            <div style="display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 40px; font-size: 14px;">
+                <div>
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">DITERIMA DARI:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${page.props.auth.user.user_detail.fullName}</p>
+                    <p style="color: #6b7280; margin: 0;">${page.props.auth.user.user_detail.roles.role} SiBanksa</p>
+                    <p style="color: #6b7280; margin: 0;">RT: ${page.props.auth.user.user_detail?.id_rt || '-'} / RW: 01</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">Dicetak Pada:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${new Date().toLocaleDateString('id-ID')}</p>
+                    <p style="color: #6b7280; margin: 0;">Lokasi: Unit Bank Sampah RT-0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                </div>
+            </div>
 
-                $(win.document.body).find('table th')
-                    .css({
-                        'background-color': '#f1f1f1',
-                        'color': '#333',
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
+                <thead>
+                    <tr style="background: #f9fafb; color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">No</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Nama Lengkap</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: center;">Nomor Rekening</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Bank</th>
+                         <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Total Saldo</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
 
-                $(win.document.body).find('table td')
-                    .css({
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
+                <tfoot>
+                    <tr style="background: #f9fafb; color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                        <th colspan="4" style="padding: 12px; border-top: 2px solid #f3f4f6; text-align: right;">Setoran yang belum dicairkan: </th>
+                        <th style="padding: 12px; border-top: 2px solid #f3f4f6; text-align: left; font-weight: bold;">${formattedTotalSemua}</th>
+                        <th style="padding: 12px; border-top: 2px solid #f3f4f6;"></th>
+                    </tr>
+                </tfoot>
+            </table>
+
+           <div style="display: flex; justify-content: flex-end; margin-top: 40px;">
+                            <div style="text-align: center; width: 220px;">
+                                <p style="font-size: 11px; margin-bottom: 60px;">Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br><b>Verifikator</b></p>
+                                <div style="border-bottom: 1px solid #d1d5db; width: 180px; margin: 0 auto 5px;"></div>
+                                <p style="font-weight: bold; font-size: 12px; text-transform: uppercase;">( Ketua Bank Sampah RT-0${page.props.auth.user.user_detail?.id_rt || '-'} )</p>
+                                <p style="font-size: 9px; color: #9ca3af;">ID: SBK-RT0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                            </div>
+                        </div>
+        </div>
+    `);
+
+                // Sembunyikan tabel asli bawaan DataTables agar tidak dobel
+                $(win.document.body).find('table').last().hide();
             }
         }
 
@@ -409,120 +620,7 @@ const dtOptions2 = {
         bottomStart: null,
         bottomEnd: 'paging'
     },
-    buttons: [
-        {
-            extend: 'pdfHtml5',
-            text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
-            className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: 'Data Transaksi Setoran',
-            exportOptions: {
-                columns: ':not(.no-print)'
-            },
-            customize: function (doc) {
-                // Atur margin halaman PDF
-                doc.pageMargins = [40, 60, 40, 40];
 
-                // Tambahkan logo + namaSampah di atas tabel
-                doc.content.splice(0, 0, {
-                    columns: [
-                        {
-                            text: 'SI BANKSA',
-                            alignment: 'left',
-                            fontSize: 16,
-                            bold: true,
-                            margin: [0, 20, 0, 0]
-                        },
-                        {
-                            text: 'Bank Sampah - Data Sampah',
-                            alignment: 'right',
-                            fontSize: 16,
-                            bold: true,
-                            margin: [0, 20, 0, 0]
-                        }
-                    ],
-                    columnGap: 10
-                });
-
-                // Tambahkan garis pemisah
-                doc.content.splice(1, 0, {
-                    canvas: [
-                        {
-                            type: 'line',
-                            x1: 0,
-                            y1: 0,
-                            x2: 515,
-                            y2: 0,
-                            lineWidth: 1,
-                            lineColor: '#cccccc'
-                        }
-                    ],
-                    margin: [0, 10, 0, 10]
-                });
-
-                // Atur gaya tabel (opsional)
-                doc.styles.tableHeader.fillColor = '#f1f1f1';
-                doc.styles.tableHeader.color = '#333333';
-                doc.defaultStyle.fontSize = 10;
-            }
-        },
-
-        {
-            extend: 'excelHtml5',
-            text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
-            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm'
-        },
-        {
-            extend: 'print',
-            text: '<i class="fa-solid fa-print mr-2"></i> Print',
-            className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-            title: '', // kosongin biar gak dobel namaSampah default
-            customize: function (win) {
-                $(win.document.body)
-                    .css('font-family', 'Poppins, sans-serif')
-                    .prepend(`
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                                <h1 class="py-5 text-2xl font-semibold text-gray-800 dark:text-gray-100 transition-all duration-300 font-[Poppins] text-center w-full"
-            >
-            <span class="font-light">Si</span>
-            Banksa
-        </h1>
-
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 14px; margin: 0;">Laporan Data Jadwal Pelaksanaan</p>
-                        <p style="font-size: 12px; margin: 0;">Dicetak pada: ${new Date().toLocaleDateString()}</p>
-                    </div>
-                </div>
-                <hr style="border: 1px solid #ccc; margin-bottom: 20px;">
-            `);
-
-                // Styling tambahan (opsional)
-                $(win.document.body).find('table')
-                    .addClass('compact')
-                    .css({
-                        'font-size': '12px',
-                        'width': '100%',
-                        'border-collapse': 'collapse'
-                    });
-
-                $(win.document.body).find('table th')
-                    .css({
-                        'background-color': '#f1f1f1',
-                        'color': '#333',
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
-
-                $(win.document.body).find('table td')
-                    .css({
-                        'padding': '6px',
-                        'border': '1px solid #ddd'
-                    });
-            }
-        }
-
-    ],
     language: {
         info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
         paginate: {
