@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\KetuaRW\PelaporanController;
 use App\Http\Controllers\DocumentArchiverController;
 use App\Http\Controllers\EvidenceArchiverController;
+use App\Http\Controllers\ProfileController;
 
 Route::middleware(['roles:Bank Sampah'])->prefix('bank-sampah')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -30,6 +31,13 @@ Route::middleware(['roles:Bank Sampah'])->prefix('bank-sampah')->group(function 
             Route::delete('/Delete/{Jadwal}',  'destroy')->name('delete-jadwalBankSampah');
         });
 
+        Route::controller(ProfileController::class)
+            ->prefix('/Dashboard')
+            ->name('dashboard.')
+            ->group(function () {
+
+                Route::post('/edit', 'editAll')->name('profile-edit');
+            });
     Route::controller(DataSampahController::class)
         ->prefix('Sampah')
         ->group(function () {

@@ -130,7 +130,7 @@ const submit = async () => {
             confirmButtonText: 'Ya, Perbarui!'
         }).then((result) => {
             if (result.isConfirmed) {
-                form.post(route('profile-edit'),
+                form.post(route('profile.profile-edit'),
                     {
                         onSuccess: () => {
                             Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload(),

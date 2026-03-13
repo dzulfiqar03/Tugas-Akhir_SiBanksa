@@ -1,10 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useForm, router, Head, usePage } from '@inertiajs/vue3';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Swal from 'sweetalert2';
 import FormWrapper from '@/Components/FormWrapper.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
+import { computed, ref } from 'vue';
 
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
@@ -12,16 +12,16 @@ import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 
 
 // ================= DATATABLES =================
-import DataTable from 'datatables.net-vue3'
-import DataTablesCore from 'datatables.net'
-import Buttons from 'datatables.net-buttons'
-import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
-import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
-import Responsive from 'datatables.net-responsive-dt'
+import DataTablesCore from 'datatables.net';
+import Buttons from 'datatables.net-buttons';
+import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5';
+import ButtonsPrint from 'datatables.net-buttons/js/buttons.print';
+import Responsive from 'datatables.net-responsive-dt';
+import DataTable from 'datatables.net-vue3';
 
 // CSS (WAJIB)
-import 'datatables.net-dt/css/dataTables.dataTables.css'
-import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
+import 'datatables.net-dt/css/dataTables.dataTables.css';
+import 'datatables.net-responsive-dt/css/responsive.dataTables.css';
 
 // Register
 DataTable.use(DataTablesCore)
@@ -212,7 +212,7 @@ const dtOptions = {
 
 
                 }
-                 setTimeout(() => {
+                setTimeout(() => {
                     $.fn.dataTable.ext.buttons.excelHtml5.action.call(self, e, dt, button, config);
                 }, 300);
             }
@@ -222,7 +222,7 @@ const dtOptions = {
             text: '<i class="fa-solid fa-print mr-2"></i> Print',
             className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
             title: '', // Kosongkan title default karena kita akan custom di action
-             exportOptions: {
+            exportOptions: {
                 columns: ':not(.no-print)'
             },
             action: async function (e, dt, button, config) {
@@ -464,9 +464,13 @@ const breadcrumbItems = [
                     </p>
                 </div>
                 <button @click="openCreateForm"
-                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                    class=" text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                    :class="[
+                        showForm ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                    ]">
+
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
-                    {{ showForm ? 'Batal' : 'Tambah Data' }}
+                    {{ showForm ? 'Tutup Form' : 'Tambah Sampah' }}
                 </button>
             </div>
 
@@ -494,7 +498,7 @@ const breadcrumbItems = [
                                 </select>
 
                                 <input v-else-if="field.type !== 'number'" :type="field.type" v-model="form[field.name]"
-                                    class="w-full border-gray-200 dark:border-gray-600 rounded-xl p-2.5 dark:bg-gray-900 dark:text-white text-black focus:ring-emerald-500"
+                                    class="w-full border-gray-200 dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500"
                                     :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
                                     :placeholder="field.placeholder">
 
@@ -502,7 +506,7 @@ const breadcrumbItems = [
                                 <div v-else>
                                     <div v-if="field.name === 'harga'">
                                         <input @keyup="kasCalculate" :type="field.type" v-model="form[field.name]"
-                                            class="w-full border-gray-200 dark:border-gray-600 rounded-xl p-2.5 dark:bg-gray-900 dark:text-white text-black focus:ring-emerald-500"
+                                            class="w-full border-gray-200 dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500"
                                             :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
                                             :placeholder="field.placeholder">
 
@@ -517,7 +521,7 @@ const breadcrumbItems = [
 
 
                                     <input v-else :type="field.type" v-model="harga_pengepul"
-                                        class="w-full border-gray-200 dark:border-gray-600 rounded-xl p-2.5 dark:bg-gray-900 dark:text-white text-black focus:ring-emerald-500"
+                                        class="w-full border-gray-200 dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500"
                                         :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
                                         :placeholder="field.placeholder">
 

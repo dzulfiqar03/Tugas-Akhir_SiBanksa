@@ -23,7 +23,6 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import Preloader from '@/Components/Preloader.vue';
-import SessionExpired from '@/Components/SessionExpired.vue';
 
 const isDark = ref(false)
 

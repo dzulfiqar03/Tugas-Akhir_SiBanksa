@@ -18,6 +18,8 @@ import { Calendar } from 'v-calendar';
 import 'v-calendar/style.css';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { Bar } from 'vue-chartjs';
+
+
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const props = defineProps({
@@ -65,38 +67,49 @@ const getUnitColor = (unitId) => {
     return colors[unitId % colors.length];
 };
 const calendarAttributes = computed(() => {
-    let rawJadwal = props.jadwal || [];
+    const attributes = [];
 
-    // 1. Filter: Jika RW pilih RT tertentu, tampilkan hanya jadwal RT itu
+    attributes.push({
+        key: 'today',
+        highlight: {
+            color: 'red',
+            fillMode: 'solid',
+        },
+        dates: new Date(),
+    });
+
+    if (!props.jadwal) return attributes;
+
+    let rawJadwal = [...props.jadwal];
     if (selectedUnitId.value !== 'all') {
         rawJadwal = rawJadwal.filter(j =>
             j.user_detail && j.user_detail.id_rt == selectedUnitId.value
         );
     }
 
-    // 2. Mapping: Ubah data jadwal menjadi format yang dimengerti v-calendar
-    return rawJadwal.map(item => {
+    rawJadwal.forEach(item => {
         const rtId = item.user_detail?.id_rt || 0;
         const namaPetugas = item.user_detail?.fullName || 'Unit Bank Sampah';
 
-        return {
-            key: `jadwal-${item.id}`, // Key unik
+        attributes.push({
+            key: `jadwal-${item.id}`,
             highlight: {
                 color: getUnitColor(rtId),
                 fillMode: 'light',
-                class: 'cursor-pointer' // Tambahkan kursor tangan
+                class: 'cursor-pointer'
             },
             dates: new Date(item.tanggal_setoran),
             popover: {
-                // Tampilkan info RT dan Nama Petugas agar RW jelas
                 label: `[RT ${rtId}] - Oleh: ${namaPetugas}`,
                 visibility: 'hover',
-                hideIndicator: true, // Opsional: bersihkan tampilan popover
+                hideIndicator: true,
             },
             customData: item,
             isEvent: true
-        };
+        });
     });
+
+    return attributes; // Kembalikan satu array yang sudah berisi Today + Semua Jadwal
 });
 
 const leaderboardChartData = computed(() => {
@@ -180,7 +193,7 @@ const handleDayClick = (day) => {
     const events = day.attributes
         .filter(a => a.isEvent)
         .map(a => a.customData);
-    
+
     selectedDateEvents.value = events;
 
     // Jika ingin tetap ada popup ringkas untuk user:
@@ -349,7 +362,7 @@ const breadcrumbItems = [
                                 class="text-lg font-normal opacity-60">Jiwa</span></h2>
                     </div>
                 </div>
-                 <div class="absolute right-0 top-0 opacity-10 pointer-events-none">
+                <div class="absolute right-0 top-0 opacity-10 pointer-events-none">
                     <svg width="300" height="200" viewBox="0 0 200 200" fill="none">
                         <circle cx="160" cy="70" r="100" fill="white" />
                     </svg>
@@ -475,7 +488,7 @@ const breadcrumbItems = [
                             class="border-none shadow-none w-full dark:bg-gray-800"
                             :is-dark="page.props.auth.user.theme === 'dark'" />
 
-                                <div class="mt-4 space-y-2">
+                        <div class="mt-4 space-y-2">
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 rounded-full bg-emerald-500"></div>

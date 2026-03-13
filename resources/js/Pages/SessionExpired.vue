@@ -4,13 +4,11 @@ import { onMounted, ref, watch } from 'vue';
 
 const darkMode = ref(false);
 
-// Inisialisasi Dark Mode dari LocalStorage saat komponen dimuat
 onMounted(() => {
     const savedMode = localStorage.getItem('darkMode');
     darkMode.value = savedMode ? JSON.parse(savedMode) : true; // Default true sesuai class 'dark' di Blade Anda
 });
 
-// Watcher untuk update localStorage dan class di dokumen
 watch(darkMode, (newValue) => {
     localStorage.setItem('darkMode', JSON.stringify(newValue));
     if (newValue) {
@@ -23,14 +21,14 @@ watch(darkMode, (newValue) => {
 
 <template>
 
-    <Head title="404 - No Internet Connection" />
+    <Head title="Session Expired" />
 
     <div :class="{ 'dark': darkMode }">
         <div
             class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen transition-colors duration-300">
 
             <div class="text-center px-4">
-                <div class="mb-8 animate-bounce">
+                <div class="mb-8 flex justify-center items-center animate-bounce">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 text-red-500" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -48,8 +46,8 @@ watch(darkMode, (newValue) => {
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button @click="router.get(route('login'))"
-                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 dark:shadow-none transition-all active:scale-95">Log
+                    <button @click="router.get('login')"
+                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg  dark:shadow-none transition-all active:scale-95">Log
                         Out
 
                     </button>
@@ -65,7 +63,6 @@ watch(darkMode, (newValue) => {
 </template>
 
 <style scoped>
-/* Anda bisa menambahkan animasi fade in di sini */
 .text-center {
     animation: fadeIn 0.5s ease-out;
 }

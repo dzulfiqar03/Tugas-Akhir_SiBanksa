@@ -66,7 +66,7 @@ const sections = computed(() => {
         menus.value.forEach(menu => {
             if (['Dashboard', 'Tracking Setoran'].includes(menu.nama)) grouped['MAIN'].push(menu);
 
-            else if (menu.data || ['Bank Sampah', 'Nasabah', 'Transaksi Setoran', 'Janji Setor'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
+            else if (menu.data || ['Bank Sampah', 'Nasabah', 'Transaksi Setoran'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
             else grouped['LAINNYA'].push(menu);
         });
     }
@@ -147,17 +147,21 @@ const sendLogout = () => {
         </div>
 
         <nav class="flex-1 p-3 space-y-5 overflow-y-auto custom-scrollbar">
-            <div v-for="(sectionMenus, sectionName) in sections" :key="sectionName">
-                <p v-show="sidebarExpanded || isOpen"
+                            <p v-if="statusVerifikasi !== 'Disetujui'" v-show="sidebarExpanded || isOpen"
+                    class="px-2 mb-2 text-[10px] font-semibold tracking-widest text-gray-400 uppercase">
+                    MAIN
+                </p>
+            <div  v-for="(sectionMenus, sectionName) in sections" :key="sectionName">
+                <p v-if="statusVerifikasi === 'Disetujui'" v-show="sidebarExpanded || isOpen"
                     class="px-2 mb-2 text-[10px] font-semibold tracking-widest text-gray-400 uppercase">
                     {{ sectionName }}
                 </p>
 
-                <div class="space-y-1">
+                <div v-if="statusVerifikasi === 'Disetujui'"  class="space-y-1">
                     <div v-for="menu in sectionMenus" :key="menu.nama">
 
                         <Link v-if="!menu.data && menu.nama !== 'LogOut'"
-                            :href="statusVerifikasi === 'Pengajuan Verifikasi' ? route('warga.dashboard') : menu.route"
+                            :href="statusVerifikasi === 'Pengajuan Verifikasi' ? (userDetail.id_roles ===  3 ? route('warga.dashboard'): userDetail.id_roles ===  2 ? route('dashboard') : route('rw.dashboard')) : menu.route"
                             class="flex items-center justify-between  p-2 rounded-lg transition group" :class="isRouteActive(menu.uri)
                                 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
                                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">
@@ -208,6 +212,40 @@ const sendLogout = () => {
                                 </Link>
                             </DisclosurePanel>
                         </Disclosure>
+                    </div>
+                </div>
+
+                 <div v-else  class="space-y-1">
+                    <div v-for="menu in sectionMenus" :key="menu.nama">
+
+                        <Link v-if="menu.nama === 'Dashboard' && menu.nama !== 'LogOut'"
+                            :href="statusVerifikasi === 'Pengajuan Verifikasi' ? (userDetail.id_roles ===  3 ? route('warga.dashboard'): userDetail.id_roles ===  2 ? route('dashboard') : route('rw.dashboard')) : menu.route"
+                            class="flex items-center justify-between  p-2 rounded-lg transition group" :class="isRouteActive(menu.uri)
+                                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                            <div class="flex gap-3">
+                                <span class="w-6 h-6 flex items-center justify-center shrink-0">
+                                    <i :class="menu.icon"></i>
+                                </span>
+                                <span v-show="sidebarExpanded || isOpen" class="truncate">{{ menu.nama }}</span>
+
+                            </div>
+
+                            <div>
+                                <span v-if="menu.nama === 'Chat'" v-show="sidebarExpanded || isOpen"
+                                    class=" items-end text-end animate-pulse bg-red-500 flex justify-end right-0 text-white px-3 rounded-full">{{
+                                    countChat }}</span>
+                            </div>
+                        </Link>
+
+                        <button v-else-if="menu.nama === 'LogOut'" type="button" @click="sendLogout"
+                            class="w-full flex items-center gap-3 p-2 rounded-lg transition group text-white font-bold bg-red-500 hover:bg-red-600 shadow-sm mt-4">
+                            <span class="w-6 h-6 flex items-center justify-center shrink-0">
+                                <i :class="menu.icon"></i>
+                            </span>
+                            <span v-show="sidebarExpanded || isOpen" class="truncate">{{ menu.nama }}</span>
+                        </button>
+             
                     </div>
                 </div>
             </div>

@@ -24,11 +24,15 @@ class AuthenticatedSessionController extends Controller
         $form = (new FormResources(null))->toArray(request());
 
         $formName = 'formLogin';
+        $message = session('message');
+        $messageLogout = session('messageLogout');
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
             'formdata' => $form,
-            'formName' => $formName
+            'formName' => $formName,
+            'message' => $message,
+            'messageLogout' => $messageLogout
         ]);
     }
 
@@ -46,6 +50,8 @@ class AuthenticatedSessionController extends Controller
         // Ambil role dari user_detail → roles
         $role = $user->user_detail->roles->role;
         $request->session()->put('user', $user);
+        session(['login_time' => time()]);
+        $request->session()->forget(keys: 'message');
 
         app(UserLogController::class)->log(
             'LOGIN',
@@ -78,6 +84,8 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
         $userId = $user ? $user->user_detail->id : null;
+
+
         app(UserLogController::class)->log(
             'LOGOUT',
             $request->ip(),
@@ -87,11 +95,11 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
 
-        $request->session()->forget('user');
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+
+        return redirect()->route('login')->with('messageLogout', 'Anda Berhasil Logout, Terima Kasih');
+;
     }
 }

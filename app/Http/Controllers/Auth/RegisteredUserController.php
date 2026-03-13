@@ -42,25 +42,35 @@ class RegisteredUserController extends Controller
      */
     public function store(RegisterRequest $request): RedirectResponse
     {
-
-
         try {
-
             $data = $request->validated();
 
+            // Tentukan key berdasarkan role
+            $key = ((int) $data['id_roles'] === 2) ? 'bankSampah' : 'nasabah';
 
-            $payload = array_merge($data['nasabah'], [
+            // Gabungkan data dari key tersebut dengan data level root
+            $payload = ((int) $data['id_roles'] === 2) ? array_merge($data[$key], [
                 'id_roles' => $data['id_roles'],
-                'status' => $data['status']
+                'status'   => $data['status'],
+                'id_gender' => $data['id_gender'],
+                'status_transaction' => $data['status_transaction'],
+            ]):array_merge($data[$key], [
+                'id_roles' => $data['id_roles'],
+                'status'   => $data['status'],
+                'status_transaction' => $data['status_transaction'],
             ]);
+
             $users = $this->authServices->registerUser($payload);
+
             event(new Registered($users));
+
+            session()->flash('message', 'Registrasi berhasil! Silakan login menggunakan akun yang didaftarkan');
+
             return redirect()->route('login')->with('success', 'Registrasi berhasil!');
         } catch (\Exception $e) {
-
-            return back()
-                ->withInput() // Agar ketikan user tidak hilang
-                ->with('error', 'Gagal mendaftar: ' . $e->getMessage());
+            // Cek error di storage/logs/laravel.log
+            \Log::error($e->getMessage());
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 }

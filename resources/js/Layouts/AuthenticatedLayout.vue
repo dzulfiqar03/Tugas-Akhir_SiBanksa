@@ -33,13 +33,7 @@
 
                     <template v-if="show === false">
 
-                        <!-- VERIFICATION WARNING -->
-                        <div v-if="$page.props.auth?.user?.user_detail?.status === 'Pengajuan Verifikasi'"
-                            class="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-700 dark:text-amber-400 text-sm flex items-center gap-3">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span>Akun Anda sedang dalam proses verifikasi.</span>
-                        </div>
-
+              
                         <slot />
                     </template>
 

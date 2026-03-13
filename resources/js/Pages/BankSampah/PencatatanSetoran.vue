@@ -1,4 +1,5 @@
 <script setup>
+import FormWrapper from '@/Components/FormWrapper.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Head, router, useForm, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
@@ -543,16 +544,21 @@ const breadcrumbItems = [
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola pencatatan setoran nasabah anda.</p>
                 </div>
                 <button @click="openCreateForm"
-                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                    class=" text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                    :class="[
+                        showForm? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                    ]"
+                    >
+
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
-                    {{ showForm ? 'Batal' : 'Tambah Data' }}
+                    {{ showForm ? 'Tutup Form' : 'Tambah Setoran' }}
                 </button>
             </div>
 
 
             <Transition name="accordion">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-                    <div v-if="showForm" class="p-5 bg-gray-50 dark:bg-gray-900">
+                                    <div v-if="showForm" class="p-5 bg-gray-50 dark:bg-gray-900">
+                <div class="bg-white accordion-wrapper dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
                         <FormWrapper formName="formPencatatan" :errors="form.errors" :processing="form.processing"
                             @submit="handleSubmit">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -568,9 +574,9 @@ const breadcrumbItems = [
                                 <div>
                                     <label class="block text-sm font-medium mb-1">Nasabah</label>
                                     <select v-model="form.id_userdetail"
-                                        class="w-full border rounded px-3 py-2 text-sm">
+                                        class="w-full border rounded capitalize px-3 py-2 text-sm">
                                         <option value="" disabled>Pilih Nasabah</option>
-                                        <option v-for="n in nasabahList" :key="n.id" :value="n.id">
+                                        <option  v-for="n in nasabahList" :key="n.id" :value="n.id">
                                             {{ n.fullName }}
                                         </option>
                                     </select>
@@ -592,8 +598,8 @@ const breadcrumbItems = [
                                 <div v-show="step === index + 1" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     <div v-for="item in chunk" :key="item.sampah_id"
                                         class="p-3 rounded-lg border bg-white shadow-sm">
-                                        <div class="text-sm font-medium truncate">{{ item.nama }}</div>
-                                        <div class="text-xs text-gray-500 mb-2">Satuan: {{ item.satuan }}</div>
+                                        <div class="text-sm font-medium truncate capitalize">{{ item.nama }}</div>
+                                        <div class="text-xs text-gray-500 mb-2 capitalize">Satuan: {{ item.satuan }}</div>
                                         <input type="number" step="0.01" v-model="item.jumlah"
                                             class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-emerald-500"
                                             placeholder="0">

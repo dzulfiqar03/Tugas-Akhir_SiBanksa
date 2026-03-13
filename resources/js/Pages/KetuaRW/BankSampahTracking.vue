@@ -532,20 +532,6 @@ const viewDetail = (id) => {
                 class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
-                    <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
-                        <button @click="exportData(0)"
-                            class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                            <i class="fas fa-file-pdf"></i> PDF
-                        </button>
-                        <button @click="exportData(1)"
-                            class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                            <i class="fas fa-file-excel"></i> Excel
-                        </button>
-                        <button @click="exportData(2)"
-                            class="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                            <i class="fas fa-print"></i> Print
-                        </button>
-                    </div>
                     <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                         <div class="flex items-end gap-2">
                             <label

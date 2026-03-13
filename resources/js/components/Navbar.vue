@@ -558,7 +558,7 @@ const sendLogout = () => {
                             <span class="font-bold text-xs uppercase text-gray-400">Riwayat Notifikasi</span>
                             <span v-if="count > 0" class="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full">{{
                                 count
-                            }} Baru</span>
+                                }} Baru</span>
                         </div>
 
                         <div class="max-h-96 overflow-y-auto">

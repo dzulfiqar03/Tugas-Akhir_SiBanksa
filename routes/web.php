@@ -12,7 +12,7 @@ Route::get('/', function () {
     if (Auth::check()) {
         $role = Auth::user()->user_detail->id_roles;
 
-        if ($role ==1) {
+        if ($role == 1) {
             return redirect()->route('rw.dashboard');
         } elseif ($role == 2) {
             return redirect()->route('dashboard');
@@ -26,7 +26,7 @@ Route::get('/testInternet', [InternetConnController::class, 'checkConnection'])-
 
 Route::middleware(['conn'])->group(function () {
 
-    Route::middleware(['auth'])->group(function () {
+    Route::middleware(['auth', 'session'])->group(function () {
 
         Route::post('/notifications/{id}/read', [NotificationController::class, 'readNotif'])->name('notifications.read');
         Route::post('/notifications/readAll', [NotificationController::class, 'readAllNotif'])->name('notifications.readAll');
@@ -57,4 +57,5 @@ Route::middleware(['conn'])->group(function () {
     require __DIR__ . '/auth.php';
 
     Route::redirect('/', 'login');
+    Route::get('/session-expired', [App\Http\Controllers\SessionExpiredController::class, 'index'])->name('session.expired');
 });

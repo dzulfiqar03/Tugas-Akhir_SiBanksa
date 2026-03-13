@@ -24,7 +24,8 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
-        $id_role = Auth::user()->user_detail->id_roles;
+        $user = Auth::user();
+        $id_role = $user->user_detail->id_roles;
 
         $menu = (new DataResources(null))->toArray(request());
         $form = (new FormResources(null))->toArray(request());
@@ -51,7 +52,7 @@ class ProfileController extends Controller
 
         $nasabah = User::with(['user_detail', 'user_detail.sampah', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan', 'user_detail.location', 'user_detail.location.open_street'])->find(Auth::user()->id);
 
-        $nasabahAll = $id_role === 1? UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->where('id_roles', 2)->get() : UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->where('id_rt', Auth::user()->user_detail->id_rt)->get();
+        $nasabahAll = $id_role === 1 ? UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->where('id_roles', 2)->get() : UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->where('id_rt', Auth::user()->user_detail->id_rt)->get();
 
         $total_setoran = $nasabah->user_detail->pencatatan->sum('total_setoran');
         $fields = [
@@ -101,6 +102,7 @@ class ProfileController extends Controller
         $nasabah->saldoUser = $saldo;
 
         $nasabah->joined = $nasabah->created_at->format('Y-m-d');
+
 
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
@@ -152,23 +154,27 @@ class ProfileController extends Controller
 
 
         UserBank::updateOrCreate(
-        ['id_userdetail' => $request->id_userdetail],
-        [
-            'id_bank' => $request->id_bank,
-            'nomor_rekening' => $request->nomor_rekening,
-        ]);
-
-
-        $geoLocation = $nasabah->user_detail->location()->updateOrCreate([
-            'id_userdetail' => $request->id_userdetail],
+            ['id_userdetail' => $request->id_userdetail],
             [
-            'amenity' => $request->amenity,
-            'house_number' => $request->house_number,
-            'city' => $request->city,
-            'state' => $request->state,
-            'country' => $request->country,
-            'postal_code' => $request->postal_code,
-        ]);
+                'id_bank' => $request->id_bank,
+                'nomor_rekening' => $request->nomor_rekening,
+            ]
+        );
+
+
+        $geoLocation = $nasabah->user_detail->location()->updateOrCreate(
+            [
+                'id_userdetail' => $request->id_userdetail
+            ],
+            [
+                'amenity' => $request->amenity,
+                'house_number' => $request->house_number,
+                'city' => $request->city,
+                'state' => $request->state,
+                'country' => $request->country,
+                'postal_code' => $request->postal_code,
+            ]
+        );
 
         $geoLocation->open_street()->create([
             'id_geoloc' => $geoLocation->id,
@@ -180,20 +186,21 @@ class ProfileController extends Controller
 
         $IDRW =  UserDetail::where('id_roles', 1)->first()->id_user;
 
-        $bankSampah = UserDetail::where('id_roles', 2)->where('id_rt',  Auth::user()->user_detail->id_rt)->where('fullName', 'LIKE', '%Petugas Bank Sampah%')->get();
+        $bankSampah = UserDetail::where('id_roles', 2)->where('id_rt',  Auth::user()->user_detail->id_rt)->where('fullName', 'LIKE', '%Petugas Bank Sampah%')->first();
 
-        $userDetail = Auth::user()?->user_detail;
+        $user = auth()->user();
+        $userDetail = $user->user_detail;
         $rt = $userDetail->id_rt;
         $fullName = $userDetail->fullName;
 
-        $bankSampahlist = User::whereHas('user_detail', function ($query) {
-            $query->where('id_rt', Auth::user()->user_detail->id_rt)
+        $bankSampahlist = User::whereHas('user_detail', function ($query) use ($userDetail) {
+            $query->where('id_rt', $userDetail->id_rt)
                 ->where('id_roles', 2)
                 ->where('fullName', 'LIKE', '%Petugas Bank Sampah%');
         })->get();
 
-        $nasabahlist = User::whereHas('user_detail', function ($query) {
-            $query->where('id_rt', Auth::user()->user_detail->id_rt)
+        $nasabahlist = User::whereHas('user_detail', function ($query) use ($userDetail) {
+            $query->where('id_rt', $userDetail->id_rt)
                 ->where('id_roles', 3);
         })->get();
 
@@ -213,40 +220,46 @@ class ProfileController extends Controller
                     $pesan = "Profil atas nama {$fullName} sudah dilengkapi, silahkan disetujui";
 
                     $uri =  '/bank-sampah/nasabah';
-                    $target =  $bankSampah;
+                    $target =  $bankSampah->id;
                     $petugas->notify(new BankSampahReminder($target, $pesan, '/profile'));
                 }
             }
         }
 
         if ($request->filled(['id_bank', 'nomor_rekening'])) {
-            if ($userDetail->id_roles === 2) {
+            $currentUser = Auth::user();
+            $fullName = $currentUser->user_detail->fullName ?? $currentUser->name;
+            $myRt = $currentUser->user_detail->id_rt;
 
-            foreach ($bankSampahlist as $petugas) {
-                $pesanBank =  "Profil";
+            if ($userDetail->id_roles === 3) {
+                $targets = User::whereHas('user_detail', function ($q) use ($myRt) {
+                    $q->where('id_roles', 2)
+                        ->where('id_rt', $myRt);
+                })->where('id', '!=', $currentUser->id)->get();
 
-                $uri =  '/profil';
+                $pesan = "Profil nasabah {$fullName} sudah lengkap. Segera lakukan verifikasi!";
+                $uri = '/bank-sampah/nasabah';
+            } else if ($userDetail->id_roles === 2) {
+                $targets = User::whereHas('user_detail', function ($q) use ($myRt) {
+                    $q->where('id_roles', 1)
+                        ->where('id_rt', $myRt);
+                })->where('id', '!=', $currentUser->id)->get();
 
-                // Kirim notifikasi ke TIAP petugas di list
-                $petugas->notify(new BankSampahReminder($petugas, $pesanBank, $uri));
+                $pesan = "Petugas {$fullName} telah memperbarui data bank instansi.";
+                $uri = '/profil';
             }
-            } elseif($userDetail->id_roles === 3) {
 
-            foreach ($nasabahlist as $petugas) {
-                $pesanBank = "Nomor Rekening nasabah {$fullName} sudah dilengkapi, segera lakukan pencairan!!!";
-
-
-                $uri = '/bank-sampah/transaksi';
-
-                $petugas->notify(new BankSampahReminder($petugas, $pesanBank, $uri));
+            // Eksekusi Pengiriman
+            if (isset($targets) && $targets->isNotEmpty()) {
+                foreach ($targets as $recipient) {
+                    $recipient->notify(new BankSampahReminder($recipient, $pesan, $uri));
+                }
             }
-            }
-
         }
 
-
-
-        return Redirect::route('profile.edit');
+        return
+            $userDetail->status === 'Disetujui' ?
+            Redirect::route('profile.edit') : ($userDetail->id_roles === 2 ?  Redirect::route('dashboard') : ($userDetail->id_roles === 3 ? Redirect::route('warga.dashboard') : Redirect::route('rw.dashboard')));
     }
 
     /**

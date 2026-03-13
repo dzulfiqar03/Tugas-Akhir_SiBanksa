@@ -118,7 +118,7 @@ const hasErrors = computed(() => props.errors && Object.keys(props.errors).lengt
 
             <slot />
 
-            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'profile.edit' && currentRoute != 'data-transaksi' && currentRoute != 'data-pelaporanRW' && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah' && currentRoute != 'data-kepengurusan' && currentRoute != 'warga.janji-setor' && currentRoute != 'rw.janji-setor' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'"
+            <div v-if="!isAuthPage && currentRoute != 'data-sampah' && currentRoute != 'profile.edit' && currentRoute != 'dashboard' && currentRoute != 'warga.dashboard' && currentRoute != 'data-transaksi' && currentRoute != 'data-pelaporanRW' && currentRoute != 'rw.data-kelola' && currentRoute != 'data-nasabah' && currentRoute != 'data-kepengurusan' && currentRoute != 'warga.janji-setor' && currentRoute != 'rw.janji-setor' && currentRoute != 'jadwal-pelaksanaan' && currentRoute != 'pencatatan-setoran'"
                 class="flex justify-end gap-3 mt-4">
                 <button type="submit" :disabled="processing" class="px-4 py-2 bg-emerald-600 text-white rounded-lg">
                     {{ processing ? 'Menyimpan...' : 'Simpan' }}

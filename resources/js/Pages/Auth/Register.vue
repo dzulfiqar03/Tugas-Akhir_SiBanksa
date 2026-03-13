@@ -13,18 +13,31 @@ const step = ref(1);
 
 // Inisialisasi Form
 const form = useForm({
-    id_rt: '',
-    id_roles: 2,
+    id_roles: 2, // Default awal (Bank Sampah)
+    id_gender: 3,
+    status: "Pengajuan Verifikasi",
+    status_transaction: "Belum Disetujui",
     bankSampah: {
-        address: 'default address',
+        userName: '',
+        fullName: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
         id_rt: '',
+        phoneNumber: '',
+        address: 'Gresik',
     },
     nasabah: {
-        address: 'default address',
+        userName: '',
+        fullName: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
         id_rt: '',
+        id_gender: '',
+        phoneNumber: '',
+        address: 'Gresik',
     },
-    id_gender: '',
-    status: "Pengajuan Verifikasi"
 });
 
 // Logic untuk filter fields: Jika BankSampah, buang field tipe 'radio'
@@ -44,6 +57,7 @@ const changeTab = (tab) => {
     showForm.value = tab;
     step.value = 1;
     form.id_roles = tab === 'BankSampah' ? 2 : 3;
+    form.id_gender = tab === 'BankSampah' ? 3 : ''; // Reset
     form.clearErrors();
     showPassword.value = {};
 };
@@ -125,6 +139,7 @@ const submit = () => {
                     </div>
                 </div>
                 <input type="hidden" name="id_roles" v-model="form.id_roles">
+                <input type="hidden" name="status_transaction" v-model="form.status_transaction">
 
                 <input v-if="showForm === 'BankSampah'" type="hidden" name="id_gender" value="3">
 

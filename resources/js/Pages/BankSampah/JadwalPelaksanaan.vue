@@ -451,9 +451,13 @@ const breadcrumbItems = [
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola daftar jadwal Anda.</p>
                 </div>
                 <button @click="openCreateForm"
-                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                    class=" text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                    :class="[
+                        showForm ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                    ]">
+
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
-                    {{ showForm ? 'Batal' : 'Tambah Data' }}
+                    {{ showForm ? 'Tutup Form' : 'Tambah Jadwal' }}
                 </button>
             </div>
 

@@ -147,6 +147,7 @@ class DashboardController extends Controller
         $finalChatList = $formattedChats->values()->toArray();
         array_unshift($finalChatList, $aiRoom);
 
+        
         return Inertia::render('Warga/Dashboard', [
             'initialNotifications' => $notifications,
             'unreadCount' => $user->unreadNotifications->count(),
@@ -179,7 +180,8 @@ class DashboardController extends Controller
                     'online' => $isOnline ? 'Online' : 'Offline'
                 ];
             }),
-            'nasabah' => $nasabah
+            'nasabah' => $nasabah,
+            
         ]);
     }
 

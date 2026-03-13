@@ -4,13 +4,15 @@ import InputLabel from '@/Components/InputLabel.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
-import { ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 const props = defineProps({
     canResetPassword: { type: Boolean },
     status: { type: String },
     formdata: { type: Object }, // Data dari FormResources
-    formName: { type: String }
+    formName: { type: String },
+    message: { type: String },
+    messageLogout: { type: String },
 });
 
 // Inisialisasi Form Inertia
@@ -27,6 +29,17 @@ const submit = () => {
         onFinish: () => form.reset('password'),
     });
 };
+
+const show = ref(true);
+
+onMounted(() => {
+    // Pesan akan menghilang setelah 5 detik
+    setTimeout(() => {
+        show.value = false;
+    }, 5000);
+});
+
+
 </script>
 <template>
     <GuestLayout>
@@ -69,6 +82,36 @@ const submit = () => {
                 </p>
             </div>
         </div>
+
+        <div v-if="message &&show" class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
+             <div   class="px-3 pb-3 border-t border-red-50 dark:border-red-500/10">
+                    <div class="max-h-24 overflow-y-auto pt-2 custom-scrollbar">
+                            <div
+                                    class="text-[11px] text-green-600 dark:text-green-400 flex items-center gap-2">
+                                    <span class="w-1 h-1 bg-green-400 rounded-full"></span>
+                                    {{ message }}
+                            </div>
+                            
+
+
+                    </div>
+                </div>
+        </div>
+        <div v-if="messageLogout &&show" class="mb-4 animate-pulse font-medium text-sm text-green-600 dark:text-green-400">
+             <div  class="px-3 pb-3 border-t border-red-50 dark:border-red-500/10">
+                    <div class="max-h-24 overflow-y-auto pt-2 custom-scrollbar">
+                            <div
+                                    class="text-[11px] text-red-600 dark:text-green-400 flex items-center gap-2">
+                                    <span class="w-1 h-1 bg-red-400 rounded-full"></span>
+                                   <span class="py-1 px-3 text-white bg-red-400 rounded-full">{{ messageLogout }}</span> 
+                            </div>
+                            
+
+
+                    </div>
+                </div>
+        </div>
+
 
         <FormWrapper formName="formLogin" :errors="form.errors" :processing="form.processing" @submit="submit">
             <div v-for="(fields, group) in (formdata.data || formdata)" :key="group">

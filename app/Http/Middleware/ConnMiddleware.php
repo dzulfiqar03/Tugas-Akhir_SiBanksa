@@ -15,30 +15,30 @@ class ConnMiddleware
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
 
-    public function handle(Request $request, Closure $next)
-    {
-        // Cek koneksi internet dengan mencoba akses ke google.com
-        if ($request->is('check-internet')) {
-            return $next($request);
-        }
-        $connected = $this->isInternetConnected();
-        if (!$connected) {
-            // Jika tidak ada koneksi, redirect ke halaman 404
-            return redirect()->route('check-internet')->with('message', "Internet bermasalah (status: offline)");
-        }
+public function handle(Request $request, Closure $next)
+{
+    // Hindari redirect loop
+    if ($request->routeIs('check-internet')) {
         return $next($request);
     }
-    private function isInternetConnected()
-    {
-        // Menggunakan curl untuk cek koneksi
-        $ch = curl_init("https://www.google.com");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Timeout 5 detik
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        // Jika HTTP code 200, berarti koneksi ada
-        return $httpCode == 200;
+
+    if (!$this->isInternetConnected()) {
+        return redirect()->route('check-internet')
+            ->with('message', "Server gagal terhubung ke layanan eksternal.");
     }
+
+    return $next($request);
+}
+
+private function isInternetConnected()
+{
+    try {
+        // Gunakan HEAD request agar lebih cepat (tidak download isi halaman)
+        // Timeout dipersingkat jadi 2-3 detik agar user tidak menunggu lama
+        $response = Http::timeout(3)->head('https://www.google.com');
+        return $response->successful();
+    } catch (\Exception $e) {
+        return false;
+    }
+}
 }

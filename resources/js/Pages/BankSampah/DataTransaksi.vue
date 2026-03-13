@@ -848,11 +848,15 @@ const handleSubmit = () => {
                         showForm ? 'mb-4' : 'mb-0'
                     ]">
                         <h3 class="text-lg font-bold text-black dark:text-white">Pencairan Dana Nasabah</h3>
-                        <button v-if="showForm" @click="showForm = !showForm"
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                            <i class="fas mr-2" :class="showForm ? 'fa-minus' : 'fa-plus'"></i>
-                            {{ showForm ? 'Tutup Form' : 'Tambah Transaksi' }}
-                        </button>
+                        <button @click="showForm = !showForm"
+                    class=" text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                    :class="[
+                        showForm ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                    ]">
+
+                    <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
+                    {{ showForm ? 'Tutup Form' : 'Tambah Transaksi' }}
+                </button>
                     </div>
 
                     <Transition name="accordion">

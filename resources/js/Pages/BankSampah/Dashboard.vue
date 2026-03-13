@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import {
     BarElement,
     CategoryScale,
@@ -20,6 +20,9 @@ import DeleteUserForm from '../Profile/Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from '../Profile/Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from '../Profile/Partials/UpdateProfileInformationForm.vue';
 
+import FormWrapper from '@/Components/FormWrapper.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+
 ChartJS.register(
     Title,
     Tooltip,
@@ -30,10 +33,10 @@ ChartJS.register(
 );
 
 const props = defineProps({
+    formName: String,
     sidebardata: Object,
     mustReverifyEmail: Boolean,
     status: String,
-    sidebardata: Object,
     user: Object,
     unreadCount: Number,
     initialNotifications: Array,
@@ -55,9 +58,12 @@ const props = defineProps({
 
 const page = usePage();
 
-// Reactive State
+
 const isCollapsed = ref(true); // Default form tertutup
 
+
+const formdata = computed(() => page.props.sharedForm);
+const nasabah2 = computed(() => page.props.nasabah2);
 // Data User
 const user = computed(() => page.props.auth.user);
 const statusVerifikasi = computed(() => user.value?.user_detail?.status || 'Warga');
@@ -67,9 +73,6 @@ const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') }
 ];
 
-import { useForm } from '@inertiajs/vue3';
-
-
 
 // Form Inertia
 const form = useForm({
@@ -77,6 +80,145 @@ const form = useForm({
     id_userdetail: '',
 });
 
+const showForm = ref('BankSampah'); // Toggle: 'BankSampah' atau 'Nasabah'
+const step = ref(1);
+
+const isEdit = ref(true);
+
+const form2 = useForm({
+    id_userdetail: nasabah2?.value.user_detail?.id ?? '',
+    id_rt: nasabah2?.value.user_detail?.id_rt ?? '',
+    id_roles: nasabah2?.value.user_detail?.id_roles ?? '',
+    id_gender: nasabah2?.value.user_detail?.id_gender ?? '',
+    fullName: nasabah2?.value.user_detail?.fullName ?? '',
+    userName: nasabah2?.value.user_detail?.userName ?? '',
+    address: nasabah2?.value.user_detail?.address ?? '',
+    phoneNumber: nasabah2?.value.user_detail?.telephone_number ?? '',
+    email: nasabah2?.value.email ?? '',
+    bank: '',
+    id_bank: nasabah2?.value.user_detail?.userbank?.id_bank ?? '',
+    nomor_rekening: nasabah2?.value.user_detail?.userbank?.nomor_rekening ?? '',
+    password: '',
+
+    status: nasabah2?.value.user_detail?.status ?? '',
+    amenity: nasabah2?.value.user_detail?.location?.amenity ?? '',
+    house_number: nasabah2?.value.user_detail?.location?.house_number ?? '',
+    city: nasabah2?.value.user_detail?.location?.city ?? '',
+    state: nasabah2?.value.user_detail?.location?.state ?? '',
+    country: nasabah2?.value.user_detail?.location?.country ?? '',
+    postal_code: nasabah2?.value.user_detail?.location?.postal_code ?? '',
+    id_geoloc: nasabah2?.value.user_detail?.location?.open_street.id_geoloc ?? '',
+    display_name: nasabah2?.value.user_detail?.location?.open_street.display_name ?? '',
+    latitude: nasabah2?.value.user_detail?.location?.open_street.latitude ?? '',
+    longitude: nasabah2?.value.user_detail?.location?.open_street.longitude ?? '',
+    type: nasabah2?.value.user_detail?.location?.open_street.type ?? '',
+
+
+});
+
+// Logic untuk filter fields: Jika BankSampah, buang field tipe 'radio'
+const filteredFields = computed(() => {
+    if (showForm.value === 'BankSampah') {
+        return formdata?.value.nasabah.filter(field => field.type !== 'radio');
+    }
+    return formdata?.value.nasabah;
+});
+
+
+
+const submit = async () => {
+    const baseUrl = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1'
+
+    const params = new URLSearchParams()
+
+    // Nominatim expects keys sesuai dokumentasi:
+    // https://nominatim.org/release-docs/latest/api/Search/#structured
+
+    if (form2.amenity) params.append('amenity', form2.amenity)
+    if (form2.house_number) params.append('house_number', form2.house_number)
+    if (form2.city) params.append('city', form2.city)
+    if (form2.state) params.append('state', form2.state)
+    if (form2.country) params.append('country', form2.country)
+    if (form2.postal_code) params.append('postalcode', form2.postal_code)
+
+    const url = `${baseUrl}&${params.toString()}`
+
+    const res = await fetch(url)
+    const data = await res.json()
+
+    if (!data.length) {
+        alert('Alamat tidak ditemukan')
+        return
+    }
+
+    console.log(data);
+
+    const { display_name, lat, lon, type } = data[0]
+
+    form2.display_name = display_name,
+        form2.latitude = lat,
+        form2.longitude = lon,
+        form2.type = type,
+        Swal.fire({
+            title: 'Lakukan Perubahan Data?',
+            text: "Apakah anda yakin mengubah data anda?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Ya, Perbarui!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form2.post(route('dashboard.profile-edit'),
+                    {
+                        onSuccess: () => {
+                            Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload(),
+                                form2.id_bank = nasabah2?.value.user_detail?.userbank?.id_bank ?? '',
+                                form2.nomor_rekening = nasabah2?.value.user_detail?.userbank?.nomor_rekening ?? '',
+                                form2.amenity = nasabah2?.value.user_detail?.location?.amenity ?? '',
+                                form2.house_number = nasabah2?.value.user_detail?.location?.house_number ?? '',
+                                form2.city = nasabah2?.value.user_detail?.location?.city ?? '',
+                                form2.state = nasabah2?.value.user_detail?.location?.state ?? '',
+                                form2.country = nasabah2?.value.user_detail?.location?.country ?? '',
+                                form2.postal_code = nasabah2?.value.user_detail?.location?.postal_code ?? ''
+
+                        }
+                    });
+            }
+        });
+}
+
+
+const bank = ref();
+const bankIdentify = (e) => {
+
+    const input = e.target.value;
+    const cleanNumber = input.trim();
+    const length = cleanNumber.length;
+
+    if (length === 10) {
+        // Cek BNI (Biasanya diawali 0) atau BCA
+        if (cleanNumber.startsWith('0')) {
+            form2.bank = "BNI";
+        } else if (["1", "2", "5", "8"].includes(cleanNumber[0])) {
+            form2.bank = "BCA";
+        }
+        form2.bank = "BCA / BNI / BJB"; // Kemungkinan antara 3 bank ini
+    }
+    else if (length === 13) {
+        if (cleanNumber.startsWith('1')) form2.bank = "Mandiri";
+        form2.bank = "CIMB Niaga";
+    }
+    else if (length === 15) {
+        form2.bank = "BRI";
+    }
+    else if (length === 16) {
+        form2.bank = "Permata / Kartu Kredit";
+    }
+    else {
+        form2.bank = "Bank Lainnya";
+    }
+
+};
 
 const rawNasabahData = ref(props.allBankSampah || []);
 
@@ -231,22 +373,38 @@ const chartOptions2 = {
 
 
 const calendarAttributes = computed(() => {
-    if (!props.jadwal) return [];
+    const attributes = [];
 
-    return props.jadwal.map(item => ({
-        key: item.id,
+    // 1. Highlight Merah untuk Hari Ini
+    attributes.push({
+        key: 'today',
         highlight: {
-            color: 'green',
-            fillMode: 'light',
+            color: 'red',
+            fillMode: 'solid', // Menggunakan solid agar lebih terlihat mencolok
         },
-        dates: new Date(item.tanggal_setoran),
-        popover: {
-            label: item.kegiatan,
-            visibility: 'hover',
-        },
-        customData: item,
-        isEvent: true
-    }));
+        dates: new Date(), // Otomatis mengambil tanggal hari ini
+    });
+
+    if (props.jadwal) {
+        props.jadwal.forEach(item => {
+            attributes.push({
+                key: item.id,
+                highlight: {
+                    color: 'green',
+                    fillMode: 'light',
+                },
+                dates: new Date(item.tanggal_setoran),
+                popover: {
+                    label: item.kegiatan,
+                    visibility: 'hover',
+                },
+                customData: item,
+                isEvent: true
+            });
+        });
+    }
+
+    return attributes;
 });
 
 const handleSubmit = (dayId) => {
@@ -365,11 +523,15 @@ const formatShortDate = (dateString) => {
         <div v-if="statusVerifikasi === 'Pengajuan Verifikasi'" class="max-w-7xl mx-auto space-y-6">
             <div class="card w-full shadow-sm border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
 
-                <div class="p-6 flex flex-col gap-5 bg-gray-200 dark:bg-gray-800 transition-colors">
-                    <h3
-                        class="border-b border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
-                        Anda belum melakukan verifikasi akun !!!
-                    </h3>
+
+                <div
+                    class="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-700 dark:text-amber-400 text-sm grid items-center gap-3">
+                    <div class="flex space-x-3 items-center">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Akun Anda sedang dalam proses verifikasi.</span>
+                    </div>
+
+
 
                     <span class="w-full font-medium text-gray-700 dark:text-gray-300">
                         Isi Biodata anda dan keperluan dokumen (Opsional)
@@ -382,11 +544,290 @@ const formatShortDate = (dateString) => {
                     </button>
                 </div>
 
-                <Transition enter-active-class="transition duration-300 ease-out"
-                    enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100"
-                    leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100"
-                    leave-to-class="opacity-0">
-                    <div v-show="!isCollapsed" class="p-5 bg-gray-100 dark:bg-gray-900 flex flex-col gap-6">
+                <Transition name="accordion">
+                    <div v-if="!isCollapsed"
+                        class="p-5  accordion-wrapper bg-gray-100 dark:bg-gray-900 flex flex-col gap-6">
+
+
+                        <div class="flex flex-col w-full bg-white  p-4 shadow  sm:rounded-lg sm:p-8 dark:bg-gray-800">
+
+                            <div class="grid px-2 space-y-3">
+                                <h1 class="text-black dark:text-white font-bold">Progress Track</h1>
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden relative">
+                                        <div class="h-2 rounded-full transition-all duration-1000 ease-out relative animate-shimmer bg-gradient-to-r"
+                                            :class="nasabah2.profile_completion.percentage === 100
+                                                ? 'from-emerald-500 via-emerald-400 to-emerald-500'
+                                                : 'from-blue-900 via-blue-700 to-blue-900'
+                                                " :style="{ width: nasabah2.profile_completion.percentage + '%' }">
+
+                                            <div class="absolute inset-0 bg-white/20 w-full h-full"></div>
+                                        </div>
+                                    </div>
+
+                                    <span class="text-xs font-bold text-black dark:text-gray-400">
+                                        {{ Math.round(nasabah2.profile_completion.percentage) }}%
+                                    </span>
+                                </div>
+                                <div v-if="nasabah2.profile_completion.percentage < 100"
+                                    class="mt-1 flex space-x-4 text-[10px] w-full font-bold  text-red-500">
+                                    <h1>Data Kurang: </h1>
+
+                                    <div class="flex space-x-1">
+                                        <div v-for="value in nasabah2.profile_completion.empty_fields">
+                                            <span
+                                            @click="value === 'Nomor Rekening'? step = 4:(value === 'Alamat'?step = 3:step = 2)  "
+                                            class="bg-red-500 cursor-pointer hover:bg-red-800 transform transition-all duration-75  text-white p-2 rounded-full font-bold">
+                                                {{ value }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <FormWrapper formName="formRegister" :errors="form2.errors" :processing="form2.processing"
+                                @submit="submit">
+                                <div class="flex flex-wrap items-center w-full gap-4 mb-8">
+
+                                    <div class="flex items-center gap-2 cursor-pointer" @click="step = 1">
+                                        <span
+                                            :class="step >= 1 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
+                                            class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">1</span>
+                                        <span :class="step >= 1 ? 'text-emerald-700' : 'text-gray-400'"
+                                            class="text-[10px] font-bold uppercase tracking-widest">Akun</span>
+                                    </div>
+
+                                    <div class="h-px bg-gray-200 flex-1"></div>
+
+
+                                    <div class="flex items-center gap-2 cursor-pointer" @click="step = 2">
+                                        <span
+                                            :class="step >= 2 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
+                                            class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">2</span>
+                                        <span :class="step >= 2 ? 'text-emerald-700' : 'text-gray-400'"
+                                            class="text-[10px] font-bold uppercase tracking-widest">Data Diri</span>
+                                    </div>
+
+                                    <div class="h-px bg-gray-200 flex-1"></div>
+                                    <div class="flex items-center gap-2 cursor-pointer" @click="step = 3">
+                                        <span
+                                            :class="step >= 3 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
+                                            class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">3</span>
+                                        <span :class="step >= 3 ? 'text-emerald-700' : 'text-gray-400'"
+                                            class="text-[10px] font-bold uppercase tracking-widest">Location
+                                            Address</span>
+                                    </div>
+
+
+
+                                    <div class="h-px bg-gray-200 flex-1"></div>
+                                    <div class="flex items-center gap-2 cursor-pointer" @click="step = 4">
+                                        <span
+                                            :class="step >= 4 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
+                                            class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">4</span>
+                                        <span :class="step >= 4 ? 'text-emerald-700' : 'text-gray-400'"
+                                            class="text-[10px] font-bold uppercase tracking-widest">Transaksi</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="id_roles" v-model="form2.id_roles">
+
+                                <input type="hidden" name="id_gender" value="3">
+
+
+                                <div v-if="step === 1" class="space-y-5">
+                                    <div class="grid grid-cols-1  gap-x-6 gap-y-5">
+                                        <div v-for="field in formdata.userAuth" :key="field.name">
+
+                                            <div v-if="field.type !== 'password'" class="col-span-1 relative">
+                                                <InputLabel :for="field.name" :value="field.title" />
+
+                                                <div class="relative mt-1">
+                                                    <input :type="field.type" v-model="form2[field.name]"
+                                                        :placeholder="field.placeholder"
+                                                        class="w-full h-11 text-sm rounded-xl  text-black  bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                                        :class="[
+                                                            isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
+                                                        ]" />
+
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+
+
+
+
+                                    </div>
+                                    <div class="flex justify-between gap-4">
+                                        <button type="button" @click="step = 2"
+                                            class="w-max px-12 py-3 bg-emerald-600 text-white rounded-xl font-bold">Lanjut</button>
+                                    </div>
+                                </div>
+
+                                <div v-if="step === 2" class="space-y-5">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div v-for="field in filteredFields" :key="field.name"
+                                            :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
+
+
+
+
+
+                                            <div v-if="field.type === 'radio'" class="col-span-full">
+
+                                                <InputLabel :for="field.name" :value="field.title" />
+
+
+                                                <div class="flex gap-3">
+                                                    <label v-for="(opt, idx) in field.options" :key="idx"
+                                                        class="flex-1 cursor-pointer group">
+                                                        <input type="radio" v-model="form2.nasabah[field.name]"
+                                                            :value="idx + 1" class="peer sr-only " :class="[
+                                                                isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
+                                                            ]">
+                                                        <div
+                                                            class="py-2 px-4 text-gray-600  dark:text-white rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
+                                                            {{ opt }}
+                                                        </div>
+                                                    </label>
+                                                </div>
+
+                                            </div>
+                                            <div v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'"
+                                                class="col-span-1">
+                                                <InputLabel :for="field.name" :value="field.title" />
+
+
+
+                                                <input :type="field.type" :id="field.name" v-model="form2[field.name]"
+                                                    :name="form2[field.name]" :placeholder="field.placeholder"
+                                                    class="w-full text-black   h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                                    :class="[
+                                                        isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
+                                                    ]">
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                    <div class="flex  justify-between w-full ">
+                                        <button type="button" @click="step = 1"
+                                            class="text-gray-400 text-sm font-bold">Kembali</button>
+
+                                        <button type="button" @click="step = 3"
+                                            class="  px-12  py-3 bg-emerald-600 text-white rounded-xl font-bold">Lanjut
+                                        </button>
+
+                                    </div>
+                                </div>
+
+
+
+                                <div v-if="step === 3" class="space-y-5">
+                                    <div class="grid grid-cols-2  gap-x-6 gap-y-5">
+                                        <div v-for="field in formdata.location" :key="field.name">
+
+                                            <input type="hidden" name="id_userdetail"
+                                                :value="page.props.user?.user_detail?.id">
+
+
+                                            <div class="col-span-1">
+                                                <InputLabel :for="field.name" :value="field.title" />
+
+
+
+                                                <input :type="field.type" :id="field.name" v-model="form2[field.name]"
+                                                    :name="form2[field.name]" :placeholder="field.placeholder"
+                                                    class="w-full text-black   h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                                    :class="[
+                                                        isEdit === true ? 'border-white  dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
+                                                    ]">
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="flex justify-between gap-4">
+                                        <button type="button" @click="step = 2"
+                                            class="text-gray-400 text-sm font-bold">Kembali</button>
+
+                                        <button type="button" @click="step = 4"
+                                            class="w-max px-12 py-3 bg-emerald-600 text-white rounded-xl font-bold">Lanjut</button>
+                                    </div>
+                                </div>
+
+
+                                <div v-if="step === 4" class="space-y-5">
+                                    <div class="grid grid-cols-1  gap-x-6 gap-y-5">
+                                        <div v-for="field in formdata?.userBank" :key="field.name">
+
+
+                                            <input type="hidden" name="id_userdetail"
+                                                :value="page.props.user?.user_detail?.id">
+                                            <div v-if="field.name === 'id_bank'" class="col-span-full">
+                                                <InputLabel :for="field.name" :value="field.title" />
+
+                                                <select v-model="form2.id_bank"
+                                                    class="w-full h-11 rounded-xl bg-gray-50 text-black   dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
+                                                    :class="[
+                                                        isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
+                                                    ]">
+                                                    <option value="" class="text-black dark:text-white">Pilih Bank
+                                                    </option>
+
+                                                    <option v-for="(opt, idx) in field.options" :key="idx"
+                                                        :value="idx + 1" class="text-gray-900 dark:text-white">
+                                                        {{ opt }}
+                                                    </option>
+                                                </select>
+
+
+                                            </div>
+
+                                            <div v-else class="col-span-1">
+                                                <InputLabel :for="field.name" :value="field.title" />
+
+
+
+                                                <input :type="field.type" :id="field.name" v-model="form2[field.name]"
+                                                    @keyup="bankIdentify" :name="form2[field.name]"
+                                                    :placeholder="field.placeholder"
+                                                    class="w-full text-black   h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                                    :class="[
+                                                        isEdit === true ? 'border-white  dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
+                                                    ]">
+                                            </div>
+
+
+
+
+
+                                        </div>
+
+
+
+
+                                    </div>
+                                    <p v-if="form2.nomor_rekening > 0 && isEdit === false"
+                                        class="dark:text-white text-black transition-all ease-in-out duration-300">Bank
+                                        {{
+                                            form2.bank }}</p>
+
+                                    <div class="flex justify-between gap-4">
+                                        <button type="button" @click="step = 3"
+                                            class="text-gray-400 text-sm font-bold">Kembali</button>
+
+                                        <button type="submit" :disabled="form2.processing"
+                                            class="px-10 py-3 bg-emerald-600 text-white rounded-xl font-bold">Simpan</button>
+                                    </div>
+                                </div>
+                            </FormWrapper>
+                        </div>
+
                         <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow rounded-2xl">
                             <div class="max-w-xl">
                                 <UpdateProfileInformationForm :must-reverify-email="mustReverifyEmail"
@@ -490,7 +931,7 @@ const formatShortDate = (dateString) => {
                             class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
                             <p class="text-xs text-gray-500 mb-1 font-medium">Status Akun</p>
                             <p
-                                class="text-xl font-bold text-emerald-600 dark:text-emerald-400 uppercase text-sm tracking-widest mt-1">
+                                class="text-xl font-bold text-emerald-600 dark:text-emerald-400 uppercasetracking-widest mt-1">
                                 {{ statusVerifikasi }}
                             </p>
                         </div>
@@ -654,3 +1095,73 @@ const formatShortDate = (dateString) => {
 
     </AuthenticatedLayout>
 </template>
+
+
+<style>
+.dark td {
+    color: white;
+}
+
+.accordion-enter-active,
+.accordion-leave-active {
+    transition: all 0.3s ease-in-out;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.accordion-wrapper>* {
+    transition: opacity 0.2s;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #10b981 !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 8px;
+}
+
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+    font-size: 0.8rem;
+    color: #ffffff !important;
+    margin-top: 1rem;
+}
+
+.dark .dataTables_wrapper .dataTables_length,
+.dark .dataTables_wrapper .dataTables_filter,
+.dark .datatable .dt-info,
+.dark .dataTables_wrapper .dataTables_processing,
+.dark .datatable .dt-paging {
+    color: #ffffff !important;
+}
+
+.dataTables_filter {
+    display: none;
+}
+
+/* Kita pakai custom search di atas */
+
+.slide-fade-enter-active {
+    transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+    transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+    transform: translateY(-10px);
+    opacity: 0;
+}
+</style>

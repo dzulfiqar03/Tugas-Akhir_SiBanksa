@@ -228,12 +228,7 @@ class DataResources extends JsonResource
                     'uri' => 'warga.data-transaksi',
                     'icon'  => 'fas fa-money-bill-wave',
                 ],
-                [
-                    'nama' => 'Janji Setor',
-                    'route' => route('warga.janji-setor'),
-                    'uri' => 'warga.janji-setor',
-                    'icon'  => 'fa fa-calendar',
-                ],
+              
 
                 [
                     'nama'  => 'Chat',
