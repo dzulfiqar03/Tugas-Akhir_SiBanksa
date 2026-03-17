@@ -395,7 +395,8 @@ const handleSubmit = () => {
 
     form[method](url, {
         onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data sampah telah diproses.', 'success');
+            isEdit.value ?
+            Swal.fire('Berhasil!', 'Data sampah telah diubah.', 'success'):Swal.fire('Berhasil!', 'Data sampah telah diproses.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -421,7 +422,7 @@ const handleSubmit = () => {
                 $('#error-message').removeClass('hidden').fadeIn();
                 Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
             } else {
-                Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+                Swal.fire('Error', xhr.responseJSON?.message || 'Maaf, Inputan Anda ada yang salah, silahkan cek kembali', 'error');
             }
         },
 
@@ -491,7 +492,9 @@ const breadcrumbItems = [
                                 <InputLabel :for="field.name" :value="field.title" />
 
                                 <select v-if="field.type === 'select'" v-model="form[field.name]"
-                                    class="w-full border-gray-200 dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500">
+                                    class="w-full border-gray-200 dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500"
+                                                                                :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
+>
                                     <option value="">Pilih {{ field.title }}</option>
                                     <option v-for="opt in field.options" :key="opt.value || opt"
                                         :value="opt.value || opt">{{ opt.label || opt }}</option>

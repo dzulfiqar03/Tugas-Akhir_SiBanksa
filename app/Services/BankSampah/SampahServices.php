@@ -39,24 +39,21 @@ class SampahServices
     public function createSampah(array $data)
     {
         return DB::transaction(function () use ($data) {
+            $sampah = $this->sampah->firstOrNew([
+                'id_userdetail' => $data['id_userdetail'],
+                'nama_sampah'   => $data['nama_sampah']
+            ]);
 
-            $sampahEksisting = $this->sampah->where('nama_sampah', $data['nama_sampah'])->first();
-            $sampahEksistingkas = $sampahEksisting->saldo;
-            $newSampah = $this->sampah::updateOrCreate(
-                [
-                    'id_userdetail' => $data['id_userdetail'],
-                    'nama_sampah' => $data['nama_sampah']
-                ],
-                [
+            $saldoLama = $sampah->exists ? $sampah->saldo : 0;
 
-                    'harga' => $data['harga'],
-                    'satuan' => $data['satuan'],
-                    'saldo' =>  $sampahEksistingkas + (int) $data['saldo']
+            $sampah->harga = $data['harga'];
+            $sampah->satuan = $data['satuan'];
+            $sampah->kategori = $data['kategori'];
+            $sampah->saldo = $saldoLama + (int) $data['saldo']; // Tambah saldo eksisting dengan input baru
 
-                ]
-            );
+            $sampah->save();
 
-            return $newSampah;
+            return $sampah;
         });
     }
 

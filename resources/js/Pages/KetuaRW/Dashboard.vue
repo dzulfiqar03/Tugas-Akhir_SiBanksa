@@ -335,7 +335,7 @@ const breadcrumbItems = [
                 <div class="flex items-center gap-3 w-full md:w-auto">
                     <span class="text-xs font-bold text-gray-400 uppercase hidden md:block">Pilih Unit:</span>
                     <select v-model="selectedUnitId"
-                        class="w-full md:w-72 bg-gray-50 dark:bg-gray-700 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 shadow-inner py-3">
+                        class="w-full md:w-72 bg-gray-50 dark:bg-gray-700 text-black dark:text-white border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 shadow-inner py-3">
                         <option value="all">Seluruh Bank Sampah</option>
                         <option v-for="unit in unitBankSampah" :key="unit.user_detail.id"
                             :value="unit.user_detail.id_rt">
@@ -485,7 +485,7 @@ const breadcrumbItems = [
                             {{ selectedUnitId === 'all' ? 'Jadwal Seluruh Unit' : 'Jadwal Operasional Unit' }}
                         </h3>
                         <Calendar :attributes="calendarAttributes" is-expanded @day-click="handleDayClick"
-                            class="border-none shadow-none w-full dark:bg-gray-800"
+                            class="border-none text-black dark:text-white shadow-none w-full dark:bg-gray-800"
                             :is-dark="page.props.auth.user.theme === 'dark'" />
 
                         <div class="mt-4 space-y-2">
@@ -526,7 +526,6 @@ const breadcrumbItems = [
                         class="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold text-gray-800 dark:text-gray-100">Aktivitas Terakhir</h3>
-                            <button class="text-xs text-emerald-600 font-bold">Lihat Semua</button>
                         </div>
                         <div class="space-y-4">
                             <div v-for="(activity, index) in lastActivity" :key="index" class="flex items-start gap-3">

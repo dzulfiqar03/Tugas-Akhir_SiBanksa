@@ -66,7 +66,7 @@ const sections = computed(() => {
         menus.value.forEach(menu => {
             if (['Dashboard', 'Tracking Setoran'].includes(menu.nama)) grouped['MAIN'].push(menu);
 
-            else if (menu.data || ['Bank Sampah', 'Nasabah', 'Transaksi Setoran'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
+            else if (menu.data || ['Bank Sampah', 'Nasabah', 'Transaksi Setoran', 'Janji Setor'].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
             else grouped['LAINNYA'].push(menu);
         });
     }

@@ -265,16 +265,84 @@ const leaderboardChartData = computed(() => {
 });
 
 const saldoPerformance = computed(() => {
-    const currentUserData = rawNasabahData.value.find(d => d.name === user.value.name);
-    if (!currentUserData) return { percentage: 0, trend: 'neutral' };
+    const data = rawNasabahData.value;
+    const detailId = user.value?.user_detail?.id_rt;
 
-    const sortedByBalance = [...rawNasabahData.value].sort((a, b) => b.balance - a.balance);
-    const rank = sortedByBalance.findIndex(d => d.name === user.value.name) + 1;
 
-    const percentage = ((rawNasabahData.value.length - rank) / rawNasabahData.value.length) * 100;
-    const trend = percentage > 80 ? 'up' : percentage < 50 ? 'down' : 'neutral';
+    if (!data?.length || !detailId) {
+        return { percentage: 0, trend: 'neutral', diff: 0 };
+    }
 
-    return { percentage: Math.round(percentage), trend };
+    const currentUserData = data.find(d =>
+        Number(d.user_detail.id_rt) === Number(detailId)
+    );
+
+
+    if (!currentUserData) {
+        return { percentage: 0, trend: 'neutral', diff: 0 };
+    }
+
+    const currentBalance = Number(currentUserData.saldo || 0);
+    const lastBalance = Number(currentUserData.last_month_balance || 0);
+
+
+    let percentage = 0;
+
+    if (lastBalance === 0) {
+        percentage = currentBalance > 0 ? 100 : 0;
+    } else {
+        percentage = ((currentBalance - lastBalance) / lastBalance) * 100;
+    }
+
+    // ✅ TREND
+    let trend = 'neutral';
+    if (currentBalance > lastBalance) trend = 'up';
+    else if (currentBalance < lastBalance) trend = 'down';
+
+    return {
+        percentage: Math.round(percentage),
+        trend,
+        diff: currentBalance - lastBalance
+    };
+});
+const sampahPerformance = computed(() => {
+    const data = rawNasabahData.value;
+    const detailId = user.value?.user_detail?.id_rt;
+
+
+    if (!data?.length || !detailId) {
+        return { percentage: 0, trend: 'neutral', diff: 0 };
+    }
+
+    const currentUserData = data.find(d =>
+        Number(d.user_detail.id_rt) === Number(detailId)
+    );
+
+    if (!currentUserData) {
+        return { percentage: 0, trend: 'neutral', diff: 0 };
+    }
+
+    const currentWeight = Number(currentUserData.weight || 0);
+    const lastWeight = Number(currentUserData.last_month_weight || 0);
+
+    // Ranking
+    const sorted = [...data].sort((a, b) => b.weight - a.weight);
+
+    const rank = sorted.findIndex(d =>
+        Number(d.user_detail_id) === Number(detailId)
+    ) + 1;
+
+    const percentile = ((data.length - rank) / data.length) * 100;
+
+    let trend = 'neutral';
+    if (currentWeight > lastWeight) trend = 'up';
+    else if (currentWeight < lastWeight) trend = 'down';
+
+    return {
+        percentage: Math.round(percentile),
+        trend,
+        diff: currentWeight - lastWeight
+    };
 });
 
 const chartOptions = {
@@ -577,8 +645,8 @@ const formatShortDate = (dateString) => {
                                     <div class="flex space-x-1">
                                         <div v-for="value in nasabah2.profile_completion.empty_fields">
                                             <span
-                                            @click="value === 'Nomor Rekening'? step = 4:(value === 'Alamat'?step = 3:step = 2)  "
-                                            class="bg-red-500 cursor-pointer hover:bg-red-800 transform transition-all duration-75  text-white p-2 rounded-full font-bold">
+                                                @click="value === 'Nomor Rekening' ? step = 4 : (value === 'Alamat' ? step = 3 : step = 2)"
+                                                class="bg-red-500 cursor-pointer hover:bg-red-800 transform transition-all duration-75  text-white p-2 rounded-full font-bold">
                                                 {{ value }}
                                             </span>
                                         </div>
@@ -864,7 +932,7 @@ const formatShortDate = (dateString) => {
                                 class="bg-emerald-500/20 text-emerald-300 text-xs px-2 py-1 rounded-lg border border-emerald-500/30">
                                 {{ saldoPerformance.trend === 'up' ? '↑' : saldoPerformance.trend === 'down' ? '↓' : '→'
                                 }}
-                                {{ saldoPerformance.percentage }}% dari nasabah lain
+                                {{ saldoPerformance.percentage }}% dari bulan lalu
                             </span>
                         </div>
                     </div>
@@ -919,7 +987,12 @@ const formatShortDate = (dateString) => {
                             class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
                             <p class="text-xs text-gray-500 mb-1 font-medium">Berat Sampah (Bulan Ini)</p>
                             <p class="text-xl font-bold text-gray-800 dark:text-gray-100">{{ jmlSampah }} Kg</p>
-                            <p class="text-[10px] text-emerald-500 mt-2">↑ 16.0% vs bulan lalu</p>
+                            <span class=" text-emerald-300 text-xs">
+                                {{ sampahPerformance.trend === 'up' ? '↑' : sampahPerformance.trend === 'down' ? '↓' :
+                                    '→'
+                                }}
+                                {{ sampahPerformance.percentage }}% dari sampah bulan lalu
+                            </span>
                         </div>
                         <div
                             class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -1016,7 +1089,8 @@ const formatShortDate = (dateString) => {
                         </div>
 
                         <Calendar :attributes="calendarAttributes" is-expanded @dayclick="handleDayClick"
-                            title-position="left" trim-weeks class="border-none shadow-none w-full dark:bg-gray-800"
+                            title-position="left" trim-weeks
+                            class="border-none text-black dark:text-white shadow-none w-full dark:bg-gray-800"
                             :is-dark="page.props.auth.user.theme === 'dark'" />
 
                         <div class="mt-4 space-y-2">

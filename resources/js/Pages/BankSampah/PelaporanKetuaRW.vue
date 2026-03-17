@@ -423,7 +423,7 @@ const dtOptions = computed(() => ({
                     `).join('')
                             : item.photos.map(p => `
                         <div style="display:inline-block; text-align:center; margin-right:12px; margin-bottom:12px;">
-                            <img src="/storage/photo/evidenceUser/BankSampah/RT0${props.IDRT}/${p.original_photoname}" 
+                            <img src="/storage/photo/evidenceUser/BankSampah/RT0${props.IDRT}/${p.original_photoname}"
                                  style="width:90px; height:90px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb; display:block; margin-bottom:5px;">
                             <span style="font-size:9px; color:#6b7280; display:block; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                                 ${p.original_photoname}
@@ -531,7 +531,14 @@ const openCreateForm = () => {
     showForm.value = !showForm.value;
 
 };
+const form = useForm({
 
+    name: typeForm.value === 'Document' ? '' : [],
+    id_userdetail: props.IDUser,
+    id_jadwal: '',
+    fileDoc: [],
+    imgEvidence: []
+});
 
 const handleSubmit = () => {
 
@@ -543,7 +550,12 @@ const handleSubmit = () => {
     form[method](url, {
         forceFormData: true,
         onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data kepengurusan telah diproses.', 'success');
+            isEdit.value
+                ? (typeForm.value === 'Document' ? Swal.fire('Berhasil!', 'Dokumen telah diubah.', 'success') : Swal.fire('Berhasil!', 'Evidence telah diubah.', 'success'))
+                : (typeForm.value === 'Document' ? Swal.fire('Berhasil!', 'Dokumen telah disimpan.', 'success') : Swal.fire('Berhasil!', 'Evidence telah disimpan.', 'success')
+                );
+
+
             showForm.value = false;
             form.reset();
         },
@@ -578,14 +590,7 @@ const handleSubmit = () => {
 
 
 
-const form = useForm({
 
-    name: typeForm.value === 'Document' ? '' : [],
-    id_userdetail: props.IDUser,
-    id_jadwal: '',
-    fileDoc: [],
-    imgEvidence: []
-});
 
 const changeTab = (tab) => {
     typeForm.value = tab;
@@ -754,7 +759,7 @@ const breadcrumbItems = [
                                         </option>
                                     </select>
                                     <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name
-                                    }}</div>
+                                        }}</div>
                                 </div>
                                 <template v-for="field in formdata.Dokumen" :key="field.name">
 
@@ -837,7 +842,7 @@ const breadcrumbItems = [
                                         </option>
                                     </select>
                                     <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name
-                                    }}</div>
+                                        }}</div>
                                 </div>
 
 

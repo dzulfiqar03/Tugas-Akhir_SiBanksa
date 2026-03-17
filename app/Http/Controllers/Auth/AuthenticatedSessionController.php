@@ -50,8 +50,8 @@ class AuthenticatedSessionController extends Controller
         // Ambil role dari user_detail → roles
         $role = $user->user_detail->roles->role;
         $request->session()->put('user', $user);
-        session(['login_time' => time()]);
-        $request->session()->forget(keys: 'message');
+        $request->session()->put('login_time', time());
+
 
         app(UserLogController::class)->log(
             'LOGIN',
@@ -99,7 +99,6 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
 
-        return redirect()->route('login')->with('messageLogout', 'Anda Berhasil Logout, Terima Kasih');
-;
+        return redirect()->route('login')->with('messageLogout', 'Anda Berhasil Logout, Terima Kasih');;
     }
 }

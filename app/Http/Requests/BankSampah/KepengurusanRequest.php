@@ -13,47 +13,55 @@ class KepengurusanRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
-    {
-        $kepengurusanId = $this->route('id') ?? $this->id;
-        
-        $id_userdetail = Auth::user()->user_detail->id ?? null;
+public function rules(): array
+{
+    // Ambil ID kepengurusan dari route untuk pengecualian (ignore) saat update
+    $kepengurusanId = $this->route('kepengurusan') ?? $this->id;
 
-        return [
-            'fullName'         => 'required|string|unique:kepengurusans,fullName,' . $this->id_userdetail . ',id',
-            'userName'         => 'required|string',
-            'address'          => 'required|string',
-            'phoneNumber'     => 'required|string',
-            'id_gender'        => 'required|integer',
-            'id_userdetail'    => 'required|integer',
-            'divisi'           => [
-                'required',
-                'string',
-                function ($attribute, $value, $fail) use ($kepengurusanId, $id_userdetail) {
-           
+    // Ambil detail user yang sedang login untuk filter RT
+    $currentUserDetail = auth()->user()->user_detail;
 
-                    // 2. Aturan: Ketua hanya boleh 1 di RT yang sama
-                    if ($value === 'Ketua') {
-                        $ketuaExists = Kepengurusan::where('divisi', 'Ketua')
-                            ->where('id_userdetail', $id_userdetail)
-                            ->when($kepengurusanId, function ($query) use ($kepengurusanId) {
-                                return $query->where('id', '!=', $kepengurusanId);
-                            })
-                            ->exists();
+    return [
+        // Ignore ID kepengurusan saat ini agar bisa update tanpa error 'already taken'
+        'fullName'      => 'required|string|unique:kepengurusans,fullName,' . $kepengurusanId,
+        'userName'      => 'required|string',
+        'address'       => 'required|string',
+        'phoneNumber'   => 'required|string',
+        'id_gender'     => 'required|integer',
+        'id_userdetail' => 'required|integer',
+        'divisi'        => [
+            'required',
+            'string',
+            function ($attribute, $value, $fail) use ($kepengurusanId, $currentUserDetail) {
+                // Aturan: Ketua hanya boleh 1 per RT
+                if ($value === 'Ketua') {
+                    $ketuaExists = Kepengurusan::where('divisi', 'Ketua')
+                        ->whereHas('user_detail', function ($q) use ($currentUserDetail) {
+                            $q->where('id_rt', $currentUserDetail->id_rt);
+                        })
+                        // Jika sedang update, abaikan ID yang sedang diedit
+                        ->when($kepengurusanId, function ($query) use ($kepengurusanId) {
+                            $query->where('id', '!=', $kepengurusanId);
+                        })
+                        ->exists();
 
-                        if ($ketuaExists) {
-                            $fail('Jabatan Ketua sudah terisi di RT ini.');
-                        }
+                    if ($ketuaExists) {
+                        $fail('Jabatan Ketua sudah terisi di RT ini.');
                     }
-                },
-            ],
-        ];
-    }
+                }
+            },
+        ],
+    ];
+}
 
     public function messages(): array
     {
         return [
             'fullName.required'         => 'Nama lengkap wajib diisi',
+            'userName.required'         => 'User Name wajib diisi',
+            'address.required'         => 'Alamat wajib diisi',
+            'phoneNumber.required'         => 'Nomor Telepon wajib diisi',
+            'id_gender.required'         => 'Jenis Kelamin wajib diisi',
             'fullName.unique'           => 'Nama ini sudah terdaftar sebagai nasabah',
             'divisi.required'           => 'Divisi wajib dipilih',
             'id_userdetail.required'    => 'Data user tidak valid',

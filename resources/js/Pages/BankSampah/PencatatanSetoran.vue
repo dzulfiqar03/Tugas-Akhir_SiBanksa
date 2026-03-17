@@ -84,7 +84,8 @@ const handleSubmit = () => {
 
     form[method](url, {
         onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data sampah telah diproses.', 'success');
+            isEdit.value ?
+            Swal.fire('Berhasil!', 'Data nasabah telah diubah.', 'success'):Swal.fire('Berhasil!', 'Setoran telah disimpan.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -110,7 +111,7 @@ const handleSubmit = () => {
                 $('#error-message').removeClass('hidden').fadeIn();
                 Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
             } else {
-                Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+                Swal.fire('Error', xhr.responseJSON?.message || 'Maaf, Inputan Anda ada yang salah, silahkan cek kembali', 'error');
             }
         },
 
@@ -564,7 +565,9 @@ const breadcrumbItems = [
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium mb-1">Jadwal Pelaksanaan</label>
-                                    <select v-model="form.id_jadwal" class="w-full border rounded px-3 py-2 text-sm">
+                                    <select v-model="form.id_jadwal" class="w-full border rounded px-3 py-2 text-sm"
+                                                                                                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors }">
+
                                         <option value="" disabled>Pilih Jadwal</option>
                                         <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
                                             {{ j.tanggal_setoran }}
@@ -574,7 +577,9 @@ const breadcrumbItems = [
                                 <div>
                                     <label class="block text-sm font-medium mb-1">Nasabah</label>
                                     <select v-model="form.id_userdetail"
-                                        class="w-full border rounded capitalize px-3 py-2 text-sm">
+                                        class="w-full border rounded capitalize px-3 py-2 text-sm"
+                                                                                                                                                            :class="{ 'border-red-500 ring-1 ring-red-500': form.errors }">
+>
                                         <option value="" disabled>Pilih Nasabah</option>
                                         <option  v-for="n in nasabahList" :key="n.id" :value="n.id">
                                             {{ n.fullName }}
@@ -601,8 +606,10 @@ const breadcrumbItems = [
                                         <div class="text-sm font-medium truncate capitalize">{{ item.nama }}</div>
                                         <div class="text-xs text-gray-500 mb-2 capitalize">Satuan: {{ item.satuan }}</div>
                                         <input type="number" step="0.01" v-model="item.jumlah"
+
                                             class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-emerald-500"
-                                            placeholder="0">
+                                            placeholder="0"
+                                            >
                                     </div>
                                 </div>
                             </div>

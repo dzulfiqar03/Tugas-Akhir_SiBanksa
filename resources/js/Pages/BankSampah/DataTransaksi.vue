@@ -698,25 +698,6 @@ const initials = (fullName) => {
     return (firstInitial + secondInitial).toUpperCase();
 };
 
-const updateVerification = (item) => {
-    Swal.fire({
-        title: 'Lakukan Pembukaan Transaksi?',
-        text: "Bank sampah RT0" + item.user_detail.id_rt + " akan dapat melakukan transaksi dan notifikasi mengenai pelaporan anda",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Kirim!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            router.post(route('rw.open-transaction', item.user_detail.id), {
-
-                message: `Pembukaan Transaksi berhasil dibuka dan notifikasi berhasil dikirim ke Bank Sampah RT0${item.user_detail.id_rt}`
-            }, {
-                onSuccess: () => { Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload() }
-            });
-        }
-    });
-};
 
 
 const handleSubmit = () => {

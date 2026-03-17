@@ -12,7 +12,7 @@ use App\Http\Controllers\Admin\BankSampah\KepengurusanController;
 use App\Http\Controllers\Admin\BankSampah\PencatatanController;
 use App\Http\Controllers\Admin\BankSampah\TrackingSetoranController;
 use App\Http\Controllers\Admin\BankSampah\UserChatController;
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\BankSampah\DashboardController;
 use App\Http\Controllers\Admin\KetuaRW\PelaporanController;
 use App\Http\Controllers\DocumentArchiverController;
 use App\Http\Controllers\EvidenceArchiverController;

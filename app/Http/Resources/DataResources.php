@@ -54,12 +54,12 @@ class DataResources extends JsonResource
                         ],
                     ],
 
-                    [
-                        'nama' => 'Janji Setor',
-                        'route' => route(name: 'rw.janji-setor'),
-                        'uri' => 'rw.janji-setor',
-                        'icon'  => 'fa fa-calendar',
-                    ],
+                    // [
+                    //     'nama' => 'Janji Setor',
+                    //     'route' => route(name: 'rw.janji-setor'),
+                    //     'uri' => 'rw.janji-setor',
+                    //     'icon'  => 'fa fa-calendar',
+                    // ],
                     [
                         'nama'  => 'Chat',
                         'icon'  => 'fa fa-comment',
@@ -150,12 +150,12 @@ class DataResources extends JsonResource
                                 'uri' => 'data-nasabah',
                                 'icon'  => 'fas fa-user',
                             ],
-                            [
-                                'nama'  => 'Setor Nasabah',
-                                'route' => route('bs.data-setor'),
-                                'uri' => 'bs.data-setor',
-                                'icon'  => 'fas fa-hand-holding-usd',
-                            ],
+                            // [
+                            //     'nama'  => 'Setor Nasabah',
+                            //     'route' => route('bs.data-setor'),
+                            //     'uri' => 'bs.data-setor',
+                            //     'icon'  => 'fas fa-hand-holding-usd',
+                            // ],
                         ],
                     ],
 
@@ -210,12 +210,12 @@ class DataResources extends JsonResource
         return [
             'Data' => 'Warga',
             'sub-data' => [
-  [
-                        'nama'  => 'Dashboard',
-                        'route' => route('warga.dashboard'),
-                        'uri' => 'warga.dashboard',
-                        'icon'  => 'fas fa-tachometer-alt',
-                    ],
+                [
+                    'nama'  => 'Dashboard',
+                    'route' => route('warga.dashboard'),
+                    'uri' => 'warga.dashboard',
+                    'icon'  => 'fas fa-tachometer-alt',
+                ],
                 [
                     'nama'  => 'Tracking Setoran',
                     'route' => route('warga.tracking-setoran'),
@@ -228,7 +228,12 @@ class DataResources extends JsonResource
                     'uri' => 'warga.data-transaksi',
                     'icon'  => 'fas fa-money-bill-wave',
                 ],
-              
+                // [
+                //     'nama' => 'Janji Setor',
+                //     'route' => route('warga.janji-setor'),
+                //     'uri' => 'warga.janji-setor',
+                //     'icon'  => 'fa fa-calendar',
+                // ],
 
                 [
                     'nama'  => 'Chat',
@@ -237,7 +242,7 @@ class DataResources extends JsonResource
                     'uri' => 'warga.chat',
                 ],
 
-               
+
 
                 [
                     'nama'  => 'Profile',

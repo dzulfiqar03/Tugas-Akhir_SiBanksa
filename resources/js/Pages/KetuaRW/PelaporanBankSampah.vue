@@ -634,8 +634,8 @@ const updateVerification = (item) => {
                             </div>
 
                             <div v-else class="flex justify-center gap-1">
-                                <button
-                                    class="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 hover:bg-gray-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                <button disabled
+                                    class="flex items-center gap-2 px-3 py-1.5 bg-emerald-500  text-white text-[11px] font-bold rounded-lg transition">
                                     <i class="fas fa-bell"></i> Transaksi sudah dibuka
                                 </button>
                             </div>

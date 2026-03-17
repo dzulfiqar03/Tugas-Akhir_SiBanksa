@@ -45,7 +45,7 @@ const dtInstance = ref(null);
 const form = useForm({
     fullName: '',
     userName: '',
-    address: '',
+    address: 'Gresik',
     phoneNumber: '',
     id_gender: '',
     id_userdetail: props.idUser,
@@ -390,7 +390,8 @@ const handleSubmit = () => {
 
     form[method](url, {
         onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data kepengurusan telah diproses.', 'success');
+            isEdit.value ?
+            Swal.fire('Berhasil!', 'Data kepengurusan berhasil diubah', 'success'):Swal.fire('Berhasil!', 'Data kepengurusan telah diproses.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -416,7 +417,7 @@ const handleSubmit = () => {
                 $('#error-message').removeClass('hidden').fadeIn();
                 Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
             } else {
-                Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+                Swal.fire('Error', xhr.responseJSON?.message || 'Maaf, Inputan Anda ada yang salah, silahkan cek kembali', 'error');
             }
         },
 
@@ -508,7 +509,10 @@ const breadcrumbItems = [
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div v-for="field in props.formdata.nasabah" :key="field.name"
-                                :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
+                                :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'"
+
+
+                                >
 
 
 
@@ -520,7 +524,10 @@ const breadcrumbItems = [
 
                                     <div class="flex gap-3">
                                         <label v-for="(opt, idx) in field.options" :key="idx"
-                                            class="flex-1 cursor-pointer group">
+                                            class="flex-1 cursor-pointer group"
+                                            :class="{
+                                        'border-red-500 ring-1 ring-red-500 rounded-lg': form.errors[`${field.name}`]
+                                    }">
                                             <input type="radio" v-model="form[field.name]" :value="idx + 1"
                                                 class="peer sr-only">
                                             <div
@@ -541,8 +548,8 @@ const breadcrumbItems = [
                                         :name="field.name" :placeholder="field.placeholder"
                                         class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-black pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                         :class="{
-                                            'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`]
-                                        }">
+                                        'border-red-500 ring-1 ring-red-500': form.errors[`${field.name}`]
+                                    }">
                                 </div>
 
 

@@ -373,7 +373,8 @@ const handleSubmit = () => {
 
     form[method](url, {
         onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data jadwal telah diproses.', 'success');
+            isEdit.value ?
+            Swal.fire('Berhasil!', 'Data jadwal berhasil diubah', 'success'):Swal.fire('Berhasil!', 'Data jadwal telah diproses.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -399,7 +400,7 @@ const handleSubmit = () => {
                 $('#error-message').removeClass('hidden').fadeIn();
                 Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
             } else {
-                Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+                Swal.fire('Error', xhr.responseJSON?.message || 'Maaf, Inputan Anda ada yang salah, silahkan cek kembali', 'error');
             }
         },
         onFinish: function () {

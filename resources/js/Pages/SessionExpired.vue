@@ -17,6 +17,10 @@ watch(darkMode, (newValue) => {
         document.documentElement.classList.remove('dark');
     }
 });
+
+const logout = () => {
+    router.post(route('logout'));
+};
 </script>
 
 <template>
@@ -46,11 +50,10 @@ watch(darkMode, (newValue) => {
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button @click="router.get('login')"
-                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg  dark:shadow-none transition-all active:scale-95">Log
-                        Out
-
-                    </button>
+                   <button @click="logout"
+    class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg dark:shadow-none transition-all active:scale-95">
+    Log Out
+</button>
 
                     <button @click="darkMode = !darkMode"
                         class="text-sm text-gray-400 hover:text-emerald-600 underline">

@@ -465,9 +465,13 @@ const viewDetail = (id) => {
                     <p class="text-sm text-gray-500 dark:text-gray-400">Kelola bank sampah di RW anda.</p>
                 </div>
                 <button @click="openCreateForm"
-                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                    :class="[
+                        showForm ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                    ]">
+
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
-                    {{ showForm ? 'Batal' : 'Tambah Data' }}
+                    {{ showForm ? 'Tutup Form' : 'Tambah Nasabah' }}
                 </button>
             </div>
 
@@ -492,14 +496,14 @@ const viewDetail = (id) => {
                                     <InputLabel :for="field.name" :value="field.title" />
                                     <input :type="field.type" v-model="form[field.name]"
                                         :placeholder="field.placeholder"
-                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
+                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-black pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
                                 </div>
 
 
                                 <div v-else-if="field.name === 'status'" class="col-span-1">
                                     <InputLabel :for="field.name" :value="field.title" />
                                     <select v-model="form[field.name]"
-                                        class="w-full h-11 rounded-xl border-gray-200 bg-gray-50 dark:bg-gray-800 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                                        class="w-full h-11 rounded-xl border-gray-200 bg-gray-50 dark:bg-gray-800 dark:text-white text-black text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
                                         <option value="">Pilih Status</option>
                                         <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
                                     </select>
