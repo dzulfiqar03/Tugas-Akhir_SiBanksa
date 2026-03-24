@@ -3,11 +3,14 @@
 namespace App\Models\BankSampah;
 
 use App\Models\UserDetail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Sampah extends Model
 {
 
+    /** @use HasFactory<\Database\Factories\BankSampah\SampahFactory> */
+    use HasFactory;
     protected $table = "sampah";
     protected $fillable = ['nama_sampah', 'harga', 'satuan', 'kategori', 'id_userdetail', 'saldo'];
 

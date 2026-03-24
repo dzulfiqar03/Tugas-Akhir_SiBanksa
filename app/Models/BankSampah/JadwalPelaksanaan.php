@@ -6,10 +6,14 @@ use App\Models\DocumentArchiver;
 use App\Models\UserDetail;
 use App\Models\Warga\JanjiSetor;
 use App\Models\Warga\UserQueue;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class JadwalPelaksanaan extends Model
 {
+
+    /** @use HasFactory<\Database\Factories\BankSampah\JadwalPelaksanaanFactory> */
+    use HasFactory;
     protected $table = 'jadwal_pelaksanaan';
 
     protected $fillable = ['id_userdetail', 'tanggal_setoran'];

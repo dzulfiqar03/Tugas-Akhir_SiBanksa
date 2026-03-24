@@ -54,7 +54,7 @@ class RegisteredUserController extends Controller
                 'status'   => $data['status'],
                 'id_gender' => $data['id_gender'],
                 'status_transaction' => $data['status_transaction'],
-            ]):array_merge($data[$key], [
+            ]) : array_merge($data[$key], [
                 'id_roles' => $data['id_roles'],
                 'status'   => $data['status'],
                 'status_transaction' => $data['status_transaction'],

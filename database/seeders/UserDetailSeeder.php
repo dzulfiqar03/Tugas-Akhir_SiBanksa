@@ -11,9 +11,9 @@ class UserDetailSeeder extends Seeder
 {
     public function run()
     {
-        $users = User::all();
+        $user = User::where('email', 'ketuarw@gmail.com')->first();
 
-        foreach ($users as $user) {
+        if ($user) {
 
             // tentukan role berdasarkan email
             $role = $this->determineRoleFromEmail($user->email);
@@ -36,12 +36,6 @@ class UserDetailSeeder extends Seeder
             ]);
         }
     }
-
-    /**
-     * Ambil RT dari email.
-     * - Ketua RW = RT 1 (manual)
-     * - Email format "rtXX" otomatis
-     */
     private function extractRTFromEmail($email)
     {
         // khusus Ketua RW

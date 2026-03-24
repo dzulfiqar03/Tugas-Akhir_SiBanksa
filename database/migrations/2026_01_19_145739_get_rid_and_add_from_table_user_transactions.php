@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::table('user_transactions', function (Blueprint $table) {
             $table->dropForeign(['id_bank']);
             $table->dropColumn('id_bank');
-            $table->dropColumn('nomor_rekening');
             $table->foreignId('id_userbank')->after('id_userdetail')->constrained('user_bank')->onDelete('cascade');
         });
     }

@@ -8,10 +8,14 @@ use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\BankSampah\Sampah;
 use App\Models\Transaction\UserTransaction;
 use App\Models\Warga\JanjiSetor;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class UserDetail extends Model
 {
+
+    /** @use HasFactory<\Database\Factories\UserDetailFactory> */
+    use HasFactory;
 
     protected $table = 'user_details';
     protected $fillable = ['id_user', 'userName', 'fullName', 'id_rt', 'address', 'telephone_number', 'id_gender', 'id_roles', 'status', 'status_transaction'];
@@ -94,7 +98,7 @@ class UserDetail extends Model
         return $this->hasOne(UserTransaction::class, 'id_userdetail', 'id');
     }
 
-     public function user_chat()
+    public function user_chat()
     {
         return $this->hasMany(UserChat::class, 'id_userdetail', 'id');
     }

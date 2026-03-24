@@ -38,5 +38,4 @@ class JadwalPelaksanaanRequest extends FormRequest
             'id_userdetail.required'          => 'Id User wajib diisi',
         ];
     }
-
 }
