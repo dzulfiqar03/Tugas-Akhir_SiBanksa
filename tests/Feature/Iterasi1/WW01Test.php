@@ -74,10 +74,8 @@ test('Seluruh data register valid', function () {
 
     $rt = \App\Models\RTPerumahan::first();
     $gender = \App\Models\Gender::where('gender', 'Laki-Laki')->first();
-    // STRUKTUR HARUS SEPERTI INI (Sesuai RegisterRequest Anda)
+
     $formData = [
-        'email' => 'muhammaddzulfiqar03gmail.com',
-        'password' => '12345678',
         'id_roles' => 3, // Role Nasabah
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
@@ -122,7 +120,6 @@ test('Data Field Register Duplikat', function () {
             'password_confirmation' => 'password123',
             'id_rt' => $rt->id,
             'id_gender' => $gender->id,
-
             'phoneNumber' => '081234567890',
             'address' => 'Gresik Kota',
         ]
