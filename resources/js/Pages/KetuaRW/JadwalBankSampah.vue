@@ -112,7 +112,7 @@ const onRowClick = (event) => {
 };
 
 const dtOptions = {
-    searching: false,
+    searching: true,
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
@@ -276,19 +276,12 @@ const dtOptions = {
 const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
 const nextPage = () => dtInstance.value.dt.page('next').draw('page');
 const handleSearch = (e) => {
-    dtInstance.value.dt.search(e.target.value).draw();
+    // Gunakan dtInstance.value.dt untuk mengakses API datatables
+    if (dtInstance.value && dtInstance.value.dt) {
+        dtInstance.value.dt.search(e.target.value).draw();
+    }
 };
 
-const handleCategoryFilter = (e) => {
-    const val = e.target.value;
-    // ^ artinya awal kata, $ artinya akhir kata (pencarian eksak)
-    const regex = val ? `^${val}$` : '';
-
-    dtInstance.value.dt
-        .column(2)
-        .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
-        .draw();
-};
 const handleLengthChange = (e) => {
     dtInstance.value.dt.page.len(parseInt(e.target.value)).draw();
 };
@@ -324,20 +317,6 @@ const breadcrumbItems = [
                 class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
-                    <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
-                        <button @click="exportData(0)"
-                            class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                            <i class="fas fa-file-pdf"></i> PDF
-                        </button>
-                        <button @click="exportData(1)"
-                            class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                            <i class="fas fa-file-excel"></i> Excel
-                        </button>
-                        <button @click="exportData(2)"
-                            class="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                            <i class="fas fa-print"></i> Print
-                        </button>
-                    </div>
                     <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
                         <div class="flex items-end gap-2">
                             <label
@@ -347,18 +326,6 @@ const breadcrumbItems = [
                                 placeholder="Ketik...">
                         </div>
 
-                        <div class="flex items-center gap-2">
-                            <label
-                                class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                            <select @change="handleCategoryFilter"
-                                class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                                <option value="">Semua</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Pengajuan Verifikasi">Pengajuan Verifikasi</option>
-                                <option value="Ditolak">Ditolak</option>
-                                <option value="Disetujui">Disetujui</option>
-                            </select>
-                        </div>
 
                         <div class="flex items-center gap-2  pl-3">
                             <label
@@ -375,7 +342,7 @@ const breadcrumbItems = [
                 </div>
 
                 <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
-                    <DataTable ref="dtInstance" :options="dtOptions"
+                    <DataTable ref="dtInstance" :options="dtOptions" :data="combinedData"
                         class="w-full display stripe hover dark:text-white">
                         <thead>
                             <tr>

@@ -1,20 +1,20 @@
 <template>
     <div
-        class="rounded-full border p-3 flex gap-3 border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-800 dark:bg-white/3">
+        class="rounded-full border p-3 sm:hidden lg:flex gap-0 sm:gap-3 border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-800 dark:bg-white/3">
 
 
-        <div class="grid">
- <div class="m-auto lg:flex hidden">
-            <h3 class="text-base  font-medium text-black dark:text-gray-400 dark:text-white/90">
-                {{ userDetail?.userName || 'Guest' }}
-            </h3>
-        </div>
+        <div class="grid ">
+            <div class="m-auto lg:flex hidden">
+                <h3 class="text-base  font-medium text-black dark:text-gray-400 dark:text-white/90">
+                    {{ userDetail?.userName || 'Guest' }}
+                </h3>
+            </div>
 
 
-                            <div class="flex items-center justify-end animate-pulse gap-2">
-                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Online</span>
-                            </div>
+            <div class="sm:flex hidden items-center justify-end animate-pulse gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Online</span>
+            </div>
 
         </div>
 

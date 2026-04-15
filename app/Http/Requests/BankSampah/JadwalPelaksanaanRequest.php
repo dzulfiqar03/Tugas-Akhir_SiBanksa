@@ -25,7 +25,12 @@ class JadwalPelaksanaanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tanggal_setoran'        => 'required|date|unique:jadwal_pelaksanaan,tanggal_setoran',
+            'tanggal_setoran' => [
+                'required',
+                'date',
+                'after_or_equal:today',
+                'unique:jadwal_pelaksanaan,tanggal_setoran',
+            ],
             'id_userdetail' => 'required|integer',
 
         ];
@@ -35,6 +40,9 @@ class JadwalPelaksanaanRequest extends FormRequest
     {
         return [
             'tanggal_setoran.required'    => 'Tanggal Setoran wajib diisi',
+            'tanggal_setoran.date'        => 'Tanggal Setoran harus berupa tanggal yang valid',
+            'tanggal_setoran.after_or_equal' => 'Tanggal Setoran tidak boleh sebelum hari ini',
+            'tanggal_setoran.unique'      => 'Tanggal Setoran sudah dijadwalkan sebelumnya',
             'id_userdetail.required'          => 'Id User wajib diisi',
         ];
     }

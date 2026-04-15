@@ -9,7 +9,7 @@ class SessionExpiredController extends Controller
 {
     public function index()
     {
-        return Inertia::render('SessionExpired', [
+        return Inertia::render('Errors/SessionExpired', [
             'message' => 'Sesi Anda telah berakhir. Silakan login kembali.',
         ]);
     }

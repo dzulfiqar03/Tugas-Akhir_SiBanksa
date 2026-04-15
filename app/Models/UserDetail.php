@@ -18,7 +18,7 @@ class UserDetail extends Model
     use HasFactory;
 
     protected $table = 'user_details';
-    protected $fillable = ['id_user', 'userName', 'fullName', 'id_rt', 'address', 'telephone_number', 'id_gender', 'id_roles', 'status', 'status_transaction'];
+    protected $fillable = ['id_user', 'userName', 'fullName', 'id_rt', 'address', 'telephone_number', 'id_gender', 'id_roles', 'status', 'status_transaction', 'pencairan_via'];
 
 
     public function user()

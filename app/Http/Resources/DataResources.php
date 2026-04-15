@@ -245,6 +245,12 @@ class DataResources extends JsonResource
 
 
                 [
+                    'nama'  => 'Pengaturan',
+                    'route' => route('preference'),
+                    'uri' => 'preference',
+                    'icon'  => 'fas fa-cog',
+                ],
+                [
                     'nama'  => 'Profile',
                     'route' => route('profile.edit'),
                     'uri' => 'profile.edit',

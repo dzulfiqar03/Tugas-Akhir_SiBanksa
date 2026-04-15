@@ -155,7 +155,8 @@ class KelolaBankSampahController extends Controller
 
             $detail = $user->user_detail;
 
-            $fields = [
+            $pencatatan_via = $detail->pencairan_via ?? '';
+            $fields = $pencatatan_via === 'Non-Tunai' ? [
                 'User Name'        => $detail->userName ?? '',
                 'Nama Lengkap'     => $detail->fullName ?? '',
                 'RT'               => $detail->id_rt ?? '',
@@ -163,6 +164,13 @@ class KelolaBankSampahController extends Controller
                 'Nomor Telepon'    => $detail->telephone_number ?? '',
                 'Status'           => $detail->status ?? '',
                 'Nomor Rekening'   => $detail?->userbank?->first()?->nomor_rekening ?? '',
+            ] : [
+                'User Name'        => $detail->userName ?? '',
+                'Nama Lengkap'     => $detail->fullName ?? '',
+                'RT'               => $detail->id_rt ?? '',
+                'Alamat'           => $detail->address ?? '',
+                'Nomor Telepon'    => $detail->telephone_number ?? '',
+                'Status'           => $detail->status ?? '',
             ];
 
             $filledCount = 0;

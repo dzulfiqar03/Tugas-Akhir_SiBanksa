@@ -14,6 +14,8 @@ test('Seluruh data valid', function () {
         'id_gender' => 3,
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
+        'pencairan_via' => 'Non-Tunai',
+
         'bankSampah' => [
             'userName' => 'banksampah03',
             'fullName' => 'Petugas Bank Sampah XYZ',
@@ -55,7 +57,7 @@ test('Data dapat diperbarui', function () {
         'address' => 'Gresik Kota',
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
-
+        'pencairan_via' => 'Non-Tunai'
     ];
 
     $userDetail = UserDetail::factory()->warga()->create($payload);
@@ -66,6 +68,7 @@ test('Data dapat diperbarui', function () {
         'status' => 'Disetujui',
         'id_roles' => 3,
         'id_rt' => 2,
+        'phoneNumber' => '081234567890',
     ]);
 
     $updateResponse->assertSessionHasNoErrors();
@@ -101,7 +104,7 @@ test('Data dapat dihapus', function () {
         'address' => 'Gresik Kota',
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
-
+        'pencairan_via' => 'Non-Tunai'
     ];
 
     $userDetail = UserDetail::factory()->warga()->create($payload);
@@ -128,6 +131,7 @@ test('Data Field Duplikat', function () {
         'id_roles' => 3, // Role Nasabah
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
+        'pencairan_via' => 'Non-Tunai',
         'nasabah' => [
             'userName' => 'dzulfiqar_nasabah',
             'fullName' => 'Muhammad Dzulfiqar',
@@ -164,6 +168,7 @@ test('Format Field Salah', function () {
         'id_gender' => $gender->id,
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
+        'pencairan_via' => 'Non-Tunai',
         'bankSampah' => [
             'userName' => 'banksampah03',
             'fullName' => 'Petugas Bank Sampah XYZ',
@@ -194,6 +199,7 @@ test('Seluruh field kosong', function () {
         'id_gender' => '',
         'status' => '',
         'status_transaction' => '',
+        'pencairan_via' => '',
         'bankSampah' => [
             'userName' => '',
             'fullName' => '',

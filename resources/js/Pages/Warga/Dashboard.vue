@@ -32,6 +32,7 @@ const props = defineProps({
     allNasabah: Array,
     nasabahList: Array,
     nasabah: Array,
+    nasabahAll: Array,
 
 });
 
@@ -61,9 +62,16 @@ const form2 = useForm({
     phoneNumber: nasabah2?.value.user_detail?.telephone_number ?? '',
     email: nasabah2?.value.email ?? '',
     bank: '',
+    pencairan_method: nasabah2?.value.user_detail?.pencairan_via ?? '',
     id_bank: nasabah2?.value.user_detail?.userbank?.id_bank ?? '',
     nomor_rekening: nasabah2?.value.user_detail?.userbank?.nomor_rekening ?? '',
     password: '',
+
+
+    name: '',
+    id_jadwal: 1,
+    fileDoc: [],
+
 
     status: nasabah2?.value.user_detail?.status ?? '',
     amenity: nasabah2?.value.user_detail?.location?.amenity ?? '',
@@ -91,10 +99,15 @@ const filteredFields = computed(() => {
 
 
 
+const hasData = computed(() => {
+    return props.myStats?.komposisi?.length > 0;
+});
+
 const submit = async () => {
     const baseUrl = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1'
 
     const params = new URLSearchParams()
+
 
     // Nominatim expects keys sesuai dokumentasi:
     // https://nominatim.org/release-docs/latest/api/Search/#structured
@@ -102,7 +115,6 @@ const submit = async () => {
     if (form2.amenity) params.append('amenity', form2.amenity)
     if (form2.house_number) params.append('house_number', form2.house_number)
     if (form2.city) params.append('city', form2.city)
-    if (form2.state) params.append('state', form2.state)
     if (form2.country) params.append('country', form2.country)
     if (form2.postal_code) params.append('postalcode', form2.postal_code)
 
@@ -371,12 +383,60 @@ const formatRupiah = (value) => {
 }
 
 const totalSaldo = computed(() => {
-    return props.nasabah.reduce((acc, item) => {
-        return acc + item.pencatatan_items.reduce((a, b) => {
-            return a + parseFloat(b.subtotal)
-        }, 0)
-    }, 0)
-})
+    // Pastikan props.recentTransactions ada dan berupa array
+    if (!props.recentTransactions || !Array.isArray(props.recentTransactions)) {
+        return 0;
+    }
+
+    // Karena di Controller sudah difilter 'whereHas(transaction)',
+    // di sini kita tinggal menjumlahkan properti 'total'-nya saja.
+    return props.recentTransactions.reduce((acc, item) => {
+        return acc + (parseFloat(item.total) || 0);
+    }, 0);
+});
+
+const totalBeratRecent = computed(() => {
+    return props.recentTransactions.reduce((acc, item) => {
+        return acc + (parseFloat(item.berat) || 0);
+    }, 0);
+});
+
+
+const isPreviewOpen2 = ref(false);
+const selectedDoc = ref(null);
+
+const openPreview = (doc) => {
+    selectedDoc.value = doc;
+    isPreviewOpen2.value = true;
+};
+
+const closePreview = () => {
+    isPreviewOpen2.value = false;
+    selectedDoc.value = null;
+};
+
+const deleteDoc = (id) => {
+    Swal.fire({
+        title: 'Hapus Dokumen?',
+        text: "Berkas yang dihapus tidak dapat dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Gunakan router.delete (Inertia) atau axios
+            form2.delete(route('delete-document', id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    Swal.fire('Terhapus!', 'Dokumen berhasil dihapus.', 'success');
+                }
+            });
+        }
+    });
+};
 </script>
 
 <template>
@@ -436,7 +496,7 @@ const totalSaldo = computed(() => {
                                     </div>
 
                                     <span class="text-xs font-bold text-black dark:text-gray-400">
-                                        {{ Math.round(nasabah2.profile_completion.percentage) }}%
+                                        {{ Math.min(Math.round(nasabah2.profile_completion.percentage), 100) }}%
                                     </span>
                                 </div>
                                 <div v-if="nasabah2.profile_completion.percentage < 100"
@@ -446,8 +506,8 @@ const totalSaldo = computed(() => {
                                     <div class="flex space-x-1">
                                         <div v-for="value in nasabah2.profile_completion.empty_fields">
                                             <span
-                                            @click="value === 'Nomor Rekening'? step = 4:(value === 'Alamat'?step = 3:step = 2)  "
-                                            class="bg-red-500 cursor-pointer hover:bg-red-800 transform transition-all duration-75  text-white p-2 rounded-full font-bold">
+                                                @click="value === 'Nomor Rekening' ? step = 4 : (value === 'Alamat' ? step = 3 : step = 2)"
+                                                class="bg-red-500 cursor-pointer hover:bg-red-800 transform transition-all duration-75  text-white p-2 rounded-full font-bold">
                                                 {{ value }}
                                             </span>
                                         </div>
@@ -507,7 +567,7 @@ const totalSaldo = computed(() => {
 
 
                                 <div v-if="step === 1" class="space-y-5">
-                                    <div class="grid grid-cols-1  gap-x-6 gap-y-5">
+                                    <div class="grid grid-cols-1  gap-x-6 gap-y-3">
                                         <div v-for="field in formdata.userAuth" :key="field.name">
 
                                             <div v-if="field.type !== 'password'" class="col-span-1 relative">
@@ -527,8 +587,117 @@ const totalSaldo = computed(() => {
 
                                         </div>
 
+                                        <div class="border-t border-gray-100 dark:border-gray-700">
+                                            <InputLabel value="Manajemen Berkas"
+                                                class="mb-4 text-emerald-600 font-black uppercase tracking-widest text-[10px]" />
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div
+                                                    class="space-y-4 bg-slate-50 dark:bg-white/[0.02] p-5 rounded-2xl border-2 border-dashed border-slate-200 dark:border-gray-700">
+                                                    <select v-model="form2.name"
+                                                        class="w-full rounded-xl border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 text-sm">
+                                                        <option value="">-- Pilih Jenis Dokumen --</option>
+                                                        <option value="KTP">KTP</option>
+                                                        <option value="KK">KK</option>
+                                                    </select>
+                                                    <input type="file"
+                                                        @change="(e) => form2.fileDoc = Array.from(e.target.files)"
+                                                        class="text-xs">
+                                                </div>
 
 
+                                                <div class="space-y-3">
+                                                    <template v-if="props.nasabahAll.user_detail.document.length > 0"
+                                                        v-for="doc in props.nasabahAll.user_detail.document"
+                                                        :key="doc.id">
+                                                        <div v-if="['KTP', 'KK', 'Akta Kelahiran'].includes(doc.name)"
+                                                            class="group flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm hover:border-emerald-500 transition-all">
+
+                                                            <div class="flex items-center gap-3">
+                                                                <div
+                                                                    class="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-xl flex items-center justify-center">
+                                                                    <i class="fas fa-file-shield text-emerald-500"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <p
+                                                                        class="text-[11px] font-black text-black dark:text-white uppercase tracking-tight">
+                                                                        {{ doc.name }}</p>
+                                                                    <p
+                                                                        class="text-[9px] text-gray-400 uppercase font-bold">
+                                                                        {{
+                                                                            doc.created_at_human }}</p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="flex items-center gap-2">
+                                                                <button type="button" @click="openPreview(doc)"
+                                                                    class="p-2 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all">
+                                                                    <i class="fas fa-eye text-xs"></i>
+                                                                </button>
+
+                                                                <button v-if="!isEdit" type="button"
+                                                                    @click="deleteDoc(doc.id)"
+                                                                    class="p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 rounded-lg transition-all">
+                                                                    <i class="fas fa-trash-alt text-xs"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+
+                                                    <div v-else
+                                                        class="flex items-center gap-3 p-3 bg-amber-50/50 dark:bg-amber-900/10 border border-dashed border-amber-200 dark:border-amber-900/30 rounded-2xl opacity-70">
+                                                        >
+                                                        <div
+                                                            class="w-10 h-10 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center text-amber-500">
+                                                            <i class="fas fa-exclamation-triangle text-xs"></i>
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-[10px] font-bold text-amber-700 dark:text-amber-500 uppercase tracking-tighter">
+                                                                Belum Mengunggah Dokumen
+                                                            </p>
+                                                            <p
+                                                                class="text-[8px] text-amber-600/70 dark:text-amber-500/50 italic">
+                                                                Harap lengkapi dokumen identitas Anda.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div v-if="isPreviewOpen2"
+                                                    class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                                                    <div
+                                                        class="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full h-[90vh] p-2 relative shadow-2xl flex flex-col">
+
+                                                        <div
+                                                            class="p-4 flex justify-between items-center border-b dark:border-gray-700">
+                                                            <h3
+                                                                class="font-black dark:text-white uppercase tracking-widest text-sm">
+                                                                Preview: {{ selectedDoc?.original_filesname }}
+                                                            </h3>
+                                                            <button @click="closePreview"
+                                                                class="text-gray-500 hover:text-red-500 transition-colors">
+                                                                <i class="fas fa-times-circle text-2xl"></i>
+                                                            </button>
+                                                        </div>
+
+                                                        <div
+                                                            class="flex-1 bg-gray-100 dark:bg-gray-900 rounded-xl overflow-hidden mt-2">
+                                                            <embed v-if="selectedDoc"
+                                                                :src="`/storage/files/documentOther/Nasabah/${selectedDoc.id_userdetail}/${selectedDoc.original_filesname}`"
+                                                                type="application/pdf" width="100%" height="100%" />
+                                                        </div>
+
+                                                        <div class="p-3 text-center">
+                                                            <p class="text-[10px] text-gray-400 font-mono italic">
+                                                                Fisik File: {{ selectedDoc?.original_filesname }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                        </div>
 
                                     </div>
                                     <div class="flex justify-between gap-4">
@@ -640,7 +809,29 @@ const totalSaldo = computed(() => {
 
                                 <div v-if="step === 4" class="space-y-5">
                                     <div class="grid grid-cols-1  gap-x-6 gap-y-5">
-                                        <div v-for="field in formdata?.userBank" :key="field.name">
+
+                                        <div>
+                                            <InputLabel value="Via Pencairan Setoran"
+                                                class="mb-4 text-emerald-600 font-black uppercase tracking-widest text-[10px]" />
+
+                                            <select v-model="form2.pencairan_method" disabled
+                                                class="w-full h-11 rounded-xl bg-gray-50 text-black   dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm">
+                                                <option value="" class="text-black dark:text-white">Pilih Metode
+                                                    Pencairan
+                                                </option>
+
+                                                <option value="Tunai" class="text-gray-900 dark:text-white">
+                                                    Tunai
+                                                </option>
+                                                <option value="Non-Tunai" class="text-gray-900 dark:text-white">
+                                                    Transfer Bank
+                                                </option>
+
+                                            </select>
+                                        </div>
+
+                                        <div v-if="form2.pencairan_method === 'Non-Tunai'"
+                                            v-for="field in formdata?.userBank" :key="field.name">
 
 
                                             <input type="hidden" name="id_userdetail"
@@ -753,7 +944,7 @@ const totalSaldo = computed(() => {
                     <div class="flex gap-8 border-t border-white/20 pt-6">
                         <div>
                             <p class="text-[10px] opacity-70 uppercase">Total Kontribusi</p>
-                            <p class="text-xl font-bold">{{ props.myStats.totalBerat }} <span
+                            <p class="text-xl font-bold">{{ totalBeratRecent }} <span
                                     class="text-sm font-normal">Kg</span></p>
                         </div>
                         <div>
@@ -773,7 +964,18 @@ const totalSaldo = computed(() => {
                             <h3 class="font-bold text-gray-800 dark:text-gray-100 mb-4 text-sm">Statistik Sampah Saya
                             </h3>
                             <div class="h-48">
-                                <Doughnut :data="chartData" :options="chartOptions" />
+                                <Doughnut v-if="hasData" :data="chartData" :options="chartOptions" />
+
+                                <div v-else class="text-center">
+                                    <div
+                                        class="w-20 h-20 bg-gray-50 dark:bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-dashed border-gray-200 dark:border-gray-600">
+                                        <i class="fas fa-chart-pie text-gray-300 dark:text-gray-600 text-2xl"></i>
+                                    </div>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Belum Ada
+                                        Data</p>
+                                    <p class="text-[9px] text-gray-400/70 italic">Lakukan setoran sampah pertama Anda
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
@@ -793,37 +995,53 @@ const totalSaldo = computed(() => {
                     </div>
 
 
-                    <div
-                        class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                        <div class="p-6 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center">
-                            <h3 class="font-bold text-gray-800 dark:text-gray-100">Riwayat Setoran</h3>
-                            <button @click="viewPencairan" class="text-xs text-emerald-600 font-bold">Lihat
-                                Semua</button>
+               <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+    <div class="p-6 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center">
+        <h3 class="font-bold text-gray-800 dark:text-gray-100">Riwayat Setoran</h3>
+        <button v-if="props.recentTransactions?.length > 0" @click="viewPencairan" class="text-xs text-emerald-600 font-bold">
+            Lihat Semua
+        </button>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 dark:bg-gray-700 text-[10px] text-gray-400 uppercase font-bold">
+                <tr>
+                    <th class="px-6 py-3">Tanggal</th>
+                    <th class="px-6 py-3">Jenis</th>
+                    <th class="px-6 py-3 text-right">Berat</th>
+                    <th class="px-6 py-3 text-right">Subtotal</th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+                <template v-if="props.recentTransactions?.length > 0">
+                    <tr v-for="trx in props.recentTransactions" :key="trx.id"
+                        class="text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
+                        <td class="px-6 py-4">{{ trx.tanggal }}</td>
+                        <td class="px-6 py-4 font-bold">{{ trx.kategori }}</td>
+                        <td class="px-6 py-4 text-right">{{ trx.berat }} kg</td>
+                        <td class="px-6 py-4 text-right text-emerald-600 font-bold">
+                            Rp {{ trx.total?.toLocaleString('id-ID') }}
+                        </td>
+                    </tr>
+                </template>
+
+                <tr v-else>
+                    <td colspan="4" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center opacity-50">
+                            <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-3">
+                                <i class="fas fa-box-open text-gray-400 text-xl"></i>
+                            </div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Belum Ada Riwayat</p>
+                            <p class="text-[9px] text-gray-400/70 italic">Data setoran terbaru akan muncul di sini</p>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead
-                                    class="bg-gray-50 dark:bg-gray-700 text-[10px] text-gray-400 uppercase font-bold">
-                                    <tr>
-                                        <th class="px-6 py-3">Tanggal</th>
-                                        <th class="px-6 py-3">Jenis</th>
-                                        <th class="px-6 py-3 text-right">Berat</th>
-                                        <th class="px-6 py-3 text-right">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-                                    <tr v-for="trx in props.recentTransactions" :key="trx.id"
-                                        class="text-xs text-gray-700 dark:text-gray-300">
-                                        <td class="px-6 py-4">{{ trx.tanggal }}</td>
-                                        <td class="px-6 py-4 font-bold">{{ trx.kategori }}</td>
-                                        <td class="px-6 py-4 text-right">{{ trx.berat }} kg</td>
-                                        <td class="px-6 py-4 text-right text-emerald-600 font-bold">Rp {{
-                                            trx.total.toLocaleString('id-ID') }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
                 </div>
 
                 <div class="space-y-6">
@@ -846,10 +1064,9 @@ const totalSaldo = computed(() => {
                                 <span class="text-[9px] text-emerald-500">Asisten Digital</span>
                             </div>
                         </div>
-
                         <div ref="chatBody"
                             class="flex-1 overflow-y-auto p-3 space-y-3 bg-[#f8f9fa] dark:bg-gray-950 custom-scrollbar">
-                            <template v-if="activeChat?.user_chat">
+                            <template v-if="activeChat?.user_chat && activeChat.user_chat.length > 0">
                                 <div v-for="(msg, i) in activeChat.user_chat" :key="i" class="flex flex-col space-y-1">
 
                                     <div v-if="msg.user_msg" class="flex justify-end">
@@ -861,7 +1078,7 @@ const totalSaldo = computed(() => {
                                         </div>
                                     </div>
 
-                                    <div class="flex justify-start">
+                                    <div v-if="msg.message" class="flex justify-start">
                                         <div
                                             class="max-w-[85%] px-3 py-2 rounded-xl bg-white dark:bg-gray-800 rounded-tl-none border border-gray-100 dark:border-gray-700 shadow-sm">
                                             <p class="text-[11px] text-gray-700 dark:text-gray-200 leading-snug">{{
@@ -872,6 +1089,25 @@ const totalSaldo = computed(() => {
                                     </div>
                                 </div>
                             </template>
+
+                            <div v-else-if="activeChat"
+                                class="h-full flex flex-col items-center justify-center opacity-50">
+                                <div
+                                    class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3">
+                                    <i class="fas fa-comments text-gray-400"></i>
+                                </div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Belum Ada Pesan
+                                </p>
+                                <p class="text-[9px] text-gray-400/70 italic">Kirim pesan pertama untuk memulai obrolan
+                                </p>
+                            </div>
+
+                            <div v-else class="h-full flex flex-col items-center justify-center">
+                                <img src="/images/empty-chat.svg" class="w-32 opacity-20 mb-4" alt="Select Chat">
+                                <p
+                                    class="text-[10px] font-black text-gray-300 dark:text-gray-700 uppercase tracking-[0.2em]">
+                                    Pilih Kontak untuk Memulai</p>
+                            </div>
                         </div>
 
                         <div class="p-3 bg-white dark:bg-gray-900 border-t dark:border-gray-800">

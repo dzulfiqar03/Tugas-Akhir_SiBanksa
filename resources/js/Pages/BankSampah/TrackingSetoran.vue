@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage, Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 
@@ -32,6 +32,7 @@ window.JSZip = jszip;
 pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 const props = defineProps({
     nasabahList: Array,
+    petugas: Array,
     kepengurusan: Array,
     sidebardata: Object,
     breadcrumbItems: Array,
@@ -287,13 +288,15 @@ const dtOptions = {
 
 
 window.viewDetail = (id) => viewDetail(id);
-
+const searchQuery = ref(''); // Tambahkan ini
 const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
 const nextPage = () => dtInstance.value.dt.page('next').draw('page');
 const handleSearch = (e) => {
-    dtInstance.value.dt.search(e.target.value).draw();
+    const value = e.target.value;
+    searchQuery.value = value; // Simpan ke ref untuk filter mobile
+    dtInstance.value.dt.search(value).draw(); // Tetap update datatables desktop
+    mobilePage.value = 1; // Reset halaman mobile ke 1 saat mencari
 };
-
 const handleCategoryFilter = (e) => {
     const val = e.target.value;
     const regex = val ? `^${val}$` : '';
@@ -303,9 +306,7 @@ const handleCategoryFilter = (e) => {
         .search(regex, true, false)
         .draw();
 };
-const handleLengthChange = (e) => {
-    dtInstance.value.dt.page.len(parseInt(e.target.value)).draw();
-};
+
 
 const exportData = (index) => {
     dtInstance.value.dt.button(index).trigger();
@@ -347,6 +348,47 @@ const timelineSteps = computed(() => {
 })
 
 
+// Pagination Mobile
+const mobilePage = ref(1);
+const mobilePerPage = ref(5); // Nilai ini akan sinkron dengan handleLengthChange
+
+const paginatedMobileData = computed(() => {
+    if (!props.nasabahList) return [];
+
+    // 1. Filter data berdasarkan searchQuery
+    const filtered = props.nasabahList.filter(item => {
+        const query = searchQuery.value.toLowerCase();
+        // Cari di nama nasabah atau jadwal
+        return item.nasabah?.toLowerCase().includes(query) ||
+            item.jadwalPelaksanaan?.toLowerCase().includes(query);
+    });
+
+    // 2. Hitung pagination dari data yang sudah difilter
+    const start = (mobilePage.value - 1) * mobilePerPage.value;
+    const end = start + mobilePerPage.value;
+
+    return filtered.slice(start, end);
+});
+
+const totalMobilePages = computed(() => {
+    const filteredCount = props.nasabahList.filter(item => {
+        const query = searchQuery.value.toLowerCase();
+        return item.nasabah?.toLowerCase().includes(query) ||
+            item.jadwalPelaksanaan?.toLowerCase().includes(query);
+    }).length;
+
+    return Math.ceil(filteredCount / mobilePerPage.value) || 1;
+});
+
+
+// Update handleLengthChange agar mobile juga ikut berubah
+const handleLengthChange = (e) => {
+    const newLen = parseInt(e.target.value);
+    dtInstance.value.dt.page.len(newLen).draw();
+    mobilePerPage.value = newLen;
+    mobilePage.value = 1; // Reset ke hal pertama
+};
+
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') },
     { label: 'Tracking Setoran', url: route('data-tracking') },
@@ -357,129 +399,100 @@ const breadcrumbItems = [
 
     <Head title="Tracking Setor Sampah" />
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
-        <div class="container mx-auto px-4 space-y-8">
-            <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white">Tracking Workflow Proses</h1>
 
+
+                <div v-if="props.petugas.length == 0" class="flex flex-col space-y-5 m-auto h-max items-center justify-center py-10 text-center">
+        <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-users-slash text-3xl text-gray-400"></i>
+        </div>
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white">Struktur Kepengurusan Belum Diatur</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mt-2">
+            Anda belum mengisi data kepengurusan atau nasabah. Silakan tambahkan data melalui form untuk mulai melacak workflow.
+        </p>
+
+        <Link href="/bank-sampah/kepengurusan" class="bg-red-500 rounded-xl p-5 text-white font-black hover:scale-105 transition-all">
+
+            <h1 class="capitalize">beralih ke halaman Kepengurusan</h1>
+        </Link>
+    </div>
+        <div v-else class="container mx-auto px-4 space-y-8">
+            <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white">Tracking Workflow Proses</h1>
             <div
-                class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <template v-for="(step, index) in timelineSteps" :key="index">
+                class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+
+
+
+                <div class="hidden md:flex items-center justify-between w-full">
+                    <template v-for="(step, index) in timelineSteps" :key="'desktop-' + index">
                         <div class="flex flex-col items-center relative z-10">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-colors duration-500"
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all duration-500 shadow-lg"
                                 :class="[
-                                    step.completed
-                                        ? 'bg-green-500 animate-pulse'
-                                        : step.status === 'in_progress'
-                                            ? 'bg-blue-500 animate-bounce'
-                                            : 'bg-gray-300'
+                                    step.completed ? 'bg-green-500 animate-pulse' :
+                                        step.status === 'in_progress' ? 'bg-blue-500 animate-bounce' : 'bg-gray-300'
                                 ]">
-                                <i v-if="step.status === 'completed'" class="fas fa-check text-sm "></i>
+                                <i v-if="step.status === 'completed'" class="fas fa-check text-sm"></i>
                                 <span v-else>{{ index + 1 }}</span>
                             </div>
-
-                            <span class="text-xs md:text-sm mt-2 font-medium text-gray-600 dark:text-gray-300" :class="[
-                                step.completed
-                                    ? ' animate-pulse'
-                                    : step.status === 'in_progress'
-                                        ? 'animate-bounce'
-                                        : 'animate-none'
-                            ]">
+                            <span class="text-xs md:text-sm mt-3 font-bold transition-colors"
+                                :class="step.status === 'pending' ? 'text-gray-400' : 'text-gray-700 dark:text-gray-200'">
                                 {{ step.name }}
                             </span>
                         </div>
 
                         <div v-if="index < timelineSteps.length - 1"
                             class="flex-1 h-1 mx-2 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                            <div class="h-full transition-all duration-500" :class="{
+                            <div class="h-full transition-all duration-700" :class="{
                                 'progress-flow': step.status === 'in_progress',
                                 'bg-green-500 w-full': step.status === 'completed',
                                 'w-0': step.status === 'pending'
-                            }"></div>
+                            }">
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="md:hidden space-y-0">
+                    <div v-for="(step, index) in timelineSteps" :key="'mobile-' + index" class="flex">
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold z-10 shrink-0 shadow-md transition-all duration-500"
+                                :class="[
+                                    step.completed ? 'bg-green-500' :
+                                        step.status === 'in_progress' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'
+                                ]">
+                                <i v-if="step.status === 'completed'" class="fas fa-check text-xs"></i>
+                                <span v-else>{{ index + 1 }}</span>
+                            </div>
+                            <div v-if="index < timelineSteps.length - 1"
+                                class="w-1 flex-1 my-1 rounded-full transition-colors duration-500"
+                                :class="step.completed ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'">
+                            </div>
                         </div>
 
-                    </template>
+                        <div class="flex-1 ml-4 pb-8">
+                            <div class="bg-gray-50 dark:bg-gray-900/40 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 transition-all"
+                                :class="step.status === 'in_progress' ? 'ring-2 ring-blue-500/20 border-blue-100' : ''">
+                                <p class="font-bold text-sm tracking-wide"
+                                    :class="step.status === 'pending' ? 'text-gray-400' : 'text-gray-800 dark:text-white'">
+                                    {{ step.name }}
+                                </p>
 
+
+                                <div class="mt-3 flex items-center justify-between">
+                                    <span
+                                        class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md tracking-tighter"
+                                        :class="step.completed ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'">
+                                        {{ step.status === 'completed' ? 'Selesai' : 'Menunggu' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+
             </div>
 
-            <transition name="accordion">
-                <div v-if="showForm"
-                    class="bg-white accordion-wrapper overflow-hidden dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
-                    <h3 class="text-lg w-full font-semibold mb-4 text-black dark:text-white">
-                        {{ isEdit ? 'Perbarui Data' : 'Input Data Baru' }}</h3>
 
-                    <FormWrapper formName="formNasabah" :errors="form.errors" :processing="form.processing"
-                        @submit="handleSubmit">
-                        <input type="hidden" name="id_rt" :value="idUserRT">
-                        <input type="hidden" name="id_roles" v-model="form.id_roles">
-
-                        <div v-for="field in formdata.nasabah" :key="field.name"">
-                                    <div v-if="field.type === 'radio'"  class=" col-span-full">
-
-                            <InputLabel :for="field.name" :value="field.title" />
-
-
-                            <div class="flex gap-3">
-                                <label v-for="(opt, idx) in field.options" :key="idx"
-                                    class="flex-1 cursor-pointer group">
-                                    <input type="radio" v-model="form[field.name]" :value="idx + 1"
-                                        class="peer sr-only">
-                                    <div
-                                        class="py-2 px-4 dark:text-white text-gray-500 rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
-                                        {{ opt }}
-                                    </div>
-                                </label>
-                            </div>
-
-                        </div>
-
-                        <div v-else-if="field.name === 'status'">
-                            <div class="col-span-2">
-                                <InputLabel :for="field.name" :value="field.title" />
-                                <select :id="field.name" :name="field.name" v-model="form[field.name]"
-                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
-                                    class="w-full h-11 rounded-xl  border-gray-200 text-gray-500
-                                        bg-gray-50 dark:bg-gray-800 dark:text-white  text-sm  pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
-                                    <option value="">Pilih Status</option>
-                                    <option v-for="opt in field.options" :key="opt" :value="opt"
-                                        class="text-gray-900 dark:text-white">
-                                        {{ opt }}
-                                    </option>
-                                </select>
-                            </div>
-
-                        </div>
-
-                        <div v-else-if="!['address', 'phoneNumber', 'userName', 'status'].includes(field.name) && field.type != 'file' &&
-                            field.type != 'select' &&
-                            field.type != 'radio'">
-                            <div class="col-span-2">
-                                <InputLabel :for="field.name" :value="field.title" />
-                                <input :type="field.type" :id="field.name" :name="field.name"
-                                    :placeholder="field.placeholder" v-model="form[field.name]"
-                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
-                                    class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-gray-500 pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all  border-gray-200">
-
-                            </div>
-
-                        </div>
-
-
-                </div>
-
-
-
-
-                <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
-                    <button type="submit"
-                        class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50"
-                        :disabled="form.processing">
-                        <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Nasabah' : 'Simpan Nasabah' }}
-                    </button>
-                </div>
-                </FormWrapper>
-        </div>
-        </transition>
 
         <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
             <div class="overflow-x-auto">
@@ -523,8 +536,70 @@ const breadcrumbItems = [
                     </div>
 
                 </div>
+
+
+
+                <div class="block md:hidden space-y-4">
+                    <div v-for="(item, idx) in paginatedMobileData" :key="idx"
+                        class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Nasabah</p>
+                                <h3 class="text-lg font-bold text-emerald-600 dark:text-emerald-400 capitalize">{{
+                                    item.nasabah
+                                }}</h3>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-gray-400 font-bold uppercase">Jadwal</p>
+                                <span class="text-xs font-semibold dark:text-gray-200">{{ item.jadwalPelaksanaan
+                                }}</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 border-t border-gray-50 dark:border-gray-700 pt-4">
+                            <div v-for="step in workflowSteps" :key="step" class="flex items-center gap-3">
+                                <div class="flex-shrink-0">
+                                    <i v-if="item.workflow?.[step]?.completed"
+                                        class="fas fa-check-circle text-emerald-500 text-lg"></i>
+                                    <i v-else class="far fa-circle text-gray-300 text-lg"></i>
+                                </div>
+
+                                <div class="flex-1 flex justify-between items-center">
+                                    <div>
+                                        <p class="text-sm font-bold dark:text-white">{{ step }}</p>
+                                        <p class="text-[10px] text-gray-400">
+                                            {{ item.workflow?.[step]?.divisi || 'Menunggu Antrean' }}
+                                        </p>
+                                    </div>
+                                    <div v-if="item.workflow?.[step]?.petugas" class="text-right">
+                                        <span
+                                            class="text-[10px] bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-600 dark:text-gray-300">
+                                            {{ item.workflow[step].petugas[0] }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="flex items-center justify-between py-4" v-if="totalMobilePages > 1">
+                        <button @click="mobilePage--" :disabled="mobilePage === 1"
+                            class="p-2 px-4 rounded-lg bg-white dark:bg-gray-800 text-emerald-500 disabled:opacity-30 shadow-sm border border-gray-100 dark:border-gray-700">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="text-sm font-bold text-gray-500 uppercase">Hal {{ mobilePage }} / {{
+                            totalMobilePages
+                        }}</span>
+                        <button @click="mobilePage++" :disabled="mobilePage === totalMobilePages"
+                            class="p-2 px-4 rounded-lg bg-white dark:bg-gray-800 text-emerald-500 disabled:opacity-30 shadow-sm border border-gray-100 dark:border-gray-700">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
                 <DataTable ref="dtInstance" :options="dtOptions" :data="nasabahList"
-                    class="w-full display stripe hover cell-border dark:text-white">
+                    class="w-full hidden lg:block display stripe hover cell-border dark:text-white">
                     <!-- <thead>
                             <tr class="text-left text-gray-500 dark:text-gray-400">
                                 <th class="text-center">No</th>
@@ -653,6 +728,23 @@ const breadcrumbItems = [
 
     to {
         background-position: -200% 0;
+    }
+}
+
+/* Animasi saat pindah halaman mobile */
+.block.md\:hidden>div {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 </style>

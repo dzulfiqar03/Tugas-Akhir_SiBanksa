@@ -1,14 +1,16 @@
 <script setup>
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { onMounted, ref, watch } from 'vue';
 
 const darkMode = ref(false);
 
+// Inisialisasi Dark Mode dari LocalStorage saat komponen dimuat
 onMounted(() => {
     const savedMode = localStorage.getItem('darkMode');
     darkMode.value = savedMode ? JSON.parse(savedMode) : true; // Default true sesuai class 'dark' di Blade Anda
 });
 
+// Watcher untuk update localStorage dan class di dokumen
 watch(darkMode, (newValue) => {
     localStorage.setItem('darkMode', JSON.stringify(newValue));
     if (newValue) {
@@ -18,42 +20,51 @@ watch(darkMode, (newValue) => {
     }
 });
 
-const logout = () => {
-    router.post(route('logout'));
+const goBack = () => {
+    window.history.back();
 };
 </script>
 
 <template>
 
-    <Head title="Session Expired" />
+    <Head title="404 - No Internet Connection" />
 
     <div :class="{ 'dark': darkMode }">
         <div
             class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen transition-colors duration-300">
 
             <div class="text-center px-4">
-                <div class="mb-8 flex justify-center items-center animate-bounce">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 text-red-500" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22v-2m0-16V2" />
-                    </svg>
-                </div>
+           <div class="mb-8 animate-bounce">
+    <svg class="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
 
-                <h1 class="text-6xl font-bold text-gray-800 dark:text-white mb-4">419</h1>
+        <!-- WiFi arcs -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8.53 16.11a6 6 0 016.94 0M5.17 12.75a10 10 0 0113.66 0M1.82 9.4a14 14 0 0119.36 0" />
+
+        <!-- Dot -->
+        <circle cx="12" cy="20" r="1.5" fill="currentColor" />
+
+        <!-- Slash (off) -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 3l18 18" />
+    </svg>
+</div>
+                <h1 class="text-6xl font-bold text-gray-800 dark:text-white mb-4">404</h1>
                 <h2 class="text-2xl font-semibold text-gray-600 dark:text-gray-300 mb-4">
-                    Session Expired !!!
+                    No Internet Connection
                 </h2>
                 <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                    It looks like you're session is expired, please do login again.
+                    It looks like you're offline. Please check your internet connection and try again.
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                   <button @click="logout"
-    class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg dark:shadow-none transition-all active:scale-95">
-    Log Out
-</button>
+                    <button @click="goBack()"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 dark:shadow-none transition-all active:scale-95">
+                        Refresh
+                    </button>
 
                     <button @click="darkMode = !darkMode"
                         class="text-sm text-gray-400 hover:text-emerald-600 underline">
@@ -66,6 +77,7 @@ const logout = () => {
 </template>
 
 <style scoped>
+/* Anda bisa menambahkan animasi fade in di sini */
 .text-center {
     animation: fadeIn 0.5s ease-out;
 }

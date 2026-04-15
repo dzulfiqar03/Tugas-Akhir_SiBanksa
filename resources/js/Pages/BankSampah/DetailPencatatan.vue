@@ -66,6 +66,31 @@ const sendReminder = () => {
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 
+// ================= MOBILE LOGIC =================
+const mobileSearch = ref('');
+const mobilePage = ref(1);
+
+
+const filteredMobileData = computed(() => {
+    let data = props.pencatatanSetoranItems || [];
+    if (mobileSearch.value) {
+        const s = mobileSearch.value.toLowerCase();
+        data = data.filter(item =>
+            item.sampah?.nama_sampah.toLowerCase().includes(s) ||
+            item.setoran?.jadwal?.tanggal_setoran.toLowerCase().includes(s)
+        );
+    }
+    return data;
+});
+
+const paginatedMobileData = computed(() => {
+    const start = (mobilePage.value - 1) * mobilePerPage.value;
+    return filteredMobileData.value.slice(start, start + mobilePerPage.value);
+});
+
+const totalMobilePages = computed(() => Math.ceil(filteredMobileData.value.length / mobilePerPage.value));
+
+
 const deleteData = (id) => {
     Swal.fire({
         title: 'Hapus data?',
@@ -214,7 +239,7 @@ const dtOptions = {
                         ]
                     }, { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1, lineColor: '#10b981' }], margin: [0, 5, 0, 15] });
 
-                   
+
 
                     doc.styles.tableHeader = { fillColor: '#10b981', color: 'white', bold: true, alignment: 'center' };
                 }
@@ -354,13 +379,25 @@ const handleCategoryFilter = (e) => {
         .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
         .draw()
 }
-const handleLengthChange = (e) => {
-    dtInstance.value.dt.page.len(parseInt(e.target.value)).draw()
-}
 
 const exportData = (index) => {
     dtInstance.value.dt.button(index).trigger()
 }
+
+const mobilePerPage = ref(5); // Default sama dengan desktop (5)
+
+const handleLengthChange = (e) => {
+    const newLen = parseInt(e.target.value);
+
+    // 1. Update untuk Desktop (DataTable)
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page.len(newLen).draw();
+    }
+
+    // 2. Update untuk Mobile (Card View)
+    mobilePerPage.value = newLen;
+    mobilePage.value = 1; // Reset ke halaman pertama agar tidak bingung
+};
 
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') },
@@ -493,18 +530,78 @@ const breadcrumbItems = [
                         </div>
                     </div>
                 </div>
-                <DataTable ref="dtInstance" :data="pencatatanSetoranItems" :options="dtOptions"
-                    class="display stripe hover cell-border w-full dark:text-gray-200">
-                    <template #column-6="data">
-                        <div class="flex justify-center gap-1">
-                            <button @click="deleteData(data.rowData.id)"
-                                class="rounded-lg p-2 text-red-500 transition hover:bg-red-50 dark:hover:bg-red-900/20"
-                                title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </template>
-                </DataTable>
+             <div class="hidden md:block overflow-x-auto">
+    <DataTable ref="dtInstance" :data="pencatatanSetoranItems" :options="dtOptions"
+        class="display stripe hover cell-border w-full dark:text-gray-200">
+        <template #column-6="data">
+            <div class="flex justify-center gap-1">
+                <button @click="deleteData(data.rowData.id)"
+                    class="rounded-lg p-2 text-red-500 transition hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </template>
+    </DataTable>
+</div>
+
+<div class="block md:hidden space-y-4">
+    <div class="mb-4">
+        <input v-model="mobileSearch" type="text" placeholder="Cari sampah/tanggal..."
+               class="w-full rounded-xl border-gray-200 dark:bg-gray-900 dark:border-gray-700 dark:text-white px-4 py-3 text-sm shadow-sm">
+    </div>
+
+    <div v-for="(item, idx) in paginatedMobileData" :key="idx"
+         class="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+
+        <div class="absolute left-0 top-0 h-full w-1.5 bg-emerald-500"></div>
+
+        <div class="flex justify-between items-start mb-3">
+            <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
+                    {{ item.setoran?.jadwal?.tanggal_setoran || '-' }}
+                </span>
+                <h3 class="mt-1 text-lg font-bold text-gray-800 dark:text-white capitalize">
+                    {{ item.sampah?.nama_sampah }}
+                </h3>
+            </div>
+            <button @click="deleteData(item.id)" class="text-red-500 p-2">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 border-t border-gray-50 pt-3 dark:border-gray-700">
+            <div>
+                <p class="text-[10px] uppercase text-gray-400 font-bold">Jumlah</p>
+                <p class="font-bold text-gray-700 dark:text-gray-200">
+                    {{ item.jumlah }} <span class="text-xs font-medium text-gray-500">{{ item.sampah?.satuan }}</span>
+                </p>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] uppercase text-gray-400 font-bold">Sub Total</p>
+                <p class="font-black text-emerald-600 dark:text-emerald-400">
+                    Rp {{ new Intl.NumberFormat('id-ID').format(item.subtotal) }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="totalMobilePages > 1" class="flex items-center justify-between pt-4 pb-10">
+        <button @click="mobilePage--" :disabled="mobilePage === 1"
+                class="px-4 py-2 text-sm font-bold text-emerald-600 disabled:opacity-30">
+            ← Prev
+        </button>
+        <span class="text-xs font-bold text-gray-500 uppercase">Hal {{ mobilePage }} dari {{ totalMobilePages }}</span>
+        <button @click="mobilePage++" :disabled="mobilePage === totalMobilePages"
+                class="px-4 py-2 text-sm font-bold text-emerald-600 disabled:opacity-30">
+            Next →
+        </button>
+    </div>
+
+    <div v-if="filteredMobileData.length === 0" class="py-20 text-center">
+        <i class="fas fa-box-open text-4xl text-gray-200 mb-3"></i>
+        <p class="text-gray-400 text-sm">Tidak ada data setoran ditemukan.</p>
+    </div>
+</div>
             </div>
         </div>
     </AuthenticatedLayout>

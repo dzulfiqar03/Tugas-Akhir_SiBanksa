@@ -452,16 +452,39 @@ const dtOptions = computed(() => ({
 
                     $(win.document.body).css('font-family', "'Poppins', sans-serif").prepend(`
                 <div style="padding: 40px; border-top: 12px solid #10b981; background: #fff;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:2px solid #f9fafb; padding-bottom:20px;">
-                        <div>
-                            <h1 style="color:#10b981; margin:0; font-size:28px; font-weight:900;">SiBanksa</h1>
-                            <p style="font-size:11px; color:#6b7280; margin:0; letter-spacing:1px; font-weight:bold;">UNIT BANK SAMPAH DIGITAL RT-0${props.IDRT}</p>
+                       <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                    <i class="fas fa-recycle text-[20rem]"></i>
+                </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div
+                            class="w-16 h-16 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg">
+                            <i class="fas fa-leaf"></i>
                         </div>
-                        <div style="text-align:right;">
-                            <h2 style="margin:0; font-size:18px; color:#1f2937;">LAPORAN ${typeForm.value.toUpperCase()}</h2>
-                            <p style="margin:0; font-size:11px; color:#9ca3af;">Dicetak: ${new Date().toLocaleString('id-ID')}</p>
-                        </div>
+                    <div>
+                        <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #1f2937;">SiBanksa</h1>
+                        <p style="margin: 0; font-size: 10px; color: #6b7280; font-weight: bold; letter-spacing: 1px;">SISTEM INFORMASI BANK SAMPAH</p>
                     </div>
+                </div>
+                <div style="text-align: right;">
+                    <h2 style="margin: 0; font-size: 28px; color: #d1d5db; letter-spacing: 4px;">LAPORAN KETUA RW</h2>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 40px; font-size: 14px;">
+                <div>
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">DITERIMA DARI:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${page.props.auth.user.user_detail.fullName}</p>
+                    <p style="color: #6b7280; margin: 0;">${page.props.auth.user.user_detail.roles.role} SiBanksa</p>
+                    <p style="color: #6b7280; margin: 0;">RT: ${page.props.auth.user.user_detail?.id_rt || '-'} / RW: 01</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">Dicetak Pada:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${new Date().toLocaleDateString('id-ID')}</p>
+                    <p style="color: #6b7280; margin: 0;">Lokasi: Unit Bank Sampah RT-0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                </div>
+            </div>
                     <table style="width:100%; border-collapse:collapse; margin-bottom:40px;">
                         <thead>
                             <tr style="background:#f9fafb; text-align:left; font-size:11px; color:#4b5563; text-transform:uppercase; letter-spacing:1px;">
@@ -581,15 +604,12 @@ const handleSubmit = () => {
                 $('#error-message').removeClass('hidden').fadeIn();
                 Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
             } else {
-                Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+                Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
             }
         },
 
     });
 };
-
-
-
 
 
 const changeTab = (tab) => {
@@ -603,7 +623,7 @@ const renamedFileList = computed(() => {
         const extension = file.name.split('.').pop();
         return {
             original: file.name,
-            dynamic: `Dokumen${form.name || 'Dokumen'}_BankSampahRT0${props.IDRT}_${index + 1}.${extension}`,
+            dynamic: `Berkas ${form.name || 'Dokumen'}_BankSampahRT0${props.IDRT}_${index + 1}.${extension}`,
             size: file.size,
 
         };
@@ -616,18 +636,25 @@ const renamedFileList = computed(() => {
 
         };
     });
-
 });
 
 const groupedEvidence = computed(() => {
     const groups = {};
-    typeForm.value === 'Document' ?
-        props.document.forEach(item => {
-            const key = item.id_jadwal; // Tetap gunakan ID sebagai kunci agar unik
+    // Daftar kata terlarang (Blacklist)
+    const blacklist = ['ktp', 'kk', 'akta', 'kartu keluarga'];
 
+    if (typeForm.value === 'Document') {
+        props.document.forEach(item => {
+            // Cek apakah nama dokumen mengandung kata blacklist
+            const isBlacklisted = blacklist.some(word =>
+                item.name.toLowerCase().includes(word)
+            );
+
+            if (isBlacklisted) return; // Lewati jika termasuk blacklist
+
+            const key = item.id_jadwal;
             if (!groups[key]) {
                 const jadwal = props.jadwalPelaksanaan.find(j => j.id === key);
-
                 groups[key] = {
                     id_jadwal: key,
                     name: item.name,
@@ -636,24 +663,28 @@ const groupedEvidence = computed(() => {
                 };
             }
             groups[key].document.push(item);
-        }) : props.image.forEach(item => {
-            if (!groups[item.name]) {
+        });
+    } else {
+        // Logika untuk Evidence/Foto
+        props.image.forEach(item => {
+            const key = item.name;
+            if (!groups[key]) {
                 const jadwal = props.jadwalPelaksanaan.find(j => j.tanggal_setoran === item.name);
-
-                groups[item.name] = {
+                groups[key] = {
                     name: item.name,
                     id_userdetail: item.id_userdetail,
                     tanggal_setoran: jadwal ? jadwal.tanggal_setoran : 'Tanggal Tidak Ditemukan',
-
                     photos: []
                 };
             }
-            groups[item.name].photos.push(item);
+            groups[key].photos.push(item);
         });
+    }
     return Object.values(groups);
 });
 
 const sendReminder = ($id) => {
+    showForm.value = false;
     Swal.fire({
         title: 'Kirim Pengingat?',
         text: "Ketua RW akan menerima notifikasi mengenai pelaporan anda",
@@ -694,23 +725,39 @@ const breadcrumbItems = [
                         Anda.</p>
                 </div>
                 <div class="flex space-x-3">
-                    <button v-if="props.document.length > 0 && props.image.length > 0" @click="sendReminder(props.IDRW)"
-                        class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                        <i class="fas fa-bell"></i> Ajukan Persetujuan Ketua RW
-                    </button>
-
-                    <div v-else x-cloak
-                        class="px-4 py-1.5 rounded-full bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wider">
-                        <h1 v-if="props.document.length = 0">Anda belum mengupload bukti hasi setoran</h1>
-                        <h1 v-else-if="props.image.length = 0">Anda belum mengupload bukti evidence</h1>
-                        <h1 v-else>Anda belum mengupload bukti</h1>
-
+                    <div v-if="props.document.length > 0 && props.image.length > 0">
+                        <button v-if="page.props.auth.user.user_detail.status_transaction !== 'Disetujui'"
+                            @click="sendReminder(props.IDRW)"
+                            class="flex h-full items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                            <i class="fas fa-bell"></i> Ajukan Persetujuan Ketua RW
+                        </button>
                     </div>
 
+
+                 <div v-else x-cloak
+    class="flex items-center gap-3 px-4 py-3 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-500/20 shadow-sm transition-all">
+
+    <div class="flex-shrink-0">
+        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    </div>
+
+    <div class=" text-xs font-medium text-red-800 dark:text-red-300">
+        <span v-if="props.document.length == 0">Belum upload hasil setoran</span>
+        <span v-else-if="props.image.length == 0">Belum upload bukti evidence</span>
+        <span v-else>Mohon lengkapi bukti upload Anda</span>
+    </div>
+</div>
+
                     <button @click="openCreateForm"
-                        class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                        class=" text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                        :class="[
+                            showForm ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                        ]">
+
                         <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
-                        {{ showForm ? 'Batal' : 'Tambah Data' }}
+                        {{ showForm ? 'Tutup Form' : (typeForm === 'Evidence' ? 'Tambah Evidence':'Tambah Dokumen') }}
                     </button>
                 </div>
 
@@ -752,27 +799,28 @@ const breadcrumbItems = [
                                         class="block mb-1 text-[11px] font-bold text-gray-400 uppercase dark:text-gray-300">Jadwal
                                         Pelaksanaan</label>
                                     <select @change="handleScheduleChange" v-model="form.id_jadwal"
-                                        class="text-black w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm">
+                                        class="text-black w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
+                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_jadwal'] }">
+
                                         <option value="" disabled>Pilih Jadwal</option>
                                         <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
                                             {{ j.tanggal_setoran }}
                                         </option>
                                     </select>
-                                    <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name
-                                        }}</div>
+
                                 </div>
                                 <template v-for="field in formdata.Dokumen" :key="field.name">
 
                                     <div v-if="field.name === 'name'" class="flex flex-col">
                                         <InputLabel :for="field.name" :value="field.title" />
                                         <select v-model="form.name"
-                                            class="w-full h-11 rounded-xl dark:text-white text-black bg-gray-50 dark:bg-gray-800 border-gray-200 focus:ring-emerald-500 transition-all shadow-sm text-sm pl-5">
+                                            class="w-full h-11 rounded-xl dark:text-white text-black bg-gray-50 dark:bg-gray-800 border-gray-200 focus:ring-emerald-500 transition-all shadow-sm text-sm pl-5"
+                                            :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }">
                                             <option value="">Pilih Jenis Upload</option>
                                             <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}
                                             </option>
                                         </select>
-                                        <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{
-                                            form.errors.name }}</div>
+
                                     </div>
 
 
@@ -807,8 +855,7 @@ const breadcrumbItems = [
                                                 {{ file.dynamic }} ({{ (file.size / 1024).toFixed(1) }} KB)
                                             </li>
                                         </ul>
-                                        <div v-if="form.errors[field.name]" class="text-red-500 text-xs mt-1">{{
-                                            form.errors[field.name] }}</div>
+
                                     </div>
 
                                 </template>
@@ -835,14 +882,15 @@ const breadcrumbItems = [
                                         class="block mb-1 text-[11px] font-bold text-gray-400 uppercase dark:text-gray-300">Jadwal
                                         Pelaksanaan</label>
                                     <select @change="handleScheduleChange" v-model="form.name"
-                                        class=" text-black  w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm">
+                                        class=" text-black  w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
+                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_jadwal'] }">
+
                                         <option value="" disabled>Pilih Jadwal</option>
                                         <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.tanggal_setoran">
                                             {{ j.tanggal_setoran }}
                                         </option>
                                     </select>
-                                    <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name
-                                        }}</div>
+
                                 </div>
 
 
@@ -872,8 +920,7 @@ const breadcrumbItems = [
                                                 {{ file.dynamic }} ({{ (file.size / 1024).toFixed(1) }} KB)
                                             </li>
                                         </ul>
-                                        <div v-if="form.errors[field.name]" class="text-red-500 text-xs mt-1">{{
-                                            form.errors[field.name] }}</div>
+
                                     </div>
                                 </template>
                             </div>

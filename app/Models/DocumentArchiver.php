@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Models\BankSampah\JadwalPelaksanaan;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class DocumentArchiver extends Model
 {
-    protected $fillable = ['id_userdetail', 'id_jadwal','name', 'original_filesname', 'encrypted_filesname'];
+    /** @use HasFactory<\Database\Factories\DocumentArchiverFactory> */
+    use HasFactory;
+    protected $fillable = ['id_userdetail', 'id_jadwal', 'name', 'original_filesname', 'encrypted_filesname'];
 
 
     public function user_detail()

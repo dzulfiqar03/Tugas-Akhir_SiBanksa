@@ -27,7 +27,7 @@ const goBack = () => {
 
 <template>
 
-    <Head title="404 - No Internet Connection" />
+    <Head title="Page Not Found" />
 
     <div :class="{ 'dark': darkMode }">
         <div
@@ -35,19 +35,31 @@ const goBack = () => {
 
             <div class="text-center px-4">
                 <div class="mb-8 animate-bounce">
-                    <svg class="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
+                    <svg class="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+        <!-- Document -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
+
+        <!-- Fold corner -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M14 3v5h5" />
+
+        <!-- X mark (not found) -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 13l2 2m0-2l-2 2m4-2l2 2m0-2l-2 2" />
+    </svg>
                 </div>
 
                 <h1 class="text-6xl font-bold text-gray-800 dark:text-white mb-4">404</h1>
                 <h2 class="text-2xl font-semibold text-gray-600 dark:text-gray-300 mb-4">
-                    No Internet Connection
+                    Page Not Found
                 </h2>
                 <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                    It looks like you're offline. Please check your internet connection and try again.
+                    The page you are looking for doesn't exist or has been moved. Please check the URL and try again.
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">

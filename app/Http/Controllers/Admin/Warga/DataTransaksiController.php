@@ -80,6 +80,24 @@ class DataTransaksiController extends Controller
                 return $user;
             });
 
+
+        $myDetailId = Auth::user()->user_detail->id;
+
+        $recentTransactions = PencatatanSetoran::with(['pencatatan_items.sampah', 'jadwal', 'transaction'])
+            ->where('id_userdetail', $myDetailId)
+            ->whereHas('transaction') // Hanya yang sudah ada bukti pembayarannya
+            ->latest()
+            ->take(6)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'tanggal' => $p->jadwal->tanggal_setoran ?? '-',
+                    'kategori' => $p->pencatatan_items->first()->sampah->nama_sampah ?? 'Campuran',
+                    'berat' => (float) $p->pencatatan_items->sum('jumlah'),
+                    'total' => (float) $p->total_setoran,
+                ];
+            });
         return Inertia::render('Warga/DataTransaksi', [
             'initialNotifications' => $notifications,
             'unreadCount' => Auth::user()->unreadNotifications->count(),
@@ -92,7 +110,8 @@ class DataTransaksiController extends Controller
             'reporting' => $reporting,
             'IDRW' => $IDRW,
             'IDRT' => $userRT,
-            'nasabah' => $nasabah
+            'nasabah' => $nasabah,
+            'recentTransactions' => $recentTransactions
 
 
         ]);

@@ -42,18 +42,10 @@ const props = defineProps({
     reporting: Array,
     countTransaction: Number,
     IDRW: Number,
-    IDRT: Number
+    IDRT: Number,
+    recentTransactions: Array,
 
 });
-
-
-const totalSaldo = computed(() => {
-    return props.nasabah.reduce((acc, item) => {
-        return acc + item.pencatatan_items.reduce((a, b) => {
-            return a + parseFloat(b.subtotal)
-        }, 0)
-    }, 0)
-})
 
 
 const formatRupiah = (value) => {
@@ -63,10 +55,6 @@ const formatRupiah = (value) => {
         minimumFractionDigits: 0
     }).format(value)
 }
-
-
-
-
 
 const dtOptions = {
     pageLength: 5,
@@ -85,7 +73,7 @@ const dtOptions = {
                 return `
                 <div class="group relative bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 mb-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-500">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-                        
+
                         <div class="flex items-center gap-5 w-full md:w-auto">
                             <div class="relative">
                                 <div class="w-16 h-16 rounded-[1.5rem] bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-500 rotate-3 group-hover:rotate-0">
@@ -93,7 +81,7 @@ const dtOptions = {
                                 </div>
                                 <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-white dark:border-gray-800 ${isSelesai ? 'bg-emerald-500' : 'bg-orange-500'}"></div>
                             </div>
-                            
+
                             <div>
                                 <h4 class="text-lg font-black text-gray-800 dark:text-white tracking-tight leading-tight">${row.jadwalPelaksanaan || 'Setoran Umum'}</h4>
                                 <div class="flex items-center gap-3 mt-1.5">
@@ -110,7 +98,7 @@ const dtOptions = {
                             </div>
                         </div>
 
-                       
+
                     </div>
                 </div>
                 `;
@@ -129,7 +117,7 @@ const dtOptions = {
                     // Ambil data asli dari objek nasabah, bukan dari HTML yang di-render
                     const item = props.nasabah[row];
                     const total = item.pencatatan_items.reduce((a, b) => a + parseFloat(b.subtotal), 0);
-                    
+
                     // Sesuaikan kolom PDF (Manual mapping)
                     if (column === 0) return row + 1;
                     if (column === 1) return item.jadwalPelaksanaan;
@@ -162,7 +150,7 @@ const exportData = (index) => {
     if (!dtInstance.value) return;
 
     const titles = ['PDF', 'Excel', 'Print'];
-    
+
     Swal.fire({
         title: `Mengekspor ${titles[index]}...`,
         text: 'Mohon tunggu sebentar',
@@ -179,6 +167,21 @@ const exportData = (index) => {
     });
 };
 
+
+const totalSaldo = computed(() => {
+    // Pastikan props.recentTransactions ada dan berupa array
+    if (!props.recentTransactions || !Array.isArray(props.recentTransactions)) {
+        return 0;
+    }
+
+    // Karena di Controller sudah difilter 'whereHas(transaction)',
+    // di sini kita tinggal menjumlahkan properti 'total'-nya saja.
+    return props.recentTransactions.reduce((acc, item) => {
+        return acc + (parseFloat(item.total) || 0);
+    }, 0);
+});
+
+
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('warga.dashboard') },
     { label: 'Transaksi', url: route('data-transaksi') },
@@ -187,8 +190,8 @@ const breadcrumbItems = [
 
 const exportAsImage = async () => {
     // Ambil elemen yang membungkus daftar transaksi (kartu-kartu)
-    const element = document.querySelector('.setoran-container'); 
-    
+    const element = document.querySelector('.setoran-container');
+
     if (!element) return;
 
     Swal.fire({
@@ -300,8 +303,8 @@ const exportAsImage = async () => {
                                 <i class="fas fa-exchange-alt"></i>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-400 font-bold uppercase tracking-tight">Total Transaksi</p>
-                                <p class="text-xl font-black text-gray-800 dark:text-white">{{ nasabah.length }} Kali
+                                <p class="text-xs text-gray-400 font-bold uppercase tracking-tight">Total Transaksi (yang cair)</p>
+                                <p class="text-xl font-black text-gray-800 dark:text-white">{{ recentTransactions.length }} dari {{ props.countTransaction }} Transaksi
                                 </p>
                             </div>
                         </div>
@@ -320,37 +323,39 @@ const exportAsImage = async () => {
 
                 <div class="mt-12">
 
+<div class="mt-12">
+    <div class="flex items-center justify-between mb-6 px-4">
+        <h3 class="text-xl font-black text-gray-800 dark:text-white tracking-tight">Transaksi Terakhir</h3>
+        <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full uppercase">Valid</span>
+    </div>
 
-                    <div class="mt-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-for="rt in props.recentTransactions" :key="rt.id"
+            class="bg-white dark:bg-gray-800 p-5 rounded-[2rem] border border-gray-100 dark:border-gray-700 hover:border-emerald-500/50 transition-all group">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-2xl group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                    <i class="fas fa-receipt text-sm"></i>
+                </div>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ rt.tanggal }}</p>
+            </div>
 
+            <div class="space-y-1">
+                <p class="text-xs text-gray-400 font-medium">{{ rt.kategori }} ({{ rt.berat }} Kg)</p>
+                <p class="text-lg font-black text-gray-800 dark:text-white">{{ formatRupiah(rt.total) }}</p>
+            </div>
 
-                        <div class="mt-16 setoran-container">
-                            <div class="flex flex-col md:flex-row items-end justify-between gap-6 mb-10 px-4">
-                                <div class="space-y-1">
-                                    <h3 class="text-3xl font-black text-gray-800 dark:text-white tracking-tighter">
-                                        Riwayat Setoran</h3>
-                                    <p class="text-sm text-gray-400 font-medium">Data setoran sampah dan riwayat
-                                        perolehan saldo anda.</p>
-                                </div>
+            <div v-if="rt.bukti" class="mt-4 pt-4 border-t border-gray-50 dark:border-gray-700">
+                <a :href="'/storage/' + rt.bukti" target="_blank" class="text-[10px] font-bold text-emerald-600 hover:underline">
+                    <i class="fas fa-image mr-1"></i> LIHAT BUKTI
+                </a>
+            </div>
+        </div>
 
-                                <div class="relative group w-full md:w-80">
-                                    <input @keyup="handleSearch" type="text" placeholder="Cari transaksi..."
-                                        class="w-full pl-14 pr-6 py-4 m-auto rounded-3xl bg-white dark:bg-gray-800 border-none shadow-xl shadow-gray-100 dark:shadow-none focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-bold">
-                                    <i
-                                        class="fas fa-search absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-emerald-500 transition-colors"></i>
-                                </div>
-                            </div>
-
-                            <DataTable ref="dtInstance" :data="nasabah" :options="dtOptions"
-                                class="feed-container w-full">
-                                <thead class="hidden">
-                                    <tr>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-                            </DataTable>
-                        </div>
-                    </div>
+        <div v-if="props.recentTransactions.length === 0" class="col-span-full py-10 text-center bg-gray-50 dark:bg-gray-800/50 rounded-[2rem] border-2 border-dashed border-gray-200 dark:border-gray-700">
+            <p class="text-gray-400 text-sm font-bold">Belum ada transaksi tervalidasi</p>
+        </div>
+    </div>
+</div>
                 </div>
             </div>
         </template>

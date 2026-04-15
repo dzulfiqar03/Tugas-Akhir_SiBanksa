@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\FormResources;
 use App\Models\User;
+use App\Models\UserDetail;
 use App\Services\Auth\AuthServices;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -48,16 +49,31 @@ class RegisteredUserController extends Controller
             // Tentukan key berdasarkan role
             $key = ((int) $data['id_roles'] === 2) ? 'bankSampah' : 'nasabah';
 
-            // Gabungkan data dari key tersebut dengan data level root
+            $isBankSampah = (int) $data['id_roles'] === 2;
+            $key = $isBankSampah ? 'bankSampah' : 'nasabah';
+
+            $inputRt = $data[$key]['id_rt'] ?? null;
+            $bankSampah = null;
+            if (!$isBankSampah && $inputRt) {
+                $bankSampah = UserDetail::where('id_rt', $inputRt)
+                    ->where('id_roles', 2)
+                    ->where(function ($q) {
+                        $q->where('fullName', 'LIKE', '%Petugas Bank Sampah%')
+                            ->orWhere('fullName', 'LIKE', '%Bank Sampah%');
+                    })
+                    ->first();
+            }
             $payload = ((int) $data['id_roles'] === 2) ? array_merge($data[$key], [
                 'id_roles' => $data['id_roles'],
                 'status'   => $data['status'],
                 'id_gender' => $data['id_gender'],
                 'status_transaction' => $data['status_transaction'],
+                'pencairan_via' => $data['pencairan_via'],
             ]) : array_merge($data[$key], [
                 'id_roles' => $data['id_roles'],
                 'status'   => $data['status'],
-                'status_transaction' => $data['status_transaction'],
+                'status_transaction' => $bankSampah ? $bankSampah->status_transaction : $data['status_transaction'],
+                'pencairan_via' => $bankSampah ? $bankSampah->pencairan_via : 'Non-Tunai',
             ]);
 
             $users = $this->authServices->registerUser($payload);

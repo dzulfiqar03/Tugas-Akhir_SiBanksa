@@ -52,6 +52,7 @@ const form = useForm({
     id_gender: '',
     id_rt: props.idUserRT,
     id_roles: 3,
+    phoneNumber: '',
 });
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -76,6 +77,7 @@ const dtOptions = {
             },
             defaultContent: '-'
         },
+
         {
             // Sesuai kode PHP Anda, status mungkin ada di level atas atau di user_detail
             data: 'user_detail.status',
@@ -94,7 +96,17 @@ const dtOptions = {
             data: null,
             orderable: false,
             className: 'no-print text-center'
-        }
+        },
+            {
+            // Langsung akses user_detail (tanpa kata 'nasabah')
+            data: 'user_detail.telephone_number',
+            className: 'capitalize',
+            visible: false, // Sembunyikan kolom ini
+            render: (data, type, row) => {
+                return row.user_detail?.telephone_number || '-';
+            },
+            defaultContent: '-'
+        },
     ],
     layout: {
         topStart: null,
@@ -383,6 +395,7 @@ const editData = (item) => {
     form.id = item.id;
     form.fullName = item.user_detail.fullName;
     form.status = item.user_detail.status;
+    form.phoneNumber = item.user_detail.telephone_number;
     form.id_gender = item.user_detail.id_gender;
     form.id_rt = item.user_detail.id_rt;
     form.id_roles = 3;
@@ -431,6 +444,7 @@ const handleSubmit = () => {
 };
 
 const deleteData = (id) => {
+    showForm.value = false;
     Swal.fire({
         title: 'Hapus data?',
         text: "Tindakan ini tidak bisa dibatalkan!",
@@ -487,7 +501,11 @@ const breadcrumbItems = [
                         <input type="hidden" name="id_rt" :value="idUserRT">
                         <input type="hidden" name="id_roles" v-model="form.id_roles">
 
-                        <div v-for="field in formdata.nasabah" :key="field.name"">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+
+                        </div>
+                        <div v-for="field in formdata.nasabah" :key="field.name">
                                     <div v-if="field.type === 'radio'"  class=" col-span-full">
 
                             <InputLabel :for="field.name" :value="field.title" />
@@ -495,11 +513,13 @@ const breadcrumbItems = [
 
                             <div class="flex gap-3">
                                 <label v-for="(opt, idx) in field.options" :key="idx"
-                                    class="flex-1 cursor-pointer group">
+                                    class="flex-1 cursor-pointer group w-full dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                    >
                                     <input type="radio" v-model="form[field.name]" :value="idx + 1"
                                         class="peer sr-only">
                                     <div
-                                        class="py-2 px-4 dark:text-white text-gray-500 rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
+                                        class="py-2 px-4 dark:text-white text-gray-500 rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700"
+                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }">
                                         {{ opt }}
                                     </div>
                                 </label>
@@ -512,8 +532,7 @@ const breadcrumbItems = [
                                 <InputLabel :for="field.name" :value="field.title" />
                                 <select :id="field.name" :name="field.name" v-model="form[field.name]"
                                     :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
-                                    class="w-full h-11 rounded-xl  border-gray-200 text-gray-500
-                                        bg-gray-50 dark:bg-gray-800 dark:text-white  text-sm  pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                                    class="w-full dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
                                     <option value="">Pilih Status</option>
                                     <option v-for="opt in field.options" :key="opt" :value="opt"
                                         class="text-gray-900 dark:text-white">
@@ -524,15 +543,15 @@ const breadcrumbItems = [
 
                         </div>
 
-                        <div v-else-if="!['address', 'phoneNumber', 'userName', 'status'].includes(field.name) && field.type != 'file' &&
+                        <div v-else-if="!['address', 'userName', 'status'].includes(field.name) && field.type != 'file' &&
                             field.type != 'select' &&
                             field.type != 'radio'">
-                            <div class="col-span-2">
+                            <div class="col-span-1">
                                 <InputLabel :for="field.name" :value="field.title" />
                                 <input :type="field.type" :id="field.name" :name="field.name"
                                     :placeholder="field.placeholder" v-model="form[field.name]"
                                     :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
-                                    class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-gray-500 pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all  border-gray-200">
+                                    class="w-full dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
 
                             </div>
 

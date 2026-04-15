@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class EvidenceArchiver extends Model
 {
+    /** @use HasFactory<\Database\Factories\EvidenceArchiverFactory> */
+    use HasFactory;
     protected $fillable = ['id_userdetail', 'name', 'original_photoname', 'encrypted_photoname'];
 
 

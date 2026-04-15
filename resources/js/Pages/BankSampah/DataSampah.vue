@@ -396,7 +396,7 @@ const handleSubmit = () => {
     form[method](url, {
         onSuccess: () => {
             isEdit.value ?
-            Swal.fire('Berhasil!', 'Data sampah telah diubah.', 'success'):Swal.fire('Berhasil!', 'Data sampah telah diproses.', 'success');
+                Swal.fire('Berhasil!', 'Data sampah telah diubah.', 'success') : Swal.fire('Berhasil!', 'Data sampah telah diproses.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -430,6 +430,7 @@ const handleSubmit = () => {
 };
 
 const deleteData = (id) => {
+    showForm.value = false;
     Swal.fire({
         title: 'Hapus data?',
         text: "Tindakan ini tidak bisa dibatalkan!",
@@ -492,16 +493,15 @@ const breadcrumbItems = [
                                 <InputLabel :for="field.name" :value="field.title" />
 
                                 <select v-if="field.type === 'select'" v-model="form[field.name]"
-                                    class="w-full border-gray-200 dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500"
-                                                                                :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
->
+                                    class="w-full  dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }">
                                     <option value="">Pilih {{ field.title }}</option>
                                     <option v-for="opt in field.options" :key="opt.value || opt"
                                         :value="opt.value || opt">{{ opt.label || opt }}</option>
                                 </select>
 
                                 <input v-else-if="field.type !== 'number'" :type="field.type" v-model="form[field.name]"
-                                    class="w-full border-gray-200 dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500"
+                                    class="w-full dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                     :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
                                     :placeholder="field.placeholder">
 
@@ -509,7 +509,7 @@ const breadcrumbItems = [
                                 <div v-else>
                                     <div v-if="field.name === 'harga'">
                                         <input @keyup="kasCalculate" :type="field.type" v-model="form[field.name]"
-                                            class="w-full border-gray-200 dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500"
+                                            class="w-full  dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all "
                                             :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
                                             :placeholder="field.placeholder">
 
@@ -524,7 +524,7 @@ const breadcrumbItems = [
 
 
                                     <input v-else :type="field.type" v-model="harga_pengepul"
-                                        class="w-full border-gray-200 dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500"
+                                        class="w-full dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                         :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
                                         :placeholder="field.placeholder">
 
@@ -601,7 +601,7 @@ const breadcrumbItems = [
                 </div>
 
                 <DataTable ref="dtInstance" :data="sampah" :options="dtOptions"
-                    class="w-full display stripe hover cell-border">
+                    class="w-full display stripe hover cell-border animate-reveal">
 
                     <thead>
                         <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">

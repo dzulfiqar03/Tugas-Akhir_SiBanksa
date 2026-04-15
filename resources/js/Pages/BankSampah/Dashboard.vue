@@ -96,9 +96,16 @@ const form2 = useForm({
     phoneNumber: nasabah2?.value.user_detail?.telephone_number ?? '',
     email: nasabah2?.value.email ?? '',
     bank: '',
+    pencairan_method: nasabah2?.value.user_detail?.pencairan_via ?? '',
     id_bank: nasabah2?.value.user_detail?.userbank?.id_bank ?? '',
     nomor_rekening: nasabah2?.value.user_detail?.userbank?.nomor_rekening ?? '',
     password: '',
+
+
+    name: '',
+    id_jadwal: 1,
+    fileDoc: [],
+
 
     status: nasabah2?.value.user_detail?.status ?? '',
     amenity: nasabah2?.value.user_detail?.location?.amenity ?? '',
@@ -137,7 +144,6 @@ const submit = async () => {
     if (form2.amenity) params.append('amenity', form2.amenity)
     if (form2.house_number) params.append('house_number', form2.house_number)
     if (form2.city) params.append('city', form2.city)
-    if (form2.state) params.append('state', form2.state)
     if (form2.country) params.append('country', form2.country)
     if (form2.postal_code) params.append('postalcode', form2.postal_code)
 
@@ -173,6 +179,7 @@ const submit = async () => {
                         onSuccess: () => {
                             Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload(),
                                 form2.id_bank = nasabah2?.value.user_detail?.userbank?.id_bank ?? '',
+                                form2.pencairan_method = nasabah2?.value.user_detail?.pencairan_via ?? '',
                                 form2.nomor_rekening = nasabah2?.value.user_detail?.userbank?.nomor_rekening ?? '',
                                 form2.amenity = nasabah2?.value.user_detail?.location?.amenity ?? '',
                                 form2.house_number = nasabah2?.value.user_detail?.location?.house_number ?? '',
@@ -571,6 +578,43 @@ const viewDetail = (id) => {
     router.get(route('show-nasabah', id));
 };
 
+
+const isPreviewOpen2 = ref(false);
+const selectedDoc = ref(null);
+
+const openPreview = (doc) => {
+    selectedDoc.value = doc;
+    isPreviewOpen2.value = true;
+};
+
+const closePreview = () => {
+    isPreviewOpen2.value = false;
+    selectedDoc.value = null;
+};
+
+const deleteDoc = (id) => {
+    Swal.fire({
+        title: 'Hapus Dokumen?',
+        text: "Berkas yang dihapus tidak dapat dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Gunakan router.delete (Inertia) atau axios
+            form.delete(route('delete-document', id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    Swal.fire('Terhapus!', 'Dokumen berhasil dihapus.', 'success');
+                }
+            });
+        }
+    });
+};
+
 const formatShortDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -588,7 +632,7 @@ const formatShortDate = (dateString) => {
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
 
 
-        <div v-if="statusVerifikasi === 'Pengajuan Verifikasi'" class="max-w-7xl mx-auto space-y-6">
+        <div v-if="statusVerifikasi === 'Pengajuan Verifikasi'" class="animate-reveal max-w-7xl mx-auto space-y-6">
             <div class="card w-full shadow-sm border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
 
 
@@ -635,7 +679,7 @@ const formatShortDate = (dateString) => {
                                     </div>
 
                                     <span class="text-xs font-bold text-black dark:text-gray-400">
-                                        {{ Math.round(nasabah2.profile_completion.percentage) }}%
+                                        {{ Math.min(Math.round(nasabah2.profile_completion.percentage), 100) }}%
                                     </span>
                                 </div>
                                 <div v-if="nasabah2.profile_completion.percentage < 100"
@@ -704,8 +748,8 @@ const formatShortDate = (dateString) => {
                                 <input type="hidden" name="id_gender" value="3">
 
 
-                                <div v-if="step === 1" class="space-y-5">
-                                    <div class="grid grid-cols-1  gap-x-6 gap-y-5">
+                                <div v-if="step === 1" class="">
+                                    <div class="grid grid-cols-1  gap-x-6 gap-y-3">
                                         <div v-for="field in formdata.userAuth" :key="field.name">
 
                                             <div v-if="field.type !== 'password'" class="col-span-1 relative">
@@ -724,9 +768,6 @@ const formatShortDate = (dateString) => {
 
 
                                         </div>
-
-
-
 
                                     </div>
                                     <div class="flex justify-between gap-4">
@@ -831,7 +872,30 @@ const formatShortDate = (dateString) => {
 
                                 <div v-if="step === 4" class="space-y-5">
                                     <div class="grid grid-cols-1  gap-x-6 gap-y-5">
-                                        <div v-for="field in formdata?.userBank" :key="field.name">
+
+                                        <div>
+                                            <InputLabel value="Via Pencairan Setoran" :disabled="isEdit"
+                                                class="mb-4 text-emerald-600 font-black uppercase tracking-widest text-[10px]" />
+
+                                            <select v-model="form2.pencairan_method"
+                                                class="w-full h-11 rounded-xl bg-gray-50 text-black   dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
+                                                :class="[
+                                                    isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
+                                                ]">
+                                                <option value="" class="text-black dark:text-white">Pilih Metode
+                                                    Pencairan
+                                                </option>
+
+                                                <option value="Tunai" class="text-gray-900 dark:text-white">
+                                                    Tunai
+                                                </option>
+                                                <option value="Non-Tunai" class="text-gray-900 dark:text-white">
+                                                    Transfer Bank
+                                                </option>
+
+                                            </select>
+                                        </div>
+                                        <div v-if="form2.pencairan_method === 'Non-Tunai'" v-for="field in formdata?.userBank" :key="field.name">
 
 
                                             <input type="hidden" name="id_userdetail"
@@ -919,10 +983,10 @@ const formatShortDate = (dateString) => {
             </div>
         </div>
 
-        <div v-else class="max-w-7xl mx-auto space-y-6">
+        <div v-else class="max-w-7xl mx-auto space-y-6 animate-reveal">
 
 
-            <div class="bg-[#064e4b] text-white p-8 rounded-3xl shadow-lg relative overflow-hidden">
+            <div class="bg-[#064e4b] animate-reveal text-white p-8 rounded-3xl shadow-lg relative overflow-hidden">
                 <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <p class="text-sm opacity-80 mb-1">Total Saldo Tabungan</p>

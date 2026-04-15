@@ -31,7 +31,7 @@ class NasabahServices
         $nasabah = $this->user::with(['user_detail', 'user_detail.image', 'user_detail.document', 'user_detail.pencatatan', 'user_detail.sampah'])
             ->whereHas('user_detail', function ($query) use ($userRT) {
                 $query->where('id_rt', $userRT)->where('id_roles', 3);
-            })
+            })->latest()
             ->get()
             ->sortBy(function ($user) {
                 // Jika status cocok, beri nilai 1 agar di atas, jika tidak beri nilai 2
@@ -60,7 +60,7 @@ class NasabahServices
 
             $autoEmail = $autoUsername . "@gmail.com";
 
-            $defaultPassword = $firstName . "123";
+            $defaultPassword = "12345678";
 
             $userData = [
                 'email'             => $autoEmail,
@@ -76,10 +76,15 @@ class NasabahServices
                 'userName'    => $autoUsername,
                 'id_roles'    => $data['id_roles'],
                 'fullName'    => $data['fullName'],
+                'telephone_number' => $data['phoneNumber'],
                 'id_rt'       => $data['id_rt'],
                 'id_gender'   => $data['id_gender'],
                 'status'      => $data['status'],
+                'status_transaction'=> auth()->user()->user_detail->status_transaction,
+                'pencairan_via' => auth()->user()->user_detail->pencairan_via,
             ];
+
+
 
             $this->userDetail::create($userDetailData);
 

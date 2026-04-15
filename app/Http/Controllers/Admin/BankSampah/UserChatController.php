@@ -116,12 +116,25 @@ class UserChatController extends Controller
 
                         $botResponse = "Rekening Anda:" . number_format($hasil, 0, ',', '.');
                     } elseif (in_array('setoran', $matches)) {
-                        $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+
+                        if (auth()->user()->user_detail->id_roles===2) {
+                       $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
                             ->whereHas('setoran', function ($query) {
                                 $query->where('id_userdetail', Auth::user()->user_detail->id);
                             })
                             ->latest() // Mengurutkan dari yang terbaru
                             ->get();
+                        } else{
+                            $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+                            ->whereHas('setoran', function ($query) {
+                                $query->whereHas('user_detail', function ($q) {
+                                    $q->where('id', Auth::user()->user_detail->id);
+                                });
+                            })
+                            ->latest() // Mengurutkan dari yang terbaru
+                            ->get();
+                        }
+
 
                         $total = $pencatatanSetoranItems->sum('total_setoran');
 

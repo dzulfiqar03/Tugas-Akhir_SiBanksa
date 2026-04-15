@@ -391,7 +391,7 @@ const handleSubmit = () => {
     form[method](url, {
         onSuccess: () => {
             isEdit.value ?
-            Swal.fire('Berhasil!', 'Data kepengurusan berhasil diubah', 'success'):Swal.fire('Berhasil!', 'Data kepengurusan telah diproses.', 'success');
+                Swal.fire('Berhasil!', 'Data kepengurusan berhasil diubah', 'success') : Swal.fire('Berhasil!', 'Data kepengurusan telah diproses.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -425,6 +425,7 @@ const handleSubmit = () => {
 };
 
 const deleteData = (id) => {
+    showForm.value = false;
     Swal.fire({
         title: 'Hapus data?',
         text: "Tindakan ini tidak bisa dibatalkan!",
@@ -484,7 +485,7 @@ const breadcrumbItems = [
                                 <InputLabel :for="field.name" :value="field.title" />
 
                                 <select :name="field.name" v-model="form.divisi"
-                                    class="w-full h-11 rounded-xl bg-gray-50 text-black dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
+                                    class="w-full dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                     :class="{
                                         'border-red-500 ring-1 ring-red-500': form.errors[`${field.name}`]
                                     }">
@@ -509,10 +510,7 @@ const breadcrumbItems = [
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div v-for="field in props.formdata.nasabah" :key="field.name"
-                                :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'"
-
-
-                                >
+                                :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
 
 
 
@@ -524,10 +522,9 @@ const breadcrumbItems = [
 
                                     <div class="flex gap-3">
                                         <label v-for="(opt, idx) in field.options" :key="idx"
-                                            class="flex-1 cursor-pointer group"
-                                            :class="{
-                                        'border-red-500 ring-1 ring-red-500 rounded-lg': form.errors[`${field.name}`]
-                                    }">
+                                            class="flex-1 cursor-pointer group" :class="{
+                                                'border-red-500 ring-1 ring-red-500 rounded-lg': form.errors[`${field.name}`]
+                                            }">
                                             <input type="radio" v-model="form[field.name]" :value="idx + 1"
                                                 class="peer sr-only">
                                             <div
@@ -546,10 +543,10 @@ const breadcrumbItems = [
 
                                     <input :type="field.type" :id="field.name" v-model="form[field.name]"
                                         :name="field.name" :placeholder="field.placeholder"
-                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-black pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                        class="w-full dark:border-gray-600  bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                         :class="{
-                                        'border-red-500 ring-1 ring-red-500': form.errors[`${field.name}`]
-                                    }">
+                                            'border-red-500 ring-1 ring-red-500': form.errors[`${field.name}`]
+                                        }">
                                 </div>
 
 

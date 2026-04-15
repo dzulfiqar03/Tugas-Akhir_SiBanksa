@@ -20,60 +20,56 @@ class AuthServices
         $userDetail = $this->userDetail;
     }
 
-public function registerUser(array $data)
-{
-    $user = DB::transaction(function () use ($data) {
-        // 1. Simpan Data User Utama
-        $user = $this->user::create([
-            'email'             => $data['email'],
-            'password'          => Hash::make($data['password']),
-            'email_verified_at' => now(),
-        ]);
+    public function registerUser(array $data)
+    {
+        $user = DB::transaction(function () use ($data) {
+            // 1. Simpan Data User Utama
+            $user = $this->user::create([
+                'email'             => $data['email'],
+                'password'          => Hash::make($data['password']),
+                'email_verified_at' => now(),
+            ]);
 
-        // 2. Simpan Detail User
-        $this->userDetail::create([
-            'id_user'            => $user->id,
-            'userName'           => $data['userName'],
-            'id_roles'           => $data['id_roles'],
-            'fullName'           => $data['fullName'],
-            'id_rt'              => $data['id_rt'],
-            'id_gender'          => $data['id_gender'],
-            'phoneNumber'        => $data['phoneNumber'],
-            'address'            => $data['address'],
-            'status'             => $data['status'],
-            // Berikan default 'Aktif' atau 1 jika tidak dikirim dari form
-            'status_transaction' => $data['status_transaction'] ?? 'Aktif',
-        ]);
+            // 2. Simpan Detail User
+            $this->userDetail::create([
+                'id_user'            => $user->id,
+                'userName'           => $data['userName'],
+                'id_roles'           => $data['id_roles'],
+                'fullName'           => $data['fullName'],
+                'id_rt'              => $data['id_rt'],
+                'id_gender'          => $data['id_gender'],
+                'telephone_number'        => $data['phoneNumber'],
+                'address'            => $data['address'],
+                'status'             => $data['status'],
+                'status_transaction' => $data['status_transaction'] ?? 'Aktif',
+                'pencairan_via'     => $data['pencairan_via'] ?? 'Non-Tunai',
+            ]);
+
+            return $user;
+        });
+
+        try {
+            $targetRoles = ($data['id_roles'] == 2) ? 1 : 2;
+
+            $admins = User::whereHas('user_detail', function ($query) use ($data, $targetRoles) {
+                $query->where('id_roles', $targetRoles);
+                // Jika targetnya Bank Sampah, filter berdasarkan RT yang sama
+                if ($targetRoles == 2) {
+                    $query->where('id_rt', $data['id_rt']);
+                }
+            })->get();
+
+            foreach ($admins as $adminUser) {
+                $adminUser->notify(new \App\Notifications\Admin\UserRegistration(
+                    $user->id,
+                    "Pengajuan Akun Baru dari " . $data['fullName'],
+                    $data['id_roles']
+                ));
+            }
+        } catch (\Exception $e) {
+            Log::error("Gagal kirim notif registrasi: " . $e->getMessage());
+        }
 
         return $user;
-    });
-
-    // 3. Notifikasi (Di luar Transaksi agar tidak menghambat insert jika notif error)
-    try {
-        // Logika Notifikasi:
-        // Jika yang daftar adalah Bank Sampah (Role 2), notif ke Super Admin (Role 1)
-        // Jika yang daftar adalah Nasabah (Role 3), notif ke Bank Sampah (Role 2) di RT tersebut
-
-        $targetRoles = ($data['id_roles'] == 2) ? 1 : 2;
-
-        $admins = User::whereHas('user_detail', function ($query) use ($data, $targetRoles) {
-            $query->where('id_roles', $targetRoles);
-            // Jika targetnya Bank Sampah, filter berdasarkan RT yang sama
-            if ($targetRoles == 2) {
-                $query->where('id_rt', $data['id_rt']);
-            }
-        })->get();
-
-        foreach ($admins as $adminUser) {
-            $adminUser->notify(new \App\Notifications\Admin\UserRegistration(
-                $user->id,
-                "Pengajuan Akun Baru dari " . $data['fullName']
-            ));
-        }
-    } catch (\Exception $e) {
-        Log::error("Gagal kirim notif registrasi: " . $e->getMessage());
     }
-
-    return $user;
-}
 }

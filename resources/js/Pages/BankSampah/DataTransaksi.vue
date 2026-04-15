@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, render } from 'vue';
-import { useForm, router, Head, usePage } from '@inertiajs/vue3';
+import { useForm, router, Head, Link,usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 import jszip from 'jszip';
@@ -167,13 +167,17 @@ const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
 
 const dtInstance = ref(null);
-const dtOptions = {
-    pageLength: 5,
-    responsive: true,
-    lengthMenu: [5, 10, 25, 50],
-    columns: [
-        {
-            data: null,
+const dtOptions =computed(() => {
+
+const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tunai');
+
+    return {
+        pageLength: 5,
+        responsive: true,
+        lengthMenu: [5, 10, 25, 50],
+        columns: [
+            {
+                data: null,
             render: (data, type, row, meta) => meta.row + 1
         },
         {
@@ -188,7 +192,7 @@ const dtOptions = {
         {
             data: 'user_bank',
             className: 'text-black dark:text-white capitalize',
-
+            visible: props.nasabah.some(n => n.user_detail?.pencairan_via === 'Non-Tunai'),
             render: (data, type, row) => {
                 return row.user_bank[0].nomor_rekening;
             },
@@ -198,7 +202,7 @@ const dtOptions = {
         {
             data: 'user_bank',
             className: 'text-black dark:text-white capitalize',
-
+            visible: props.nasabah.some(n => n.user_detail?.pencairan_via === 'Non-Tunai'),
             render: (data, type, row) => {
                 return row.user_bank[0].bank.short_name || '-';
             }
@@ -605,7 +609,9 @@ const dtOptions = {
         },
         emptyTable: "Tidak ada data tersedia"
     }
-};
+
+}
+}) ;
 
 
 const dtOptions2 = {
@@ -734,7 +740,7 @@ const handleSubmit = () => {
                 $('#error-message').removeClass('hidden').fadeIn();
                 Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
             } else {
-                Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+                Swal.fire('Error', xhr.responseJSON?.message || 'Maaf, Inputan Anda ada yang salah, silahkan cek kembali', 'error');
             }
         },
 
@@ -752,16 +758,19 @@ const handleSubmit = () => {
 
                 <div class="flex flex-col gap-5 bg-gray-200 dark:bg-gray-800 transition-colors">
 
-                    <template v-if="props.transaction.length === 0">
+                    <template  v-if="props.transaction.length === 0">
 
-                        <h3
-                            class="border-b capitalize border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
+                        <div class="p-3">
+ <h3
+                            class="border-b  capitalize border-gray-400 dark:border-gray-600 font-bold text-xl py-5 text-red-600 dark:text-red-400 w-full">
                             Anda belum melakukan pencatatan setoran nasabah !!!
                         </h3>
 
                         <span class="w-full font-medium capitalize text-gray-700 dark:text-gray-300">
                             Lakukan pencatatan pada menu manajemen nasabah -> Pencatatan Setoran
                         </span>
+                        </div>
+
                     </template>
 
 
@@ -796,10 +805,10 @@ const handleSubmit = () => {
                     </template>
 
                     <template v-if="props.transaction.length === 0">
-                        <button @click=""
+                        <Link href="/bank-sampah/pencatatan"
                             class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
                             <i class="fas fa-bell"></i> Anda Belum Melakukan Pencatatan Setoran
-                        </button>
+                        </Link>
 
 
                     </template>
@@ -829,7 +838,7 @@ const handleSubmit = () => {
                         showForm ? 'mb-4' : 'mb-0'
                     ]">
                         <h3 class="text-lg font-bold text-black dark:text-white">Pencairan Dana Nasabah</h3>
-                        <button @click="showForm = !showForm"
+                        <button v-show="showForm" @click="showForm = !showForm"
                     class=" text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
                     :class="[
                         showForm ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
@@ -886,8 +895,7 @@ const handleSubmit = () => {
                                                     {{ file.dynamic }} ({{ (file.size / 1024).toFixed(1) }} KB)
                                                 </li>
                                             </ul>
-                                            <div v-if="form.errors[field.name]" class="text-red-500 text-xs mt-1">{{
-                                                form.errors[field.name] }}</div>
+
                                         </div>
 
                                     </template>
@@ -897,7 +905,7 @@ const handleSubmit = () => {
                                     <button type="submit"
                                         class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50"
                                         :disabled="form.processing">
-                                        <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Dokumen' : 'Simpan Dokumen'
+                                        <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Upload Bukti Pembayaran' : 'Simpan Dokumen'
                                         }}
                                     </button>
                                 </div>

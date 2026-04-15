@@ -2,7 +2,7 @@
 import FormWrapper from '@/Components/FormWrapper.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Head, router, useForm, usePage } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 
 // ================= DATATABLES =================
 import DataTablesCore from 'datatables.net'
@@ -11,6 +11,7 @@ import ButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
 import ButtonsPrint from 'datatables.net-buttons/js/buttons.print'
 import Responsive from 'datatables.net-responsive-dt'
 import DataTable from 'datatables.net-vue3'
+import XLSX from 'xlsx-js-style';
 
 // CSS (WAJIB)
 import 'datatables.net-dt/css/dataTables.dataTables.css'
@@ -85,7 +86,7 @@ const handleSubmit = () => {
     form[method](url, {
         onSuccess: () => {
             isEdit.value ?
-            Swal.fire('Berhasil!', 'Data nasabah telah diubah.', 'success'):Swal.fire('Berhasil!', 'Setoran telah disimpan.', 'success');
+                Swal.fire('Berhasil!', 'Data nasabah telah diubah.', 'success') : Swal.fire('Berhasil!', 'Setoran telah disimpan.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -122,10 +123,7 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
 
-const selectedJadwalFilter = ref('');
 
-const categories = ['Non Daur Ulang', 'Daur Ulang', 'Lainnya'];
-const activeCategory = ref('Non Daur Ulang');
 
 const filteredJenisSampah = computed(() => {
     // Pastikan data ada sebelum di-filter
@@ -137,271 +135,706 @@ const filteredJenisSampah = computed(() => {
     });
 });
 
-const dtOptions = computed(() => {
-    // 1. Kolom Statis Awal (Nama)
-    const baseColumns = [
-        { data: 'fullName', title: 'Nasabah', className: 'font-medium capitalize dark:text-white text-black' }
-    ];
+// ================= FILTER STATE =================
+const selectedYear = ref(new Date().getFullYear());
+const years = [2024, 2025, 2026];
+const selectedBulan = ref('');
+const selectedSampah = ref('');
+const activeCategory = ref('Non Daur Ulang');
+const categories = ['Non Daur Ulang', 'Daur Ulang', 'Lainnya'];
+const selectedJadwalFilter = ref('');
 
-    const dynamicColumns = filteredJenisSampah.value.map((s) => ({
-        title: `${s.nama_sampah} (${s.satuan}) <br> <span class="text-xs dark:text-white text-black">Rp${s.harga}</span>`,
+const months = [
+    { id: 1, name: 'Jan' }, { id: 2, name: 'Feb' }, { id: 3, name: 'Mar' },
+    { id: 4, name: 'Apr' }, { id: 5, name: 'Mei' }, { id: 6, name: 'Jun' },
+    { id: 7, name: 'Jul' }, { id: 8, name: 'Agu' }, { id: 9, name: 'Sep' },
+    { id: 10, name: 'Okt' }, { id: 11, name: 'Nov' }, { id: 12, name: 'Des' }
+];
+
+// Sampah yang sesuai kategori aktif
+const filteredSampahByKategori = computed(() =>
+    (props.jenisSampah || []).filter(s => s.kategori?.trim() === activeCategory.value.trim())
+);
+
+const processedData = computed(() => {
+    if (!props.nasabahList) return [];
+
+    return props.nasabahList.map(nasabah => {
+        let total = 0;
+
+        (nasabah.pencatatan || []).forEach(nota => {
+            const tgl = new Date(nota.created_at);
+
+            const matchYear = tgl.getFullYear() === selectedYear.value;
+
+            const matchJadwal = !selectedJadwalFilter.value ||
+                Number(nota.id_jadwal) === Number(selectedJadwalFilter.value);
+
+            const matchBulan =
+                viewMode.value === 'sampah'
+                    ? (!selectedBulan.value || (tgl.getMonth() + 1) === Number(selectedBulan.value))
+                    : (!selectedBulan.value || (tgl.getMonth() + 1) === Number(selectedBulan.value));
+
+
+
+            if (matchYear && matchJadwal && matchBulan) {
+                (nota.pencatatan_items || []).forEach(item => {
+
+                    if (viewMode.value === 'sampah') {
+                        const info = props.jenisSampah.find(s => s.id === item.sampah_id);
+
+                        const matchKategori = info?.kategori?.trim() === activeCategory.value.trim();
+                        const matchSampah = !selectedSampah.value || item.sampah_id === Number(selectedSampah.value);
+
+                        if (matchKategori && matchSampah) {
+                            total += parseFloat(item.jumlah || 0);
+                        }
+                    } else {
+                        total += parseFloat(item.subtotal || 0);
+                    }
+
+                });
+            }
+        });
+
+        return { ...nasabah, totalTahunan: total };
+    });
+});
+
+// ================= KOLOM DINAMIS =================
+// Jika bulan dipilih → kolom per jenis sampah
+// Jika bulan kosong → kolom per bulan
+
+const isModeSampah = computed(() => !!selectedBulan.value);
+
+const viewMode = ref('saldo');
+const dynamicColumns = computed(() => {
+
+    // 🔥 PRIORITAS 1: JIKA PILIH JADWAL → HANYA 1 KOLOM
+    if (selectedJadwalFilter.value) {
+
+        const jadwal = props.jadwalPelaksanaan.find(
+            j => Number(j.id) === Number(selectedJadwalFilter.value)
+        );
+
+        if (!jadwal) return [];
+
+        const tanggal = new Date(jadwal.tanggal_setoran);
+        const label = tanggal.toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'short'
+        });
+
+        return [{
+            title: label.toUpperCase(),
+            data: null,
+            className: 'text-center col-bulan',
+
+            render: (data, type, row) => {
+                let total = 0;
+
+                row.pencatatan?.forEach(nota => {
+                    if (
+                        Number(nota.id_jadwal) === Number(selectedJadwalFilter.value)
+                    ) {
+                        nota.pencatatan_items?.forEach(item => {
+                            total += viewMode.value === 'sampah'
+                                ? parseFloat(item.jumlah || 0)
+                                : parseFloat(item.subtotal || 0);
+                        });
+                    }
+                });
+
+                return type === 'display'
+                    ? total.toLocaleString('id-ID')
+                    : total;
+            }
+        }];
+    }
+
+    // 🔥 PRIORITAS 2: MODE SAMPAH
+    if (viewMode.value === 'sampah') {
+        let sampahList = filteredSampahByKategori.value;
+
+        if (selectedSampah.value) {
+            sampahList = sampahList.filter(s => s.id === Number(selectedSampah.value));
+        }
+
+        return sampahList.map(s => ({
+            title: s.nama_sampah.toUpperCase(),
+            data: null,
+            className: 'text-center col-bulan',
+            render: (data, type, row) => {
+                let total = 0;
+
+                row.pencatatan?.forEach(nota => {
+                    const tgl = new Date(nota.created_at);
+
+                    if (
+                        tgl.getFullYear() === selectedYear.value &&
+                        (!selectedBulan.value || (tgl.getMonth() + 1) === Number(selectedBulan.value))
+                    ) {
+                        nota.pencatatan_items?.forEach(item => {
+                            if (item.sampah_id === s.id) {
+                                total += parseFloat(item.jumlah || 0);
+                            }
+                        });
+                    }
+                });
+
+                return type === 'display'
+                    ? total.toLocaleString('id-ID')
+                    : total;
+            }
+        }));
+    }
+
+    // 🔥 PRIORITAS 3: DEFAULT (BULAN)
+    const bulanList = selectedBulan.value
+        ? months.filter(m => m.id === Number(selectedBulan.value))
+        : months;
+
+    return bulanList.map(m => ({
+        title: m.name.toUpperCase(),
         data: null,
-        className: 'text-center dark:text-white text-black capitalize',
+        className: 'text-center col-bulan',
         render: (data, type, row) => {
-            const semuaSetoran = row.pencatatan || [];
-            let totalBerat = 0;
+            let total = 0;
 
-            // FILTER berdasarkan jadwal yang dipilih
-            const setoranTersaring = semuaSetoran.filter(nota => {
-                if (!selectedJadwalFilter.value) return true; // Jika dropdown "Semua", tampilkan semua
-                return Number(nota.id_jadwal) === Number(selectedJadwalFilter.value);
+            row.pencatatan?.forEach(nota => {
+                const tgl = new Date(nota.created_at);
+
+                if (
+                    tgl.getFullYear() === selectedYear.value &&
+                    (tgl.getMonth() + 1) === m.id
+                ) {
+                    nota.pencatatan_items?.forEach(item => {
+                        total += parseFloat(item.subtotal || 0);
+                    });
+                }
             });
 
-            setoranTersaring.forEach(nota => {
-                const items = nota.pencatatan_items || [];
-                const found = items.find(item => Number(item.sampah_id) === Number(s.id));
-                if (found) totalBerat += parseFloat(found.jumlah || 0);
-            });
-
-            return totalBerat > 0 ? `<b>${totalBerat}</b>` : `<span class="text-gray-400">0</span>`;
+            return type === 'display'
+                ? total.toLocaleString('id-ID')
+                : total;
         }
     }));
+});
 
-    const columnTotal = {
-        title: 'Total Saldo (Rp)',
-        data: null,
-        className: 'text-center dark:text-white text-black font-bold bg-emerald-50 dark:bg-emerald-900/20',
-        render: (data, type, row) => {
-            const semuaSetoran = row.pencatatan || [];
-            console.log(semuaSetoran);
-            const grandTotal = semuaSetoran.reduce((acc, nota) => {
-                // Cek filter jadwal
-                if (selectedJadwalFilter.value && Number(nota.id_jadwal) !== Number(selectedJadwalFilter.value)) {
-                    return acc;
-                }
-                return acc + parseFloat(nota.total_setoran || 0);
-            }, 0);
+const mobileSearch = ref('');
+const mobilePage = ref(1);
+const mobilePerPage = ref(5);
 
-            return grandTotal > 0
-                ? `<span class="text-emerald-600 font-bold">Rp${grandTotal.toLocaleString()}</span>`
-                : `Rp 0`;
-        }
-    };
+const filteredMobileData = computed(() => {
+    let data = processedData.value;
 
+    if (mobileSearch.value) {
+        const keyword = mobileSearch.value.toLowerCase();
 
-    const openDetail = (base64) => {
-        const row = JSON.parse(decodeURIComponent(escape(atob(base64))));
-        router.get(route('show-pencatatan', row.id));
+        data = data.filter(row =>
+            row.fullName.toLowerCase().includes(keyword)
+        );
     }
-    window.viewDetail = openDetail;
-    // 3. Kolom Statis Akhir (Aksi)
-    const actionColumn = [
-        {
-            data: null,
-            title: 'Aksi',
-            orderable: false,
-            className: 'text-center no-print dark:text-white text-black',
-            render: (data, type, row) => {
-                const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(row))));
-                return ` <button
-            onclick="window.viewDetail('${base64Data}')"
-            class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
-            title="Lihat Pencatatan Lengkap"
-        >
-            <i class="fas fa-eye text-sm"></i>
-        </button>`;
-            }
+
+    return data;
+});
+
+const paginatedMobileData = computed(() => {
+    const start = (mobilePage.value - 1) * mobilePerPage.value;
+    const end = start + mobilePerPage.value;
+
+    return filteredMobileData.value.slice(start, end);
+});
+
+const totalMobilePages = computed(() => {
+    return Math.ceil(filteredMobileData.value.length / mobilePerPage.value);
+});
+
+const nextMobilePage = () => {
+    if (mobilePage.value < totalMobilePages.value) {
+        mobilePage.value++;
+    }
+};
+
+const prevMobilePage = () => {
+    if (mobilePage.value > 1) {
+        mobilePage.value--;
+    }
+};
+
+watch(selectedJadwalFilter, (val) => {
+    if (val) {
+        selectedBulan.value = ''; // reset bulan
+        selectedSampah.value = '';
+    }
+});
+// ================= DT OPTIONS =================
+const dtOptions = computed(() => ({
+    scrollX: false,
+    autoWidth: true,
+    pageLength: 5,
+    responsive: {
+        details: {
+            type: 'column',
+            target: 0
         }
-    ];
+    },
+    lengthMenu: [5, 10, 25, 50],
+    columns: [
 
-    return {
-        responsive: true,
-        pageLength: 10,
-        key: form.id_jadwal,
-        // Gabungkan semua kolom menjadi satu array
-        columns: [...baseColumns, ...dynamicColumns, columnTotal, ...actionColumn],
-        layout: {
-            topStart: null,
-            topEnd: null,
-            bottomStart: 'info',
-            bottomEnd: 'paging'
+        {
+            data: 'fullName',
+            title: 'NASABAH',
+            className: 'font-bold text-gray-700 dark:text-white uppercase'
         },
-        buttons: [
+        ...dynamicColumns.value,
+        {
+            title: 'TOTAL',
+            data: 'totalTahunan',
+            className: 'text-right font-black text-emerald-600 bg-emerald-50/50 border-l col-total',
+            render: (data, type) => type === 'display' ? data.toLocaleString('id-ID') : data
+        },
+        {
+            title: 'DETAIL',
+            data: null,
+            orderable: false,
+            className: 'text-center no-print',
+            render: (data, type, row) => `
+            <button class="btn-detail text-blue-600 hover:text-blue-800"
+                data-id="${row.id}">
+                <i class="fas fa-eye"></i>
+            </button>
+        `
+        }
+    ],
+    buttons: [
+        {
+            extend: 'pdfHtml5',
+            text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
+            className: 'export-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+            pageSize: 'A4',
+            // Otomatis Landscape jika kolom terlalu banyak
+            orientation: dynamicColumns.value.length > 5 ? 'landscape' : 'portrait',
+            title: 'Laporan Sampah SiBanksa RT' + (page.props.auth.user.user_detail?.id_rt || '-') + ' Tanggal ' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
 
-            // 1. PDF SINKRONISASI
-            {
-                extend: 'pdfHtml5',
-                text: '<i class="fa-solid fa-file-pdf mr-2"></i> PDF',
-                className: 'bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                title: 'Laporan Setoran ' + activeCategory.value + ' SiBanksa RT-0' + (page.props.auth.user.user_detail?.id_rt || '-') + ' Tanggal ' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
-                exportOptions: {
-                    columns: ':not(.no-print)'
-                },
-                action: async function (e, dt, button, config) {
-                    const self = this;
-                    Swal.fire({
-                        title: 'Memproses PDF...',
-                        text: `Menyiapkan laporan ${activeCategory.value}...`,
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
+            exportOptions: {
+                columns: ':not(.no-print)'
+            },
+            action: async function (e, dt, button, config) {
+                const self = this;
 
-                    config.customize = function (doc) {
-                        Swal.close();
-                        const tableNode = doc.content.find(c => c.table);
-                        if (tableNode) {
-                            const colCount = tableNode.table.body[0].length;
-                            tableNode.table.widths = [100, ...Array(colCount - 1).fill('*')];
-                            tableNode.table.body.forEach((row, rowIndex) => {
-                                row.forEach((cell, i) => {
-                                    if (rowIndex === 0) {
-                                        cell.fillColor = '#10b981';
-                                        cell.color = 'white';
-                                        cell.bold = true;
-                                        cell.alignment = 'center';
-                                    }
-                                    if (rowIndex > 0 && i === 0) {
-                                        let txt = typeof cell === 'object' ? (cell.text || "") : cell.toString();
-                                        cell.text = txt.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
-                                    }
-                                });
-                            });
-                            tableNode.layout = 'lightHorizontalLines';
+                Swal.fire({
+                    title: 'Memproses PDF...',
+                    text: `Menyiapkan layout laporan digital`,
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                config.customize = function (doc) {
+                    Swal.close();
+
+                    // 1. Pengaturan Tabel
+                    const tableNode = doc.content.find(c => c.table);
+                    if (tableNode) {
+                        // Set widths: Kolom 1 (No/Nama) agak lebar, sisanya bagi rata (*)
+                        const colCount = tableNode.table.body[0].length;
+
+                        // 💡 TRICK 1: Perkecil font otomatis jika kolom lebih dari 7 agar tidak terpotong
+                        if (colCount > 7) {
+                            doc.defaultStyle.fontSize = 8;
+                            doc.styles.tableHeader.fontSize = 8;
                         }
 
-                        // Header & Footer (Sesuai Referensi)
-                        const idRT = page.props.auth.user?.user_detail.id_rt || '-';
-                        doc.content.splice(0, 1, {
-                            columns: [
-                                { stack: [{ text: 'SiBanksa', fontSize: 20, bold: true, color: '#10b981' }, { text: 'Sistem Informasi Bank Sampah Digital', fontSize: 8, color: '#6b7280' }] },
-                                { stack: [{ text: 'LAPORAN SETORAN NASABAH', fontSize: 14, bold: true, alignment: 'right' }, { text: `UNIT RT-0${idRT}`, fontSize: 9, alignment: 'right', color: '#9ca3af' }], width: '*' }
-                            ]
-                        }, { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1, lineColor: '#10b981' }], margin: [0, 5, 0, 15] });
+                        // 💡 TRICK 2: Gunakan 'auto' untuk kolom data, dan '*' untuk nama nasabah
+                        // Ini memaksa kolom angka mengecil sesuai isinya, dan sisa ruang diberikan ke nama
+                        let widths = Array(colCount).fill('auto');
+                        widths[0] = '*'; // Kolom Nama Nasabah fleksibel
+                        tableNode.table.widths = widths;
 
-                        doc.content.push({ text: '\n\n' }, {
-                            columns: [{ text: '', width: '*' }, {
-                                width: 200, stack: [
-                                    { text: `Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, alignment: 'center' },
-                                    { text: 'Petugas Operasional,', alignment: 'center', margin: [0, 5, 0, 45] },
-                                    { text: `( Ketua Bank Sampah RT-0${idRT} )`, alignment: 'center', bold: true },
-                                    { text: 'ID Petugas: SBK-RT0' + idRT, alignment: 'center', fontSize: 8, color: '#9ca3af' }
-                                ]
-                            }]
+                        tableNode.table.dontBreakRows = true;
+                        // Memaksa tabel untuk tidak melebihi lebar halaman (A4)
+                        tableNode.table.keepWithHeaderRows = 1;
+                        // 💡 TRICK 3: Hapus margin kiri kanan dokumen agar tabel punya ruang lebih luas
+                        doc.pageMargins = [20, 20, 20, 20];
+
+                        tableNode.table.body.forEach((row, rowIndex) => {
+                            row.forEach((cell, i) => {
+                                if (!row[i]) row[i] = { text: '' };
+
+                                // Alignment angka agar rapi
+                                if (rowIndex > 0 && i > 0) {
+                                    row[i].alignment = 'center';
+                                }
+
+                                // Capitalize text
+                                if (rowIndex > 0 && i === 0) {
+                                    let txt = row[i].text || row[i].toString();
+                                    row[i].text = txt.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                                }
+                            });
                         });
+
+                        tableNode.layout = {
+                            hLineWidth: (i, node) => (i === 0 || i === node.table.body.length) ? 1 : 0.5,
+                            vLineWidth: () => 0.5,
+                            hLineColor: () => '#e2e8f0',
+                            vLineColor: () => '#e2e8f0',
+                            paddingLeft: () => 8,
+                            paddingRight: () => 8,
+                        };
+                    }
+
+                    // 2. Custom Header (SiBanksa Brand)
+                    const userDetail = page.props.auth.user?.user_detail;
+                    doc.content.splice(0, 1,
+                        {
+                            columns: [
+                                {
+                                    stack: [
+                                        { text: 'SiBanksa', fontSize: 22, bold: true, color: '#10b981' },
+                                        { text: 'Sistem Informasi Bank Sampah Digital', fontSize: 8, color: '#6b7280', letterSpacing: 1 }
+                                    ]
+                                },
+                                {
+                                    stack: [
+                                        { text: 'LAPORAN PENYETORAN', fontSize: 16, bold: true, alignment: 'right' },
+                                        { text: `UNIT RT-0${userDetail?.id_rt || '-'} / RW-01`, fontSize: 10, alignment: 'right', color: '#9ca3af' },
+                                        { text: `Tahun: ${selectedYear.value}`, fontSize: 9, alignment: 'right' }
+                                    ],
+                                    width: '*'
+                                }
+                            ]
+                        },
+                        {
+                            canvas: [{ type: 'line', x1: 0, y1: 5, x2: doc.internal?.pageSize?.width - 80 || 515, y2: 5, lineWidth: 2, lineColor: '#10b981' }],
+                            margin: [0, 5, 0, 20]
+                        }
+                    );
+
+                    // 3. Footer (Tanda Tangan)
+                    doc.content.push(
+                        { text: '\n\n' },
+                        {
+                            columns: [
+                                { text: '', width: '*' },
+                                {
+                                    width: 200,
+                                    stack: [
+                                        { text: `Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, alignment: 'center', fontSize: 10 },
+                                        { text: 'Ketua Unit Bank Sampah', alignment: 'center', margin: [0, 5, 0, 50], fontSize: 10 },
+                                        { text: `KETUA ${userDetail?.fullName?.toUpperCase() || '..........................'} )`, alignment: 'center', bold: true, fontSize: 11 },
+                                        { canvas: [{ type: 'line', x1: 20, y1: 2, x2: 180, y2: 2, lineWidth: 0.5 }] },
+                                        { text: 'ID: SBK-RT0' + userDetail?.id_rt, alignment: 'center', fontSize: 8, color: '#9ca3af' }
+                                    ]
+                                }
+                            ]
+                        }
+                    );
+
+                    // 4. Global Styles
+                    doc.styles.tableHeader = {
+                        fillColor: '#10b981',
+                        color: 'white',
+                        bold: true,
+                        alignment: 'center',
+                        fontSize: 10,
+                        margin: [0, 5, 0, 5]
                     };
-                    setTimeout(() => $.fn.dataTable.ext.buttons.pdfHtml5.action.call(self, e, dt, button, config), 300);
+                    doc.defaultStyle = {
+                        fontSize: 9,
+                        color: '#374151'
+                    };
                 }
+
+                setTimeout(() => {
+                    $.fn.dataTable.ext.buttons.pdfHtml5.action.call(self, e, dt, button, config);
+                }, 300);
             },
+        },
 
-            // 2. EXCEL SINKRONISASI (Header Hijau & Border)
-            {
-                extend: 'excelHtml5',
-                text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
-                className: 'bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                title: 'Laporan Setoran ' + activeCategory.value + ' SiBanksa RT-0' + (page.props.auth.user.user_detail?.id_rt || '-') + ' Tanggal ' + new Date().toLocaleDateString('id-ID').replace(/\//g, '-'),
-                exportOptions: { columns: ':not(.no-print)' },
-                customize: function (xlsx) {
-                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    // Beri warna hijau emerald (#10b981) pada header (baris 1)
-                    // '51' adalah style default datatables untuk bold white text
+        // ================= EXCEL (STYLISH & STRUCTURED) =================
+        {
+            text: '<i class="fa-solid fa-file-excel mr-2"></i> Excel',
+            className: 'export-btn bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
 
-                    $('row c', sheet).attr('s', '25');
-                    $('row:first c', sheet).attr('s', '51');
-                }
-            },
-            {
-                extend: 'print',
-                text: '<i class="fa-solid fa-print mr-2"></i> Print',
-                className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
-                title: '',
-                exportOptions: {
-                    columns: ':not(.no-print)'
-                },
-                action: async function (e, dt, button, config) {
-                    const self = this;
+            action: function (e, dt) {
 
-                    Swal.fire({
-                        title: 'Memproses Cetak...',
-                        text: `Menyiapkan dokumen laporan lengkap`,
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
+                Swal.fire({
+                    title: 'Mereset & Merakit Excel...',
+                    text: 'Memberikan border dan styling...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                const data = dt.rows({ search: 'applied' }).data().toArray();
+                const wb = XLSX.utils.book_new();
+
+                // ================= MAIN SHEET =================
+                const excelRows = data.map((row, idx) => {
+                    const res = {
+                        "NO": idx + 1,
+                        "NAMA NASABAH": row.fullName || '-',
+                    };
+
+                    dynamicColumns.value.forEach(col => {
+                        res[col.title] = col.render(null, 'sort', row) || 0;
                     });
 
-                    config.customize = function (win) {
-                        Swal.close();
+                    res["TOTAL KESELURUHAN"] = row.totalTahunan || 0;
+                    return res;
+                });
 
-                        // 1. Ambil data dari tabel yang terfilter
-                        const data = dt.rows({ filter: 'applied' }).data().toArray();
-                        const columns = filteredJenisSampah.value; // Daftar jenis sampah dinamis
+                const ws = XLSX.utils.json_to_sheet(excelRows, { origin: 'A6' });
 
-                        // 2. Generate Header Dinamis
-                        const headerHtml = `
-                <th style="padding: 10px; border-bottom: 2px solid #f3f4f6; text-align: center; width: 30px;">No</th>
-                <th style="padding: 10px; border-bottom: 2px solid #f3f4f6; text-align: left;">Nama Nasabah</th>
-                ${columns.map(s => `
-                    <th style="padding: 10px; border-bottom: 2px solid #f3f4f6; text-align: center;">
-                        ${s.nama_sampah}<br><span style="font-size: 8px;">(${s.satuan})</span>
-                    </th>
-                `).join('')}
-                <th style="padding: 10px; border-bottom: 2px solid #f3f4f6; text-align: right;">Total (Rp)</th>
-            `;
+                // ================= HEADER =================
+                XLSX.utils.sheet_add_aoa(ws, [
+                    ["LAPORAN BANK SAMPAH SIBANKSA"],
+                    [`UNIT RT-0${userDetail.value?.id_rt || '-'}`],
+                    [`TAHUN ${selectedYear.value}`],
+                    [`Dicetak: ${new Date().toLocaleString('id-ID')}`],
+                    []
+                ], { origin: 'A1' });
 
-                        // 3. Generate Baris Dinamis
-                        const tableRows = data.map((row, index) => {
-                            const semuaSetoran = row.pencatatan || [];
+                const colCount = Object.keys(excelRows[0]).length;
 
-                            // Hitung berat per jenis sampah untuk kolom dinamis
-                            const dynamicCells = columns.map(s => {
-                                let totalBerat = 0;
-                                const setoranTersaring = semuaSetoran.filter(nota => {
-                                    if (!selectedJadwalFilter.value) return true;
-                                    return Number(nota.id_jadwal) === Number(selectedJadwalFilter.value);
+                // ================= MERGE =================
+                ws['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } },
+                    { s: { r: 1, c: 0 }, e: { r: 1, c: colCount - 1 } },
+                    { s: { r: 2, c: 0 }, e: { r: 2, c: colCount - 1 } },
+                    { s: { r: 3, c: 0 }, e: { r: 3, c: colCount - 1 } },
+                ];
+
+                // ================= STYLE GLOBAL =================
+                const range = XLSX.utils.decode_range(ws['!ref']);
+
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+
+                        const cell = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!ws[cell]) continue;
+
+                        ws[cell].s = {
+                            border: {
+                                top: { style: "thin" },
+                                bottom: { style: "thin" },
+                                left: { style: "thin" },
+                                right: { style: "thin" }
+                            },
+                            alignment: {
+                                vertical: "center",
+                                horizontal: C === 1 ? "left" : "center"
+                            }
+                        };
+
+                        // HEADER TITLE
+                        if (R === 0) {
+                            ws[cell].s.font = { bold: true, sz: 14 };
+                            ws[cell].s.alignment = { horizontal: "center" };
+                        }
+
+                        // SUB HEADER
+                        if (R >= 1 && R <= 3) {
+                            ws[cell].s.font = { bold: true };
+                            ws[cell].s.alignment = { horizontal: "center" };
+                        }
+
+                        // HEADER TABLE
+                        if (R === 5) {
+                            ws[cell].s.font = { bold: true, color: { rgb: "FFFFFF" } };
+                            ws[cell].s.fill = { fgColor: { rgb: "10B981" } };
+                            ws[cell].s.alignment = { horizontal: "center" };
+                        }
+                    }
+                }
+
+                ws['!cols'] = Object.keys(excelRows[0]).map(() => ({ wch: 20 }));
+
+                XLSX.utils.book_append_sheet(wb, ws, 'LAPORAN UTAMA');
+
+                months.forEach(m => {
+                    const sheetData = data.map(row => {
+                        let totalBulanIni = 0;
+
+                        // 1. Inisialisasi baris nasabah
+                        const res = {
+                            "NASABAH": row.fullName || '-'
+                        };
+
+                        // 2. Tentukan Kolom Dinamis berdasarkan ViewMode
+                        if (viewMode.value === 'sampah') {
+                            // Jika mode sampah, buat kolom: [Plastik, Kertas, Logam, dst]
+                            filteredSampahByKategori.value.forEach(s => {
+                                res[s.nama_sampah.toUpperCase()] = 0;
+                            });
+                        } else {
+                            // Jika mode saldo, hanya ada satu kolom nilai untuk bulan tersebut
+                            res[`SETORAN ${m.name.toUpperCase()}`] = 0;
+                        }
+
+                        // 3. Isi Data dari Pencatatan
+                        row.pencatatan?.forEach(nota => {
+                            const tgl = new Date(nota.created_at);
+
+                            // Filter Tahun, Bulan, dan Jadwal
+                            if (
+                                Number(tgl.getFullYear()) === Number(selectedYear.value) &&
+                                Number(tgl.getMonth() + 1) === Number(m.id) &&
+                                (!selectedJadwalFilter.value || Number(nota.id_jadwal) === Number(selectedJadwalFilter.value))
+                            ) {
+                                nota.pencatatan_items?.forEach(item => {
+                                    const nilai = viewMode.value === 'sampah'
+                                        ? parseFloat(item.jumlah || 0)  // Satuan (Kg/Pcs)
+                                        : parseFloat(item.subtotal || 0); // Rupiah
+
+                                    if (viewMode.value === 'sampah') {
+                                        const info = props.jenisSampah.find(s => s.id === item.sampah_id);
+                                        if (info && res[info.nama_sampah.toUpperCase()] !== undefined) {
+                                            res[info.nama_sampah.toUpperCase()] += nilai;
+                                        }
+                                    } else {
+                                        res[`SETORAN ${m.name.toUpperCase()}`] += nilai;
+                                    }
+                                    totalBulanIni += nilai;
                                 });
+                            }
+                        });
 
-                                setoranTersaring.forEach(nota => {
-                                    const items = nota.pencatatan_items || [];
-                                    const found = items.find(item => Number(item.sampah_id) === Number(s.id));
-                                    if (found) totalBerat += parseFloat(found.jumlah || 0);
-                                });
+                        res["TOTAL AKHIR"] = totalBulanIni;
+                        return res;
+                    });
 
-                                return `<td style="padding: 8px; text-align: center; font-size: 12px; color: ${totalBerat > 0 ? '#1f2937' : '#d1d5db'};">
-                        ${totalBerat > 0 ? `<b>${totalBerat}</b>` : '0'}
-                    </td>`;
-                            }).join('');
+                    // 4. Hanya buat sheet jika ada transaksi (TOTAL > 0)
+                    if (!sheetData.some(r => r["TOTAL AKHIR"] > 0)) return;
 
-                            // Hitung Grand Total Saldo
-                            const grandTotal = semuaSetoran.reduce((acc, nota) => {
-                                if (selectedJadwalFilter.value && Number(nota.id_jadwal) !== Number(selectedJadwalFilter.value)) {
-                                    return acc;
-                                }
-                                return acc + parseFloat(nota.total_setoran || 0);
-                            }, 0);
+                    // 5. Buat Worksheet & Tambahkan Header
+                    const wsMonth = XLSX.utils.json_to_sheet(sheetData, { origin: 'A6' });
 
-                            return `
-                    <tr style="border-bottom: 1px solid #f3f4f6;">
-                        <td style="padding: 8px; text-align: center; color: #9ca3af; font-size: 12px;">${index + 1}</td>
-                        <td style="padding: 8px; font-weight: 600; color: #1f2937; text-transform: capitalize; font-size: 12px;">
-                            ${row.fullName}
-                        </td>
-                        ${dynamicCells}
-                        <td style="padding: 8px; text-align: right; font-weight: bold; color: #10b981; font-size: 12px;">
-                            ${grandTotal.toLocaleString('id-ID')}
-                        </td>
+                    const judulLaporan = viewMode.value === 'sampah'
+                        ? `LAPORAN DETAIL SAMPAH - ${m.name.toUpperCase()} ${selectedYear.value}`
+                        : `LAPORAN SALDO NASABAH - ${m.name.toUpperCase()} ${selectedYear.value}`;
+
+                    XLSX.utils.sheet_add_aoa(wsMonth, [
+                        [judulLaporan],
+                        [`UNIT RT-0${userDetail.value?.id_rt || '-'} / RW-01`],
+                        [`Tipe Laporan: ${viewMode.value.toUpperCase()}`],
+                        [`Dicetak: ${new Date().toLocaleString('id-ID')}`],
+                        []
+                    ], { origin: 'A1' });
+
+                    // 6. Styling & Merge (Gunakan logic yang sudah Anda miliki sebelumnya)
+                    const colCount = Object.keys(sheetData[0]).length;
+                    wsMonth['!merges'] = [
+                        { s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } },
+                        { s: { r: 1, c: 0 }, e: { r: 1, c: colCount - 1 } },
+                        { s: { r: 2, c: 0 }, e: { r: 2, c: colCount - 1 } },
+                        { s: { r: 3, c: 0 }, e: { r: 3, c: colCount - 1 } },
+                    ];
+
+                    // Berikan border dan warna hijau pada header (Baris 6 / Index 5)
+                    const range = XLSX.utils.decode_range(wsMonth['!ref']);
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                        for (let C = range.s.c; C <= range.e.c; ++C) {
+                            const cell = XLSX.utils.encode_cell({ r: R, c: C });
+                            if (!wsMonth[cell]) continue;
+
+                            wsMonth[cell].s = {
+                                border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } },
+                                alignment: { vertical: "center", horizontal: C === 0 ? "left" : "center" }
+                            };
+
+                            if (R === 5) { // Header Tabel
+                                wsMonth[cell].s.font = { bold: true, color: { rgb: "FFFFFF" } };
+                                wsMonth[cell].s.fill = { fgColor: { rgb: "10B981" } };
+                            }
+                        }
+                    }
+
+                    wsMonth['!cols'] = Object.keys(sheetData[0]).map((k, i) => ({ wch: i === 0 ? 30 : 20 }));
+
+                    XLSX.utils.book_append_sheet(wb, wsMonth, `${m.name.toUpperCase()} ${selectedYear.value}`);
+                });
+
+                XLSX.writeFile(wb, `Laporan Nasabah SiBanksa RT-0${page.props.auth.user.user_detail?.id_rt || '-'} Tanggal ${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}.xlsx`);
+
+                Swal.close();
+            }
+        },
+
+        // ================= PRINT (FULL CUSTOM) =================
+        {
+            extend: 'print',
+            text: '<i class="fa-solid fa-print mr-2"></i> Print',
+            className: 'export-btn bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-sm',
+
+            exportOptions: {
+                columns: ':not(.no-print)'
+            },
+
+            action: function (e, dt, button, config) {
+                const self = this;
+
+                Swal.fire({
+                    title: 'Memproses Print...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                config.customize = function (win) {
+                    Swal.close();
+
+                    const data = dt.rows({ search: 'applied' }).data().toArray();
+                    const user = userDetail.value;
+
+                    // ================= HEADER DINAMIS =================
+                    const tableHeader = `
+                    <tr style="background:#f9fafb;font-size:10px;text-transform:uppercase;">
+                        <th style="padding:10px;">No</th>
+                        <th style="padding:10px;">Nasabah</th>
+
+                        ${dynamicColumns.value.map(col => `
+                            <th style="padding:10px;text-align:center;">
+                                ${col.title}
+                            </th>
+                        `).join('')}
+
+                        <th style="padding:10px;">Total</th>
                     </tr>
                 `;
-                        }).join('');
 
-                        const namaBulan = new Date().toLocaleString('id-ID', { month: 'long' }).toUpperCase();
-                        // 4. Inject ke Dokumen Print
-                        $(win.document.body)
-                            .css('font-family', 'Poppins, sans-serif')
-                            .prepend(`
-                <div style="padding: 20px; border-top: 8px solid #10b981; background: white;">
-                    <div
+                    // ================= ROW DINAMIS =================
+                    const tableRows = data.map((row, index) => `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:10px;">${index + 1}</td>
+                        <td style="padding:10px;">${row.fullName}</td>
+
+                        ${dynamicColumns.value.map(col => `
+                            <td style="padding:10px;text-align:center;">
+                                ${col.render(null, 'display', row)}
+                            </td>
+                        `).join('')}
+
+                        <td style="padding:10px;font-weight:bold;">
+                            ${row.totalTahunan.toLocaleString('id-ID')}
+                        </td>
+                    </tr>
+                `).join('');
+
+                    // ================= RENDER =================
+                    $(win.document.body)
+                        .css('font-family', 'Poppins, sans-serif')
+                        .html(`
+                        <div style="padding: 40px; border-top: 10px solid #10b981; background: white;">
+
+                            <!-- HEADER -->
+
+                                   <div
                     class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
                     <i class="fas fa-recycle text-[20rem]"></i>
                 </div>
-                      <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 30px;">
+
+
+                 <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 30px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <div
                             class="w-16 h-16 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg">
@@ -413,13 +846,10 @@ const dtOptions = computed(() => {
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <h2 style="margin: 0; font-size: 28px; color: #d1d5db; letter-spacing: 4px;">SETORAN BULAN ${namaBulan}</h2>
-                                                <p style="margin: 0; font-size: 10px; color: #10b981; font-weight: bold;">KATEGORI: ${activeCategory.value.toUpperCase()}</p>
-
+                    <h2 style="margin: 0; font-size: 28px; color: #d1d5db; letter-spacing: 4px;">SAMPAH</h2>
                 </div>
             </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 40px; font-size: 14px;">
+                                      <div style="display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 40px; font-size: 14px;">
                 <div>
                     <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">DITERIMA DARI:</p>
                     <p style="font-weight: bold; font-size: 18px; margin: 0;">${page.props.auth.user.user_detail.fullName}</p>
@@ -433,48 +863,74 @@ const dtOptions = computed(() => {
                 </div>
             </div>
 
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                        <thead>
-                            <tr style="background: #f9fafb; color: #6b7280; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                ${headerHtml}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRows}
-                        </tbody>
-                    </table>
+                            <!-- TABLE -->
+                                      <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
+                                <thead>${tableHeader}</thead>
+                                <tbody>${tableRows}</tbody>
+                            </table>
 
-                    <div style="display: flex; justify-content: flex-end; margin-top: 40px;">
-                        <div style="text-align: center; width: 200px;">
-                            <p style="font-size: 11px; margin-bottom: 50px;">
-                                Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br>
-                                <b>Verifikator</b>
-                            </p>
-                            <div style="border-bottom: 1px solid #d1d5db; width: 160px; margin: 0 auto 5px;"></div>
-                            <p style="font-weight: bold; text-transform: uppercase; font-size: 11px; margin: 0;">Ketua Bank Sampah RT-0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
-                            <p style="font-size: 9px; color: #9ca3af; margin: 0;">ID: SBK-RT0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                            <!-- FOOTER -->
+                                <div style="display: flex; justify-content: flex-end; margin-top: 40px;">
+                            <div style="text-align: center; width: 220px;">
+                                <p style="font-size: 11px; margin-bottom: 60px;">Gresik, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br><b>Verifikator</b></p>
+                                <div style="border-bottom: 1px solid #d1d5db; width: 180px; margin: 0 auto 5px;"></div>
+                                <p style="font-weight: bold; font-size: 12px; text-transform: uppercase;">( Ketua Bank Sampah RT-0${page.props.auth.user.user_detail?.id_rt || '-'} )</p>
+                                <p style="font-size: 9px; color: #9ca3af;">ID: SBK-RT0${page.props.auth.user.user_detail?.id_rt || '-'}</p>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            `);
 
-                        $(win.document.body).find('table').last().hide();
-                    };
+                        </div>
+                    `);
+                };
 
-                    setTimeout(() => {
-                        $.fn.dataTable.ext.buttons.print.action.call(self, e, dt, button, config);
-                    }, 300);
-                }
+                setTimeout(() => {
+                    $.fn.dataTable.ext.buttons.print.action.call(self, e, dt, button, config);
+                }, 300);
             }
-
-        ],
-        language: {
-            info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-            emptyTable: "Tidak ada data untuk kategori " + activeCategory.value
         }
-    };
-});
+    ],
+    layout: {
+        topStart: null,
+        topEnd: null,
+        bottomStart: 'info',
+        bottomEnd: 'paging'
+    },
+    footerCallback: function () {
+        const api = this.api();
 
+        // Hitung footer tiap kolom dinamis
+        dynamicColumns.value.forEach((col, idx) => {
+            const colIdx = idx + 1; // offset kolom Nasabah
+            let sum = 0;
+            api.rows({ page: 'current' }).data().each(row => {
+                sum += col.render(null, 'sort', row) || 0;
+            });
+            $(api.column(colIdx).footer()).html(sum > 0 ? sum.toLocaleString('id-ID') : '0');
+        });
+
+        // Footer kolom TOTAL
+        let grandTotal = 0;
+        api.rows({ page: 'current' }).data().each(row => {
+            grandTotal += parseFloat(row.totalTahunan || 0);
+        });
+        const lastColIdx = dynamicColumns.value.length + 1;
+        $(api.column(lastColIdx).footer()).html(grandTotal > 0 ? grandTotal.toLocaleString('id-ID') : '0');
+    },
+    language: {
+        info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+        paginate: {
+            previous: "← Sebelumnya",
+            next: "Berikutnya →"
+        },
+        emptyTable: "Tidak ada data tersedia"
+    }
+}));
+
+const isMobile = ref(window.innerWidth < 768);
+
+window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 768;
+});
 // Referensi instance tabel
 const dtInstance = ref(null);
 const handleSearch = (e) => {
@@ -524,6 +980,39 @@ const deleteData = (id) => {
     });
 };
 
+
+onMounted(() => {
+    $(document).on('click', '.btn-detail', function () {
+        const id = $(this).data('id');
+
+        // contoh: redirect ke detail
+        router.visit(route('show-pencatatan', id));
+
+        // ATAU modal:
+        // openModalDetail(id)
+    });
+});
+
+const tableRows = computed(() => {
+    if (!dtInstance.value) return '';
+
+    return dtInstance.value.dt.rows({ search: 'applied' }).data().toArray().map((row, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${row.fullName}</td>
+            ${dynamicColumns.value.map(col => `
+                <td>${col.render(null, 'display', row)}</td>
+            `).join('')}
+            <td>${row.totalTahunan.toLocaleString('id-ID')}</td>
+        </tr>
+    `).join('');
+});
+
+
+const goToDetail = (id) => {
+    router.visit(route('show-pencatatan', id));
+};
+
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') },
     { label: 'Manajemen Bank Sampah', url: null },
@@ -547,9 +1036,8 @@ const breadcrumbItems = [
                 <button @click="openCreateForm"
                     class=" text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
                     :class="[
-                        showForm? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
-                    ]"
-                    >
+                        showForm ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                    ]">
 
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
                     {{ showForm ? 'Tutup Form' : 'Tambah Setoran' }}
@@ -558,15 +1046,15 @@ const breadcrumbItems = [
 
 
             <Transition name="accordion">
-                                    <div v-if="showForm" class="p-5 bg-gray-50 dark:bg-gray-900">
-                <div class="bg-white accordion-wrapper dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                <div v-if="showForm" class="p-5 bg-gray-50 dark:bg-gray-900">
+                    <div class="bg-white accordion-wrapper dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
                         <FormWrapper formName="formPencatatan" :errors="form.errors" :processing="form.processing"
                             @submit="handleSubmit">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium mb-1">Jadwal Pelaksanaan</label>
                                     <select v-model="form.id_jadwal" class="w-full border rounded px-3 py-2 text-sm"
-                                                                                                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors }">
+                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_jadwal'] }">
 
                                         <option value="" disabled>Pilih Jadwal</option>
                                         <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
@@ -578,15 +1066,23 @@ const breadcrumbItems = [
                                     <label class="block text-sm font-medium mb-1">Nasabah</label>
                                     <select v-model="form.id_userdetail"
                                         class="w-full border rounded capitalize px-3 py-2 text-sm"
-                                                                                                                                                            :class="{ 'border-red-500 ring-1 ring-red-500': form.errors }">
->
+                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_userdetail'] }">
                                         <option value="" disabled>Pilih Nasabah</option>
-                                        <option  v-for="n in nasabahList" :key="n.id" :value="n.id">
+                                        <option v-for="n in nasabahList" :key="n.id" :value="n.id">
                                             {{ n.fullName }}
                                         </option>
                                     </select>
                                 </div>
                             </div>
+
+
+                            <div v-if="chunks.length === 0" class="text-center text-gray-500 py-10">
+                                <i class="fas fa-box
+-open text-4xl mb-3"></i>
+                                <p class="text-sm">Tidak ada jenis sampah tersedia.</p>
+                            </div>
+
+                            <div v-else>
 
                             <div class="flex flex-col items-center gap-3">
                                 <span class="text-xs text-gray-500">Step {{ step }} dari {{ totalSteps }}</span>
@@ -599,22 +1095,21 @@ const breadcrumbItems = [
                                 </div>
                             </div>
 
-                            <div v-for="(chunk, index) in chunks" :key="index">
+                               <div  v-for="(chunk, index) in chunks" :key="index">
                                 <div v-show="step === index + 1" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     <div v-for="item in chunk" :key="item.sampah_id"
                                         class="p-3 rounded-lg border bg-white shadow-sm">
                                         <div class="text-sm font-medium truncate capitalize">{{ item.nama }}</div>
-                                        <div class="text-xs text-gray-500 mb-2 capitalize">Satuan: {{ item.satuan }}</div>
+                                        <div class="text-xs text-gray-500 mb-2 capitalize">Satuan: {{ item.satuan }}
+                                        </div>
                                         <input type="number" step="0.01" v-model="item.jumlah"
-
                                             class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-emerald-500"
-                                            placeholder="0"
-                                            >
+                                            placeholder="0">
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex justify-between pt-4 border-t">
+                               <div class="flex justify-between pt-4 border-t">
                                 <button type="button" @click="step = Math.max(step - 1, 1)" :disabled="step === 1"
                                     class="text-gray-500 disabled:opacity-30">
                                     ← Kembali
@@ -630,27 +1125,126 @@ const breadcrumbItems = [
                                     {{ form.processing ? 'Menyimpan...' : 'Simpan Setoran' }}
                                 </button>
                             </div>
+                            </div>
+
+
                         </FormWrapper>
                     </div>
                 </div>
             </Transition>
 
             <!-- TABLE -->
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl">
+            <div class=" p-4 ">
                 <div class="bg-white dark:bg-gray-800  rounded-2xl shadow-sm ">
 
+                    <!-- FILTER BAR -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 mb-4">
 
-                    <div
-                        class="mb-6 flex flex-wrap gap-2 p-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl w-fit border border-gray-100 dark:border-gray-700">
-                        <button v-for="cat in categories" :key="cat" @click="activeCategory = cat" :class="[
-                            'px-6 py-2 text-sm font-bold rounded-xl transition-all duration-300',
-                            activeCategory === cat
-                                ? 'bg-white dark:bg-gray-800 text-emerald-600 shadow-md ring-1 ring-black/5'
-                                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                        ]">
-                            {{ cat }}
-                        </button>
+                        <div class="flex flex-wrap items-center justify-between mb-4">
+                            <div class="flex gap-2 mb-4">
+                                <button @click="viewMode = 'saldo'"
+                                    :class="viewMode === 'saldo' ? 'bg-emerald-600 text-white' : 'bg-gray-200'"
+                                    class="px-4 py-2 rounded-lg text-sm font-bold">
+                                    Cek Saldo
+                                </button>
+
+                                <button @click="viewMode = 'sampah'"
+                                    :class="viewMode === 'sampah' ? 'bg-blue-600 text-white' : 'bg-gray-200'"
+                                    class="px-4 py-2 rounded-lg text-sm font-bold">
+                                    Cek Sampah
+                                </button>
+                            </div>
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                                <div v-if="viewMode === 'sampah'"
+                                    class="flex p-1 bg-gray-100 dark:bg-gray-900 rounded-2xl w-fit border border-gray-100 dark:border-gray-700">
+                                    <button v-for="cat in categories" :key="cat"
+                                        @click="activeCategory = cat; selectedSampah = ''"
+                                        :class="['px-6 py-2 text-sm font-bold rounded-xl transition-all',
+                                            activeCategory === cat ? 'bg-white shadow-md text-emerald-600' : 'text-gray-500']">
+                                        {{ cat }}
+                                    </button>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- Row 2: Filter Bulan + Sampah + Jadwal -->
+                        <div class="flex flex-wrap items-center gap-3">
+
+                            <div class="flex items-center gap-3">
+                                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Tahun:</label>
+                                <select v-model="selectedYear"
+                                    class="rounded-xl border-gray-200 text-sm font-bold text-emerald-700 focus:ring-emerald-500">
+                                    <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+                                </select>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Bulan:</label>
+
+                                <select v-model="selectedBulan"
+                                    class="rounded-xl border-gray-200 text-sm font-bold text-gray-700">
+
+                                    <!-- SALDO -->
+                                    <template v-if="viewMode === 'saldo'">
+                                        <option value="">Semua Bulan</option>
+                                    </template>
+
+                                    <!-- SAMPAH -->
+                                    <template v-else>
+                                        <option value="">Pilih Bulan</option>
+                                    </template>
+
+                                    <option v-for="m in months" :key="m.id" :value="m.id">
+                                        {{ m.name }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- MODE SAMPAH -->
+                            <div v-if="viewMode === 'sampah'" class="flex items-center gap-2">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Jenis Sampah:</label>
+                                <select v-model="selectedSampah"
+                                    class="rounded-xl border-gray-200 text-sm font-bold text-gray-700">
+                                    <option value="">Semua Jenis</option>
+                                    <option v-for="s in filteredSampahByKategori" :key="s.id" :value="s.id">
+                                        {{ s.nama_sampah }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Jadwal:</label>
+                                <select v-model="selectedJadwalFilter"
+                                    class="rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-emerald-500">
+                                    <option value="">Semua Jadwal</option>
+                                    <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
+                                        {{ j.tanggal_setoran }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Badge info mode aktif -->
+                            <div class="ml-auto">
+                                <span v-if="selectedBulan"
+                                    class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+                                    Mode: Kolom per Jenis Sampah
+                                </span>
+                                <span v-else
+                                    class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+                                    Mode: Kolom per Bulan
+                                </span>
+                            </div>
+                        </div>
                     </div>
+
+
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-4">
 
                     <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
@@ -668,24 +1262,28 @@ const breadcrumbItems = [
                                 <i class="fas fa-print"></i> Print
                             </button>
                         </div>
-                        <div class="flex flex-wrap gap-3">
+
+                        <div v-if="isMobile" class="flex flex-col gap-2 mb-4">
+
+                            <!-- Search -->
+                            <input v-model="mobileSearch" type="text" placeholder="Cari nasabah..."
+                                class="border rounded-lg px-3 py-2 text-sm w-full">
+
+                            <!-- Show -->
+                            <select v-model="mobilePerPage" class="border rounded-lg px-3 py-2 text-sm w-full">
+                                <option :value="5">5</option>
+                                <option :value="10">10</option>
+                                <option :value="25">25</option>
+                            </select>
+
+                        </div>
+                        <div v-else class="flex flex-wrap gap-3">
                             <div class="flex items-end gap-2">
                                 <label
                                     class="text-xs m-auto  font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
                                 <input @keyup="handleSearch" type="text"
                                     class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                                     placeholder="Ketik...">
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <label class="text-xs font-semibold text-gray-500 uppercase">Jadwal:</label>
-                                <select v-model="selectedJadwalFilter"
-                                    class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white text-black dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                                    <option value="">Semua Jadwal</option>
-                                    <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
-                                        {{ j.tanggal_setoran }}
-                                    </option>
-                                </select>
                             </div>
 
                             <div class="flex items-center gap-2  pl-3">
@@ -701,102 +1299,132 @@ const breadcrumbItems = [
                         </div>
 
                     </div>
+
+                    <!-- MOBILE VIEW -->
+                    <div v-if="isMobile" class="space-y-3">
+                        <div v-for="row in paginatedMobileData" :key="row.id || row.fullName"
+                            class="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+
+                            <!-- Nama -->
+                            <div class="font-bold text-gray-800 dark:text-white">
+                                {{ row.fullName }}
+                            </div>
+
+                            <!-- Dynamic Data -->
+                            <div class="mt-2 space-y-1 text-sm">
+                                <div v-for="(col, i) in dynamicColumns" :key="i"
+                                    class="flex justify-between border-b py-1">
+
+                                    <span class="text-gray-500">
+                                        {{ col.title }}
+                                    </span>
+
+                                    <span class="font-semibold">
+                                        {{ col.render(null, 'display', row) }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Total -->
+                            <div class="mt-3 flex justify-between font-bold text-emerald-600 border-t pt-2">
+                                <span>Total</span>
+                                <span>{{ row.totalTahunan.toLocaleString('id-ID') }}</span>
+                            </div>
+
+                            <div class="mt-3">
+                                <button @click="goToDetail(row.id)"
+                                    class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold">
+                                    Lihat Detail
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-if="isMobile" class="flex justify-between items-center mt-4">
+
+                            <button @click="prevMobilePage" :disabled="mobilePage === 1"
+                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-30">
+                                ← Prev
+                            </button>
+
+                            <span class="text-sm font-semibold">
+                                {{ mobilePage }} / {{ totalMobilePages }}
+                            </span>
+
+                            <button @click="nextMobilePage" :disabled="mobilePage === totalMobilePages"
+                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-30">
+                                Next →
+                            </button>
+
+                        </div>
+
+                        <div class="text-xs text-gray-500">
+                            Menampilkan {{ paginatedMobileData.length }} dari {{ filteredMobileData.length }} data
+                        </div>
+                    </div>
+                    <DataTable v-else
+                        :key="viewMode + selectedBulan + selectedSampah + selectedJadwalFilter + activeCategory"
+                        :options="dtOptions" :data="processedData" ref="dtInstance">
+                        <thead>
+                        </thead>
+                        <tfoot class="bg-gray-50 dark:bg-gray-900 font-bold">
+                            <tr class="text-gray-800 dark:text-white border-t-2 border-emerald-500">
+                                <th class="text-left py-4 px-2 uppercase">Total Keseluruhan</th>
+                                <th v-for="(col, i) in dynamicColumns" :key="i" class="text-center py-4">0</th>
+                                <th class="text-right py-4 px-2 text-emerald-600">0</th>
+                            </tr>
+                        </tfoot>
+                    </DataTable>
                 </div>
-                <DataTable :key="activeCategory + selectedJadwalFilter" ref="dtInstance" :data="nasabahList"
-                    :options="dtOptions" class="w-full display stripe hover cell-border dark:text-gray-200">
-                </DataTable>
             </div>
 
         </div>
+
+
     </AuthenticatedLayout>
 </template>
 
-<style>
-.dark td {
-    color: white;
+<style scoped>
+/* Paksa tabel menggunakan layout fixed agar tidak meluber */
+:deep(.dataTable) {
+    table-layout: fixed !important;
+    width: 100% !important;
+    font-size: 14px !important;
+    /* Naikan sedikit dari 10px */
 }
 
-.accordion-enter-active,
-.accordion-leave-active {
-    transition: all 0.3s ease-in-out;
-    max-height: 500px;
+/* Kolom NASABAH lebih lebar */
+:deep(.dataTable thead th:first-child),
+:deep(.dataTable tbody td:first-child),
+:deep(.dataTable tfoot th:first-child) {
+    width: 12% !important;
+}
+
+:deep(.dataTable tbody td:first-child) {
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.accordion-enter-from,
-.accordion-leave-to {
-    max-height: 0;
-    opacity: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+/* Kolom bulan lebih proporsional */
+:deep(.col-bulan) {
+    width: 6.2% !important;
+    padding: 6px 3px !important;
 }
 
-.accordion-wrapper>* {
-    transition: opacity 0.2s;
+/* Kolom TOTAL */
+:deep(.col-total) {
+    width: 9% !important;
 }
 
-
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: #10b981 !important;
-    border: none !important;
-    color: white !important;
-    border-radius: 8px;
+:deep(.dataTable tbody td) {
+    padding: 10px 4px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.dataTables_wrapper .dataTables_info,
-.dataTables_wrapper .dataTables_paginate {
-    font-size: 0.8rem;
-    color: #ffffff !important;
-    margin-top: 1rem;
-}
-
-.dark .dataTables_wrapper .dataTables_length,
-.dark .dataTables_wrapper .dataTables_filter,
-.dark .datatable .dt-info,
-.dark .dataTables_wrapper .dataTables_processing,
-.dark .datatable .dt-paging {
-    color: #ffffff !important;
-}
-
-.dataTables_filter {
-    display: none;
-}
-
-/* Kita pakai custom search di atas */
-
-.slide-fade-enter-active {
-    transition: all 0.3s ease-out;
-}
-
-.slide-fade-leave-active {
-    transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-    transform: translateY(-10px);
-    opacity: 0;
-}
-
-.progress-flow {
+:deep(.dataTables_wrapper) {
     width: 100%;
-    background: linear-gradient(110deg,
-            #3b82f6 25%,
-            #60a5fa 37%,
-            #3b82f6 63%);
-    background-size: 200% 100%;
-    animation: flow 1.2s linear infinite;
-}
-
-@keyframes flow {
-    from {
-        background-position: 200% 0;
-    }
-
-    to {
-        background-position: -200% 0;
-    }
+    overflow-x: hidden;
 }
 </style>

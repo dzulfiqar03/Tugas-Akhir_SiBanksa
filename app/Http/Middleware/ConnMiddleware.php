@@ -32,13 +32,14 @@ public function handle(Request $request, Closure $next)
 
 private function isInternetConnected()
 {
-    try {
-        // Gunakan HEAD request agar lebih cepat (tidak download isi halaman)
-        // Timeout dipersingkat jadi 2-3 detik agar user tidak menunggu lama
-        $response = Http::timeout(3)->head('https://www.google.com');
-        return $response->successful();
-    } catch (\Exception $e) {
-        return false;
-    }
+    return cache()->remember('internet_check', 300, function () {
+        try {
+            // Gunakan IP DNS Google (8.8.8.8) atau layanan yang lebih ringan
+            $response = Http::timeout(2)->head('https://8.8.8.8');
+            return $response->successful();
+        } catch (\Exception $e) {
+            return false;
+        }
+    });
 }
 }

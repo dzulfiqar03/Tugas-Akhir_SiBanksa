@@ -20,30 +20,28 @@ class PencatatanRequest extends FormRequest
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
-{
-    return [
-        'id_jadwal' => 'required|exists:jadwal_pelaksanaan,id',
-        'id_userdetail' => 'required|exists:user_details,id',
-        'items' => 'required|array|min:1',
-        
-        // Validasi tiap elemen di dalam array items
-        'items.*.sampah_id' => 'required|exists:sampah,id',
-        'items.*.jumlah'     => 'required|decimal:0,2|min:0',
-        'items.*.harga_satuan'     => 'required|numeric|min:0',
-    ];
-}
+    {
+        return [
+            'id_jadwal' => 'required|exists:jadwal_pelaksanaan,id',
+            'id_userdetail' => 'required|exists:user_details,id',
+            'items' => 'required|array|min:1',
 
-public function messages(): array
-{
-    return [
-        'id_jadwal.required'  => 'Jadwal pelaksanaan wajib dipilih.',
-        'id_userdetail.required' => 'Nama nasabah wajib dipilih.',
-        'items.required'      => 'Data sampah tidak boleh kosong.',
-        
-        // Pesan error dinamis untuk tiap item
-        'items.*.jumlah.decimal' => 'Berat harus berupa decimal.',
-        'items.*.harga_satuan.numeric' => 'Harga harus berupa angka.',
-        'items.*.jumlah.min'     => 'Berat tidak boleh kurang dari 0.',
-    ];
-}
+            'items.*.sampah_id' => 'required|exists:sampah,id',
+            'items.*.jumlah'     => 'required|decimal:0,2|min:0',
+            'items.*.harga_satuan'     => 'required|numeric|min:0',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'id_jadwal.required'  => 'Jadwal pelaksanaan wajib dipilih.',
+            'id_userdetail.required' => 'Nama nasabah wajib dipilih.',
+            'items.required'      => 'Data sampah tidak boleh kosong.',
+
+            'items.*.jumlah.decimal' => 'Berat harus berupa decimal.',
+            'items.*.harga_satuan.numeric' => 'Harga harus berupa angka.',
+            'items.*.jumlah.min'     => 'Berat tidak boleh kurang dari 0.',
+        ];
+    }
 }

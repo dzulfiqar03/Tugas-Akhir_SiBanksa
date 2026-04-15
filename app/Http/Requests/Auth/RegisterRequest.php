@@ -36,6 +36,7 @@ class RegisterRequest extends FormRequest
                 'id_gender'       => 'required',
                 'status'       => 'required',
                 'status_transaction' => 'required',
+                'pencairan_via' => 'required',
                 'bankSampah.phoneNumber'     => 'required|string|min:10',
                 'bankSampah.address'         => 'required|string',
             ];
@@ -51,6 +52,7 @@ class RegisterRequest extends FormRequest
                 'nasabah.id_gender'       => 'required',
                 'status_transaction' => 'required',
                 'status'       => 'required',
+                    'pencairan_via' => 'required',
                 'nasabah.phoneNumber'     => 'required|string|min:10',
                 'nasabah.address'         => 'required|string',
             ];
@@ -75,6 +77,7 @@ class RegisterRequest extends FormRequest
                 'id_gender.required'   => 'Jenis kelamin wajib dipilih',
                 'status_transaction.required'   => 'Status transaksi wajib dipilih',
                 'status.required'   => 'Status wajib dipilih',
+                'pencairan_via.required'   => 'Metode pencairan wajib dipilih',
                 'bankSampah.phoneNumber.required' => 'Nomor telepon wajib diisi',
                 'bankSampah.phoneNumber.min'      => 'Nomor telepon minimal 10 digit',
                 'bankSampah.address.required'     => 'Alamat wajib diisi',
@@ -95,6 +98,7 @@ class RegisterRequest extends FormRequest
                 'nasabah.id_gender.required'   => 'Jenis kelamin wajib dipilih',
                 'status.required'   => 'Status wajib dipilih',
                 'status_transaction.required'   => 'Status transaksi wajib dipilih',
+                'pencairan_via.required'   => 'Metode pencairan wajib dipilih',
                 'nasabah.phoneNumber.required' => 'Nomor telepon wajib diisi',
                 'nasabah.phoneNumber.min'      => 'Nomor telepon minimal 10 digit',
                 'nasabah.address.required'     => 'Alamat wajib diisi',

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Geolocation extends Model
 {
-        protected $table = 'user_geolocations';
+    protected $table = 'user_geolocations';
 
     protected $fillable = [
         'id_userdetail',

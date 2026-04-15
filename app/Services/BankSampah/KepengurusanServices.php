@@ -19,8 +19,9 @@ class KepengurusanServices
     public function getAllKepengurusan()
     {
 
-        $kepengurusan = $this->kepengurusan::where('id_userdetail', operator: Auth::user()->user_detail->id)->get();
-
+        $kepengurusan = $this->kepengurusan::where('id_userdetail', Auth::user()->user_detail->id)
+            ->orderByRaw("FIELD(divisi, 'Ketua', 'Sekretaris', 'Bendahara', 'Pemilah', 'Penimbang') ASC")
+            ->get();
         return $kepengurusan;
     }
 

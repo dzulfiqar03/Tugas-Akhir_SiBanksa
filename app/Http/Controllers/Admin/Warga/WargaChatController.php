@@ -119,14 +119,28 @@ class WargaChatController extends Controller
 
                         $botResponse = "Rekening Anda:" . number_format($hasil, 0, ',', '.');
                     } elseif (in_array('setoran', $matches)) {
-                        $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
-                            ->whereHas('setoran', function ($query) {
-                                $query->where('id_userdetail', Auth::user()->user_detail->id);
-                            })
-                            ->latest() // Mengurutkan dari yang terbaru
-                            ->get();
+                        if (auth()->user()->user_detail->id_roles === 2) {
+                            $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+                                ->whereHas('setoran', function ($query) {
+                                    $query->where('id_userdetail', Auth::user()->user_detail->id);
+                                })
+                                ->latest() // Mengurutkan dari yang terbaru
+                                ->get();
+                        } else {
+                            // Ambil ID User Detail milik warga yang sedang login
+                            $myId = Auth::user()->user_detail->id;
 
-                        $total = $pencatatanSetoranItems->sum('setoran.total_setoran');
+                            // Ambil data item (untuk keperluan list jika dibutuhkan)
+                            $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+                                ->whereHas('setoran', function ($query) use ($myId) {
+                                    $query->where('id_userdetail', $myId);
+                                    $query->whereHas('transaction');
+                                })
+                                ->get();
+
+                            $total = \App\Models\BankSampah\PencatatanSetoran::where('id_userdetail', $myId)->whereHas('transaction')
+                                ->sum('total_setoran');
+                        }
 
                         $botResponse = "Total setoran Anda sampai saat ini adalah: Rp " . number_format($total, 0, ',', '.');
                     } elseif (

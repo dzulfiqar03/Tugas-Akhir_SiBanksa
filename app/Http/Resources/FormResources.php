@@ -75,19 +75,19 @@ class FormResources extends JsonResource
                     'options' => $optionGender,
                 ],
                 [
-                    'title' => 'Username',
+                    'title' => 'User Name',
                     'name' => 'userName',
                     'type' => 'text',
-                    'placeholder' => 'Masukkan username',
+                    'placeholder' => 'Misal : johndoe',
                 ],
                 [
-                    'title' => 'Full Name',
+                    'title' => 'Nama Lengkap',
                     'name' => 'fullName',
                     'type' => 'text',
                     'placeholder' => 'Masukkan Nama Lengkap',
                 ],
                 [
-                    'title' => 'Phone Number',
+                    'title' => 'Nomor Telepon',
                     'name' => 'phoneNumber',
                     'type' => 'text',
                     'placeholder' => 'Masukkan Nomor Telepon',
@@ -118,7 +118,7 @@ class FormResources extends JsonResource
             'userAuth' => [
 
                 [
-                    'title' => 'Email Address',
+                    'title' => 'Alamat Email',
                     'name' => 'email',
                     'type' => 'email',
                     'placeholder' => 'Masukkan Alamat Email',
@@ -244,7 +244,7 @@ class FormResources extends JsonResource
                     'title' => 'Nama Jalan',
                     'name' => 'amenity',
                     'type' => 'text',
-                    'placeholder' => 'Masukkan Nama Jalam (misal: Bangka)',
+                    'placeholder' => 'Masukkan Nama Jalan (misal: Bangka)',
                 ],
 
                 [
@@ -283,21 +283,21 @@ class FormResources extends JsonResource
 
             ],
 
-             'janji_setor' => [
-                    [
-                        'title' => 'Janji Penyetoran',
-                        'name' => 'waktu_janji',
-                        'type' => 'time',
-                        'placeholder' => 'Masukkan Waktu Penyetoran',
-                    ],
+            'janji_setor' => [
+                [
+                    'title' => 'Janji Penyetoran',
+                    'name' => 'waktu_janji',
+                    'type' => 'time',
+                    'placeholder' => 'Masukkan Waktu Penyetoran',
+                ],
 
-                    [
-                        'title' => 'Jadwal',
-                        'name' => 'id_jadwal',
-                        'type' => 'select',
-                        'options' => $optionJadwalJanji,
-                    ],
-                ]
+                [
+                    'title' => 'Jadwal',
+                    'name' => 'id_jadwal',
+                    'type' => 'select',
+                    'options' => $optionJadwalJanji,
+                ],
+            ]
         ];
     }
 }

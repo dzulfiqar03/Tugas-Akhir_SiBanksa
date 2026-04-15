@@ -4,7 +4,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 defineProps({
     status: {
@@ -23,68 +23,120 @@ const submit = () => {
 
 <template>
     <GuestLayout>
+        <Head title="Forgot Password - SI BANKSA" />
 
-        <Head title="Forgot Password" />
-
-        <div x-data="{ showUsername: false }">
-            <div class=" mb-5 justify-center sm:mb-8">
-
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
-                    <h1
-                        class="my-auto text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white font-[Poppins]">
-                        <span class="text-emerald-600 dark:text-emerald-400">SI </span>BANKSA
+        <div class="w-full max-w-lg mx-auto bg-white  dark:bg-gray-900  overflow-hidde ">
+            <div class="p-8 sm:p-12">
+                <div class="flex items-center justify-between mb-10">
+                    <h1 class="text-2xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">
+                        <span class="text-emerald-600">SI</span> BANKSA
                     </h1>
 
-                    <div class="w-full flex justify-end">
-                        <div class="transform scale-90 flex w-max items-center gap-3">
+                    <Link href="/login"
+                        class="group flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-emerald-600 transition-all uppercase tracking-widest">
+                        <i class="fas fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
+                        Kembali
+                    </Link>
+                </div>
 
+                <div class="mb-8 animate-in">
+                    <div class="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 text-2xl mb-6">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">Reset Password</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+                        Lupa kata sandi? Jangan khawatir. Masukkan email Anda dan kami akan mengirimkan tautan pemulihan.
+                    </p>
+                </div>
 
+                <div v-if="status" class="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-sm font-bold text-emerald-600 dark:text-emerald-400 animate-pulse">
+                    <i class="fas fa-check-circle mr-2"></i> {{ status }}
+                </div>
 
-                            <a href="{{ route('\') }}"
-                                class="group relative flex items-center justify-start gap-0 hover:gap-3 overflow-hidden rounded-full bg-gray-100 px-4 py-3 text-sm font-medium text-gray-700 w-max transition-all duration-300 hover:bg-gray-200 hover:pl-6 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                </svg>
-
-                                <span @click="showUsername = !showUsername" class="overflow-hidden pl-3">
-                                    Back
-                                </span>
-                            </a>
+                <form @submit.prevent="submit" class="space-y-6 animate-in">
+                    <div>
+                        <InputLabel for="email" value="Alamat Email" class="ml-1 uppercase text-[10px] tracking-widest text-slate-400" />
+                        <div class="relative mt-2">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <input
+                                id="email"
+                                type="email"
+                                v-model="form.email"
+                                placeholder="nama@email.com"
+                                class="w-full h-14 pl-12 pr-4 rounded-2xl bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-black dark:text-white font-bold focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
+                                required
+                                autofocus
+                            />
                         </div>
+                        <InputError class="mt-2 ml-1" :message="form.errors.email" />
                     </div>
 
+                    <button
+                        type="submit"
+                        :disabled="form.processing"
+                        class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-emerald-700 transition shadow-xl shadow-emerald-500/20 active:scale-95 disabled:opacity-50">
+                        <span v-if="form.processing" class="flex items-center justify-center gap-2">
+                            <i class="fas fa-circle-notch animate-spin"></i> Processing
+                        </span>
+                        <span v-else>Kirim Link Reset</span>
+                    </button>
+                </form>
 
-                </div>
-                <p class="text-sm mt-3 text-center text-gray-500 dark:text-gray-400">
-                    Forgot your password? <br>No problem. Just let us know your email
-                    address and <br>we will email you a password reset link that <br>will allow
-                    you to choose a new one.
+                <p class="mt-10 text-center text-[9px] text-gray-400 uppercase tracking-[0.4em] font-medium border-t border-gray-50 dark:border-gray-800 pt-6">
+                    Security Protocol v2.4 • SiBanksa
                 </p>
             </div>
         </div>
-
-
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600 dark:text-green-400">
-            {{ status }}
-        </div>
-
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput id="email" type="email" class="mt-1 dark:text-white text-black block w-full"
-                    v-model="form.email" required autofocus autocomplete="username" />
-
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton :class="{ 'opacity-25 bg-emerald-500': form.processing }" :disabled="form.processing">
-                    Email Password Reset Link
-                </PrimaryButton>
-            </div>
-        </form>
     </GuestLayout>
 </template>
+
+<style scoped>
+
+/* Pastikan scrollbar halus jika konten form panjang */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-emerald-500/20 rounded-full;
+}
+
+
+.modern-input {
+    @apply w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold;
+}
+
+
+.submit-btn {
+    @apply w-full bg-emerald-600 text-white py-3.5 rounded-xl font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50 text-xs;
+}
+
+.animate-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+</style>

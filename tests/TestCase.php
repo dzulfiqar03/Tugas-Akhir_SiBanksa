@@ -47,4 +47,39 @@ abstract class TestCase extends BaseTestCase
 
         return $userDetail;
     }
+
+       public function loginAsKetuaRW(): UserDetail
+    {
+        // 1. Jalankan Seed data master yang dibutuhkan
+        $this->seed([
+            \Database\Seeders\RTSeeder::class,
+            \Database\Seeders\RolesSeeder::class,
+            \Database\Seeders\GenderSeeder::class
+        ]);
+
+        // 3. Buat Detail (Pastikan status 'Disetujui' agar tidak terkena middleware)
+        $rt = RTPerumahan::first();
+        $user = User::factory()->create([
+            'email' => 'ketuarw@gmail.com',
+            'password' => bcrypt('ketuarw123')
+        ]);
+
+        $payload = [
+            'id_user' => $user->id,
+            'userName' => 'ketuarw',
+            'fullName' => 'Ketua RW',
+            'id_rt' => $rt->id,
+            'telephone_number' => '081234567890',
+            'address' => 'Gresik Kota',
+            'id_gender' => 1
+
+        ];
+        $userDetail = UserDetail::factory()->ketuaRW()->create($payload);
+
+        // 4. Lakukan login state
+        $this->actingAs($user);
+
+
+        return $userDetail;
+    }
 }

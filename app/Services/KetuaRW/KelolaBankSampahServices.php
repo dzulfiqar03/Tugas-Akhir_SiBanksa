@@ -23,11 +23,19 @@ class KelolaBankSampahServices
 
     public function getAllBankSampah()
     {
+
+        
         $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.pencatatan'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 2);
-                $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%');
+                $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%')
+                    ->orWhere('fullName', 'LIKE', '%Bank Sampah%');
             })->orderBy(
+                $this->userDetail::select('status')
+                    ->whereColumn('user_details.id_user', 'users.id')
+                    ->orderByRaw("FIELD(status, 'Pengajuan Verifikasi', 'Pending', 'Tidak Disetujui', 'Disetujui') DESC")
+                    ->limit(1)
+            )->orderBy(
                 $this->userDetail::select('id_rt')
                     ->whereColumn('user_details.id_user', 'users.id'),
                 'ASC'
@@ -58,7 +66,8 @@ class KelolaBankSampahServices
         $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.image', 'user_detail.document'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 2);
-                $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%');
+                $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%')
+                    ->orWhere('fullName', 'LIKE', '%Bank Sampah%');
             })
             ->whereHas('user_detail.document')
             ->whereHas('user_detail.document')
@@ -207,20 +216,17 @@ class KelolaBankSampahServices
 
 
 
-        $userAccount = $this->user::find($updateNasabah->id_user);
+            $userAccount = $this->user::find($updateNasabah->id_user);
 
-        if ($userAccount) {
-            // Kirim notifikasi ke AKUN USER, bukan ke DETAIL
-            $userAccount->notify(new BankSampahReminder(
-                $userAccount->id,
-                $request->message,
-                '/bank-sampah/transaksi'
-            ));
-        }
+            if ($userAccount) {
+                // Kirim notifikasi ke AKUN USER, bukan ke DETAIL
+                $userAccount->notify(new BankSampahReminder(
+                    $userAccount->id,
+                    $request->message,
+                    '/bank-sampah/transaksi'
+                ));
+            }
             return $updateNasabah;
-
-
         });
-
     }
 }

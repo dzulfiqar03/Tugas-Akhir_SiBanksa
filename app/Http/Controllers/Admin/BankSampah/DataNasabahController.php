@@ -96,15 +96,22 @@ class DataNasabahController extends Controller
         $telephone_number = $nasabah->user_detail->telephone_number ?? "";
         $status = $nasabah->user_detail->status ?? "";
         $nomorRekening = $nasabah->user_detail?->userbank?->first()?->nomor_rekening ?? "";
-
-        $fieldNasabahProfile = [
+        $pembayaranVia = $nasabah->user_detail->pencairan_via ?? "";
+        $fieldNasabahProfile = $pembayaranVia === 'Non-Tunai' ?  [
             'User Name' =>  $userName,
             'Nama Lengkap' =>   $fullName,
             'RT' =>  $id_rt,
             'Alamat' =>  $address,
             'Nomor Telepon' =>  $telephone_number,
             'Status' =>  $status,
-            'Nomor Rekening' =>  $nomorRekening
+        ] : [
+            'User Name' =>  $userName,
+            'Nama Lengkap' =>   $fullName,
+            'RT' =>  $id_rt,
+            'Alamat' =>  $address,
+            'Nomor Telepon' =>  $telephone_number,
+            'Status' =>  $status,
+            'Nomor Rekening' => $nomorRekening,
         ];
 
         $filledNasabah = 0;

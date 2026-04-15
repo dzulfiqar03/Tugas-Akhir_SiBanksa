@@ -428,10 +428,39 @@ const dtOptions = {
             exportOptions: { columns: ':not(.no-print)' },
             customize: function (win) {
                 $(win.document.body).css('font-family', 'Poppins, sans-serif').prepend(`
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #10b981; padding-bottom:10px; margin-bottom:20px;">
-                    <div><h1 style="color:#10b981; margin:0;">SiBanksa</h1><p style="font-size:10px; color:#666; margin:0;">Sistem Informasi Bank Sampah Keluarga</p></div>
-                    <div style="text-align:right;"><h3 style="margin:0;">LAPORAN MONITORING RW</h3><p style="font-size:10px; margin:0;">Dicetak pada: ${new Date().toLocaleString('id-ID')}</p></div>
+                       <div style="padding: 40px; border-top: 10px solid #10b981; background: white;">
+            <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                    <i class="fas fa-recycle text-[20rem]"></i>
                 </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div
+                            class="w-16 h-16 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                    <div>
+                        <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #1f2937;">SiBanksa</h1>
+                        <p style="margin: 0; font-size: 10px; color: #6b7280; font-weight: bold; letter-spacing: 1px;">SISTEM INFORMASI BANK SAMPAH</p>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <h2 style="margin: 0; font-size: 28px; color: #d1d5db; letter-spacing: 4px;">LAPORAN BANK SAMPAH</h2>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 40px; font-size: 14px;">
+                <div>
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">DITERIMA DARI:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${page.props.auth.user.user_detail.fullName}</p>
+                    <p style="color: #6b7280; margin: 0;">${page.props.auth.user.user_detail.roles.role} SiBanksa</p>
+                    <p style="color: #6b7280; margin: 0;">RT: ${page.props.auth.user.user_detail?.id_rt || '-'} / RW: 01</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="color: #9ca3af; font-weight: bold; font-size: 10px; margin-bottom: 5px;">Dicetak Pada:</p>
+                    <p style="font-weight: bold; font-size: 18px; margin: 0;">${new Date().toLocaleDateString('id-ID')}</p>
+                </div>
+            </div>
             `);
 
                 // Styling Tabel di Print

@@ -73,14 +73,10 @@ class DashboardController extends Controller
 
             $detail = $user->user_detail;
 
-            // ✅ WAJIB: ID CONSISTENT
             $user->user_detail_id = $detail->id;
 
-            // ✅ Nama
             $user->name = $detail->fullName;
 
-            // ✅ SALDO BULAN INI
-            // SALDO BULAN INI
             $user->balance = $detail->pencatatan->sum('total_setoran');
             $now = Carbon::now();
             $currentMonth = $now->month;
@@ -90,24 +86,21 @@ class DashboardController extends Controller
             $lastMonth = $lastMonthDate->month;
             $lastMonthYear = $lastMonthDate->year;
 
-            // Saldo Bulan Maret (Bulan Ini)
             $user->saldo = (float) Sampah::where('id_userdetail', auth()->user()->user_detail->id)
                 ->whereMonth('created_at', $currentMonth)
                 ->whereYear('created_at', $currentYear)
                 ->sum('saldo');
 
-            // Saldo Bulan Februari (Bulan Lalu) - Akan tetap 0 jika memang tidak ada data
             $user->last_month_balance = (float) Sampah::where('id_userdetail', auth()->user()->user_detail->id)
                 ->whereMonth('created_at', $lastMonth)
                 ->whereYear('created_at', $lastMonthYear)
                 ->sum('saldo');
-            // ✅ BERAT BULAN INI
-            $user->weight = (float) PencatatanSetoranItems::whereHas('setoran.user_detail', function ($q) use ($detail, $now, $currentMonth, $lastMonth, $currentYear, $lastMonthYear) {
+
+                $user->weight = (float) PencatatanSetoranItems::whereHas('setoran.user_detail', function ($q) use ($detail, $now, $currentMonth, $lastMonth, $currentYear, $lastMonthYear) {
                 $q->where('id_rt', auth()->user()->user_detail->id_rt);
             })->whereMonth('created_at', $currentMonth)
                 ->whereYear('created_at', $currentYear)->sum('jumlah');
 
-            // ✅ BERAT BULAN LALU
             $user->last_month_weight = (float) PencatatanSetoranItems::whereHas('setoran.user_detail', function ($q) use ($detail, $lastMonth, $lastMonthYear) {
                 $q->where('id_rt', auth()->user()->user_detail->id_rt);
             })->whereMonth('created_at', $lastMonth)

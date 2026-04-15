@@ -51,6 +51,7 @@ const userDetail = computed(() => user.value?.user_detail || {});
 const dtInstance = ref(null);
 
 const sendReminder = ($id) => {
+    showForm.value = false;
     Swal.fire({
         title: 'Kirim Pengingat?',
         text: "Bank Sampah akan menerima notifikasi mengenai kekurangan data.",
@@ -439,7 +440,7 @@ const handleSubmit = () => {
                 $('#error-message').removeClass('hidden').fadeIn();
                 Swal.fire('Gagal!', 'Silakan periksa kembali inputan Anda.', 'error');
             } else {
-                Swal.fire('Error', xhr.responseJSON?.message || 'Server error', 'error');
+                Swal.fire('Error', xhr.responseJSON?.message || 'Maaf, Inputan Anda ada yang salah, silahkan cek kembali', 'error');
             }
         },
 
@@ -494,16 +495,22 @@ const viewDetail = (id) => {
                                 <div v-if="!['address', 'phoneNumber', 'userName', 'status', 'rt'].includes(field.name) && !['file', 'select', 'radio'].includes(field.type)"
                                     class="col-span-1">
                                     <InputLabel :for="field.name" :value="field.title" />
-                                    <input :type="field.type" v-model="form[field.name]"
+                                    <input disabled :type="field.type" v-model="form[field.name]"
                                         :placeholder="field.placeholder"
-                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-black pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200">
+                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-black pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200"
+                                        :class="{
+                                            'border-red-500 ring-1 ring-red-500': form.errors[`${field.name}`]
+                                        }">
                                 </div>
 
 
                                 <div v-else-if="field.name === 'status'" class="col-span-1">
                                     <InputLabel :for="field.name" :value="field.title" />
                                     <select v-model="form[field.name]"
-                                        class="w-full h-11 rounded-xl border-gray-200 bg-gray-50 dark:bg-gray-800 dark:text-white text-black text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                                        class="w-full h-11 rounded-xl border-gray-200 bg-gray-50 dark:bg-gray-800 dark:text-white text-black text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                                        :class="{
+                                            'border-red-500 ring-1 ring-red-500': form.errors[`${field.name}`]
+                                        }">
                                         <option value="">Pilih Status</option>
                                         <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
                                     </select>
@@ -512,7 +519,10 @@ const viewDetail = (id) => {
                                 <div v-else-if="!isEdit && field.name === 'rt'" class="col-span-1">
                                     <InputLabel :for="field.name" :value="field.title" />
                                     <select v-model="form.id_rt"
-                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-sm">
+                                        class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-sm"
+                                        :class="{
+                                            'border-red-500 ring-1 ring-red-500': form.errors['id_rt']
+                                        }">
                                         <option value="">Pilih RT</option>
                                         <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
                                     </select>

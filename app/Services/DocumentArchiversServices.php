@@ -36,40 +36,46 @@ class DocumentArchiversServices
     {
         return DB::transaction(function () use ($data, $file) {
             $uploadedDocs = [];
-
+            $userDetail = \App\Models\UserDetail::find($data['id_userdetail']); // Ambil data nasabah
+            $fullName = str_replace(' ', '_', $userDetail->fullName);
+            $idRT = Auth::user()->user_detail->id_rt;
 
             foreach ($file as $index => $files) {
-                $idRT = Auth::user()->user_detail->id_rt;
-                $cleanName = str_replace(' ', '_', $data['name']);
                 $extension = $files->getClientOriginalExtension();
-                $jadwal = $this->jadwalPelaksanaan::find($data['id_jadwal']);
-                $tanggalSetoran = $jadwal ? $jadwal->tanggal_setoran : 'TanpaTanggal';
-                $dynamicName = "Dokumen_{$cleanName}_Tanggal {$tanggalSetoran}_BankSampahRT0{$idRT}_{$index}." . $extension;
+                $docType = $data['name']; // KTP, KK, atau lainnya
+                $cleanDocName = str_replace(' ', '_', $docType);
 
-                $original_filesname = $dynamicName;
+                // LOGIKA PENAMAAN KHUSUS
+                if (in_array($docType, ['KTP', 'KK'])) {
+                    // Format: KTP_Muhammad_Dzulfiqar_RT01.jpg
+                    $original_filesname = "{$cleanDocName}_{$fullName}_RT0{$idRT}." . $extension;
+                } else {
+                    // Format lama untuk dokumen setoran/umum
+                    $jadwal = $this->jadwalPelaksanaan::find($data['id_jadwal']);
+                    $tanggalSetoran = $jadwal ? $jadwal->tanggal_setoran : 'TanpaTanggal';
+                    $original_filesname = "Dokumen_{$cleanDocName}_Tanggal_{$tanggalSetoran}_BankSampahRT0{$idRT}_{$index}." . $extension;
+                }
+
                 $encrypted_filesname = $files->hashName();
 
                 // Store File
                 $role = Auth::user()->user_detail->id_roles;
-                $folderPath =   match ($role) {
-                    1    => 'public/files/documentUser/KetuaRW/' . $data['id_userdetail'],
+                $folderPath = match ($role) {
+                    1 => 'public/files/documentUser/KetuaRW/' . $data['id_userdetail'],
                     2 => 'public/files/documentUser/BankSampah/RT0' . $idRT,
                     default => 'public/files/documentOther/Nasabah/' . $data['id_userdetail'],
                 };
 
+                // Simpan file dengan nama yang sudah dikustomisasi
                 $files->storeAs($folderPath, $original_filesname);
-
 
                 // ELOQUENT
                 $document = new DocumentArchiver();
                 $document->id_userdetail = $data['id_userdetail'];
                 $document->id_jadwal = $data['id_jadwal'];
-                $document->name = $data['name'];
-
-                if ($files != null) {
-                    $document->original_filesname = $original_filesname;
-                    $document->encrypted_filesname = $encrypted_filesname;
-                }
+                $document->name = $docType;
+                $document->original_filesname = $original_filesname;
+                $document->encrypted_filesname = $encrypted_filesname;
 
                 $document->save();
 
@@ -84,7 +90,7 @@ class DocumentArchiversServices
         return DB::transaction(function () use ($data, $files, $id) {
 
             $document = DocumentArchiver::findOrFail($id);
-                $idRT = Auth::user()->user_detail->id_rt;
+            $idRT = Auth::user()->user_detail->id_rt;
 
             if ($files != null) {
                 $original_filesname = $files->getClientOriginalName();
@@ -122,7 +128,7 @@ class DocumentArchiversServices
     {
         return DB::transaction(function () use ($id) {
             $document = DocumentArchiver::findOrFail($id);
-                $idRT = Auth::user()->user_detail->id_rt;
+            $idRT = Auth::user()->user_detail->id_rt;
 
             $role = Auth::user()->user_detail->id_roles;
             $folder = match ($role) {

@@ -2,176 +2,435 @@
 import FormWrapper from '@/Components/FormWrapper.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import Preloader from '@/Components/Preloader.vue';
 
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { onMounted, ref, onUnmounted } from 'vue';
 
 const props = defineProps({
     canResetPassword: { type: Boolean },
     status: { type: String },
-    formdata: { type: Object }, // Data dari FormResources
+    formdata: { type: Object },
     formName: { type: String },
     message: { type: String },
     messageLogout: { type: String },
 });
 
-// Inisialisasi Form Inertia
+// --- Logic Slideshow ---
+const currentSlide = ref(0);
+const slides = [
+    {
+        image: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=2070',
+        title: 'Gotong Royong',
+        desc: 'Membangun lingkungan yang bersih dan nyaman bersama.'
+    },
+    {
+        image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?q=80&w=1974',
+        title: 'Kegiatan Warga',
+        desc: 'Transparansi dana RT untuk kesejahteraan kita semua.'
+    },
+    {
+        image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070',
+        title: 'Musyawarah Digital',
+        desc: 'Sistem Informasi Bank Sampah & Keuangan Terpadu.'
+    }
+];
+
+let slideInterval;
+const nextSlide = () => {
+    currentSlide.value = (currentSlide.value + 1) % slides.length;
+};
+const prevSlide = () => {
+    currentSlide.value = (currentSlide.value - 1 + slides.length) % slides.length;
+};
+
+
+// --- Logic Form ---
+const step = ref(1);
 const form = useForm({
-    email: '',
+    nama_bank: '',
+    id_rt: '',
+    phone: '',
     password: '',
     remember: false,
 });
 
-const showPassword = ref(false);
-
+const page = usePage();
 const submit = () => {
     form.post("/login", {
-        onFinish: () => form.reset('password'),
+        onSuccess: () => {
+            if (page.props.flash?.message) {
+                step.value = 2;
+                form.clearErrors();
+            }
+        },
+        onError: () => {
+            if (form.errors.nama_bank || form.errors.id_rt || form.errors.phone) step.value = 1;
+        }
     });
 };
 
-const show = ref(true);
+const showPassword = ref(false);
+
+const isExpanded = ref(false); // State untuk mengontrol lebar slideshow
+
+const toggleExpand = () => {
+    isExpanded.value = !isExpanded.value;
+};
+
+const handleResize = () => {
+    // Jika layar lebih kecil dari 1024px (breakpoint 'lg' di Tailwind)
+    // maka paksa isExpanded menjadi false
+    if (window.innerWidth < 1024) {
+        isExpanded.value = false;
+    }
+};
+
+const shouldExpand = localStorage.getItem('is_true');
+
+const showPreloader = ref(true);
+
+const showLogoutNotice = ref(!!props.messageLogout);
+
+const showMessageNotice = ref(!!props.message);
 
 onMounted(() => {
-    // Pesan akan menghilang setelah 5 detik
-    setTimeout(() => {
-        show.value = false;
-    }, 5000);
+    slideInterval = setInterval(nextSlide, 5000);
+
+    // Daftarkan event resize
+    handleResize(); // Cek sekali saat pertama load
+    window.addEventListener('resize', handleResize);
+
+    const shouldExpand = localStorage.getItem('is_true');
+
+    const fromRegister = localStorage.getItem('fromRegister');
+
+
+    if (shouldExpand === 'true') {
+        // 2. Buka menu secara otomatis
+        isExpanded.value = true;
+
+        showPreloader.value = false;
+        localStorage.removeItem('is_true');
+    } else {
+
+        if (fromRegister === 'false') {
+            showPreloader.value = false;
+            localStorage.removeItem('fromRegister');
+        } else {
+            showPreloader.value = true;
+        }
+
+    }
+
+    if (showLogoutNotice.value) {
+        setTimeout(() => {
+            showLogoutNotice.value = false;
+        }, 5000);
+    }
+
+
+    if (showMessageNotice.value) {
+        setTimeout(() => {
+            showMessageNotice.value = false;
+        }, 5000);
+    }
 });
 
 
+
+
+onUnmounted(() => {
+    clearInterval(slideInterval);
+    // Bersihkan event resize
+    window.removeEventListener('resize', handleResize);
+});
+
+const toggleVisibility = (field) => {
+    showPassword.value = !showPassword.value;
+};
 </script>
+
 <template>
+    <Preloader v-if="showPreloader" />
     <GuestLayout>
 
-        <Head title="Sign In" />
+        <Head title="Login - SI BANKSA" />
 
-        <div x-data="{ showUsername: false }">
-            <div class=" mb-5 justify-center sm:mb-8">
+        <div class="flex flex-col lg:flex-row transition-all  w-full min-h-[650px] relative overflow-hidden bg-white dark:bg-gray-900 rounded-3xl"
+            :class="(!isExpanded && Object.keys(form.errors).length > 0) ? 'max-h-none' : 'max-h-[650px]'">
 
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
-                    <h1
-                        class="my-auto text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white font-[Poppins]">
-                        <span class="text-emerald-600 dark:text-emerald-400">SI </span>BANKSA
-                    </h1>
+            <div class="relative hidden lg:block transition-all duration-700 ease-in-out bg-emerald-900 z-20"
+                :class="isExpanded ? 'w-full' : 'w-[40%]'">
+                <div v-for="(slide, index) in slides" :key="index"
+                    class="absolute inset-0 transition-opacity duration-1000"
+                    :class="currentSlide === index ? 'opacity-100 z-10' : 'opacity-0 z-0'">
+                    <img :src="slide.image" class="h-full w-full object-cover opacity-50" alt="Warga">
+                    <div class="absolute inset-0 bg-black/40"></div>
 
-                    <div class="w-full flex justify-end">
-                        <div class="transform scale-90 flex w-max items-center gap-3">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/30 to-transparent">
+                    </div>
 
 
 
-                            <Link href="/register"
-                                class="group relative flex items-center justify-start gap-0 hover:gap-3 overflow-hidden rounded-full bg-gray-100 px-4 py-3 text-sm font-medium text-gray-700 w-max transition-all duration-300 hover:bg-gray-200 hover:pl-6 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                </svg>
+                    <div class="absolute bottom-12 left-10 right-10 z-20 transition-all duration-700"
+                        :class="isExpanded ? 'scale-110 translate-x-10' : 'scale-100'">
+                        <div class="flex justify-between">
+                            <div>
+                                <h2
+                                    class="text-3xl font-black text-white mb-2 leading-tight uppercase tracking-tighter">
+                                    {{
+                                        slide.title }}</h2>
+                                <p class="text-emerald-100/80 text-sm italic font-light max-w-xs">{{ slide.desc }}</p>
 
-                                <span @click="showUsername = !showUsername" class="overflow-hidden pl-3">
-                                    Register
-                                </span>
+
+                            </div>
+
+                            <Link href="/welcome"
+                                class="w-max h-max  bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-emerald-700 transition shadow-xl shadow-emerald-500/20 active:scale-95 disabled:opacity-50"
+                                :class="!isExpanded ? 'hidden' : 'absolute bottom-4  right-16'">
+                                Jelajahi
+                            </Link>
+                        </div>
+
+                    </div>
+                </div>
+
+                <button v-if="Object.keys(form.errors).length === 0" @click="toggleExpand"
+                    class="absolute top-1/2 -right-5 -translate-y-1/2 z-50 w-10 h-10 bg-emerald-600 text-white rounded-full shadow-xl flex items-center justify-center border-4 border-white dark:border-gray-900 hover:scale-110 transition-all duration-300">
+                    <i class="fas transition-transform duration-500"
+                        :class="isExpanded ? 'fa-chevron-left' : 'fa-chevron-right'"></i>
+                </button>
+
+                <div class="absolute bottom-6 left-10 z-20 flex gap-1.5">
+                    <div v-for="(_, i) in slides" :key="i"
+                        :class="['h-1 rounded-full transition-all duration-500', currentSlide === i ? 'w-8 bg-emerald-400' : 'w-2 bg-white/30']">
+                    </div>
+                </div>
+            </div>
+
+            <div class="transition-all duration-700 ease-in-out flex flex-col justify-center overflow-y-auto custom-scrollbar"
+                :class="isExpanded ? 'w-0 opacity-0 invisible' : 'w-full lg:w-[60%] p-8 sm:p-12 opacity-100 visible'">
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h1 class="text-2xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">
+                            <span class="text-emerald-600">SI</span> BANKSA
+                        </h1>
+                        <Link href="/register"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg">
+                            Daftar Akun
+                        </Link>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">Selamat Datang!</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Silakan lengkapi data anda dengan benar.
+                    </p>
+                </div>
+
+                <transition name="fade">
+                    <div v-if="showLogoutNotice"
+                        class="mb-6 flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl animate-in">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-500">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                    Autentikasi Selesai</p>
+                                <p class="text-sm font-bold text-gray-700 dark:text-emerald-50">
+                                    {{ messageLogout }}
+                                </p>
+                            </div>
+                        </div>
+                        <button @click="showLogoutNotice = false"
+                            class="text-gray-400 hover:text-emerald-500 transition-colors px-2">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </transition>
+
+                <transition name="fade">
+                    <div v-if="showMessageNotice"
+                        class="mb-6 flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl animate-in">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-500">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                    Autentikasi Selesai</p>
+                                <p class="text-sm font-bold text-gray-700 dark:text-emerald-50">
+                                    {{ message }}
+                                </p>
+                            </div>
+                        </div>
+                        <button @click="showMessageNotice = false"
+                            class="text-gray-400 hover:text-emerald-500 transition-colors px-2">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </transition>
+
+                <FormWrapper formName="formLogin" :errors="form.errors" :processing="form.processing" @submit="submit">
+
+                    <div v-if="step === 1" class="flex flex-col gap-5 animate-in">
+                        <div>
+                            <InputLabel for="nama_bank" value="Nama Lengkap" />
+                            <input type="text" v-model="form.nama_bank" placeholder="Masukan Nama Lengkap..."
+                                :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['nama_bank'] }"
+                                class="w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold" />
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <InputLabel for="id_rt" value="Unit RT" />
+                                <input type="number" v-model="form.id_rt" placeholder="Contoh: 1"
+                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_rt'] }"
+                                    class="w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold" />
+                            </div>
+                            <div>
+                                <InputLabel for="phone" value="No. Telepon" />
+                                <input type="tel" v-model="form.phone" placeholder="0812..."
+                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['phone'] }"
+                                    class="w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold" />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between mt-2">
+                            <label class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <input type="checkbox" v-model="form.remember"
+                                    class="rounded text-emerald-600 focus:ring-emerald-500 mr-2" />
+                                Remember me
+                            </label>
+
+                            <Link class="dark:text-white text-sm text-gray-600" href="/forgot-password">
+                                Forgot your password?
                             </Link>
                         </div>
                     </div>
 
+                    <div v-if="step === 2" class="flex flex-col gap-6 animate-in">
+                        <div class="text-center space-y-2">
+                            <div
+                                class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 mb-2">
+                                <i class="fas fa-key text-2xl"></i>
+                            </div>
+                            <div class="flex items-center justify-center gap-2">
+                                <InputLabel value="Masukkan Password Akun" class="text-center w-full" />
 
-                </div>
-                <p class="text-sm mt-3 text-gray-500 dark:text-gray-400">
-                    Enter your email and password to sign in!
+
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex">
+                               <input :type="(showPassword ? 'text' : 'password')"
+       v-model="form.password"
+       :class="{ 'border-red-500': form.errors.password }"
+       class="w-full h-14 px-4 text-center text-xl rounded-tl-2xl rounded-bl-2xl bg-gray-100 dark:bg-white/5 border-2 border-emerald-500/30 focus:border-emerald-500 focus:ring-0 transition-all text-black dark:text-white"
+       :placeholder="[showPassword ? 'Masukkan Password' : '••••••••']" />
+
+<button type="button" @click="showPassword = !showPassword"
+        class="bg-gray-200 inset-y-0 rounded-tr-2xl rounded-br-2xl right-3 p-3 top-12 flex items-center z-10">
+    <span class="text-gray-500 dark:text-gray-400 hover:text-emerald-500 transition-colors">
+        <svg v-if="!showPassword" class="w-5 h-5 fill-current" viewBox="0 0 20 20">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+        </svg>
+        <svg v-else class="w-5 h-5 fill-current" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.515 1.515a2.046 2.046 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+            <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+        </svg>
+    </span>
+</button>
+                            </div>
+
+                            <div v-if="form.errors.password" class="mt-2 text-center">
+                                <span
+                                    class="text-[11px] text-red-500 font-black uppercase tracking-wider animate-pulse">
+                                    {{ form.errors.password }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <button type="button" @click="step = 1; form.password = ''"
+                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-500 transition-colors">
+                            Bukan akun Anda? Kembali
+                        </button>
+                    </div>
+
+                    <button type="submit" :disabled="form.processing"
+                        class="w-full mt-8 bg-emerald-600 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-emerald-700 transition shadow-xl shadow-emerald-500/20 active:scale-95 disabled:opacity-50">
+                        <span v-if="form.processing" class="flex items-center justify-center gap-2">
+                            <i class="fas fa-circle-notch animate-spin"></i> Processing...
+                        </span>
+                        <span v-else>
+                            {{ step === 1 ? 'Submit Verifikasi' : 'Verifikasi & Sign In' }}
+                        </span>
+                    </button>
+                </FormWrapper>
+
+                <p
+                    class="mt-8 text-center text-[9px] text-gray-400 uppercase tracking-[0.4em] font-medium border-t border-gray-50 dark:border-gray-800 pt-6">
+                    Security Protocol v2.4 • Gresik 2026
                 </p>
             </div>
+
         </div>
-
-        <div v-if="message &&show" class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
-             <div   class="px-3 pb-3 border-t border-red-50 dark:border-red-500/10">
-                    <div class="max-h-24 overflow-y-auto pt-2 custom-scrollbar">
-                            <div
-                                    class="text-[11px] text-green-600 dark:text-green-400 flex items-center gap-2">
-                                    <span class="w-1 h-1 bg-green-400 rounded-full"></span>
-                                    {{ message }}
-                            </div>
-                            
-
-
-                    </div>
-                </div>
-        </div>
-        <div v-if="messageLogout &&show" class="mb-4 animate-pulse font-medium text-sm text-green-600 dark:text-green-400">
-             <div  class="px-3 pb-3 border-t border-red-50 dark:border-red-500/10">
-                    <div class="max-h-24 overflow-y-auto pt-2 custom-scrollbar">
-                            <div
-                                    class="text-[11px] text-red-600 dark:text-green-400 flex items-center gap-2">
-                                    <span class="w-1 h-1 bg-red-400 rounded-full"></span>
-                                   <span class="py-1 px-3 text-white bg-red-400 rounded-full">{{ messageLogout }}</span> 
-                            </div>
-                            
-
-
-                    </div>
-                </div>
-        </div>
-
-
-        <FormWrapper formName="formLogin" :errors="form.errors" :processing="form.processing" @submit="submit">
-            <div v-for="(fields, group) in (formdata.data || formdata)" :key="group">
-                <div v-for="field in fields" :key="field.name" class="flex flex-col gap-3">
-
-                    <template v-if="['email', 'password'].includes(field.name)">
-
-                        <div v-if="['password'].includes(field.name)"></div>
-                        <InputLabel :for="field.name" :value="field.title" />
-                        <div class="">
-                            <input :type="field.name === 'password' ? (showPassword ? 'text' : 'password') : field.type"
-                                v-model="form[field.name]" :placeholder="field.placeholder"
-                                class="w-full h-11 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
-                                :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }" />
-
-                            <button v-if="field.name === 'password'" type="button" @click="showPassword = !showPassword"
-                                class="absolute  -translate-y-1/2 dark:text-gray-400 text-black">
-                                <span v-if="showPassword"
-                                    class="absolute z-30 text-gray-500 -translate-y-1/2 top-8 cursor-pointer right-3  dark:text-gray-400">
-                                    <svg class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd" clip-rule="evenodd"
-                                            d="M4.63803 3.57709C4.34513 3.2842 3.87026 3.2842 3.57737 3.57709C3.28447 3.86999 3.28447 4.34486 3.57737 4.63775L4.85323 5.91362C3.74609 6.84199 2.89363 8.06395 2.4155 9.45936C2.3615 9.61694 2.3615 9.78801 2.41549 9.94558C3.49488 13.0957 6.48191 15.3619 10.0002 15.3619C11.255 15.3619 12.4422 15.0737 13.4994 14.5598L15.3625 16.4229C15.6554 16.7158 16.1302 16.7158 16.4231 16.4229C16.716 16.13 16.716 15.6551 16.4231 15.3622L4.63803 3.57709ZM12.3608 13.4212L10.4475 11.5079C10.3061 11.5423 10.1584 11.5606 10.0064 11.5606H9.99151C8.96527 11.5606 8.13333 10.7286 8.13333 9.70237C8.13333 9.5461 8.15262 9.39434 8.18895 9.24933L5.91885 6.97923C5.03505 7.69015 4.34057 8.62704 3.92328 9.70247C4.86803 12.1373 7.23361 13.8619 10.0002 13.8619C10.8326 13.8619 11.6287 13.7058 12.3608 13.4212ZM16.0771 9.70249C15.7843 10.4569 15.3552 11.1432 14.8199 11.7311L15.8813 12.7925C16.6329 11.9813 17.2187 11.0143 17.5849 9.94561C17.6389 9.78803 17.6389 9.61696 17.5849 9.45938C16.5055 6.30925 13.5184 4.04303 10.0002 4.04303C9.13525 4.04303 8.30244 4.17999 7.52218 4.43338L8.75139 5.66259C9.1556 5.58413 9.57311 5.54303 10.0002 5.54303C12.7667 5.54303 15.1323 7.26768 16.0771 9.70249Z"
-                                            fill="#98A2B3" />
-                                    </svg></span>
-                                <span v-else
-                                    class="absolute z-30 text-gray-500 top-8 -translate-y-1/2 cursor-pointer right-3  dark:text-gray-400">
-                                    <svg class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd" clip-rule="evenodd"
-                                            d="M10.0002 13.8619C7.23361 13.8619 4.86803 12.1372 3.92328 9.70241C4.86804 7.26761 7.23361 5.54297 10.0002 5.54297C12.7667 5.54297 15.1323 7.26762 16.0771 9.70243C15.1323 12.1372 12.7667 13.8619 10.0002 13.8619ZM10.0002 4.04297C6.48191 4.04297 3.49489 6.30917 2.4155 9.4593C2.3615 9.61687 2.3615 9.78794 2.41549 9.94552C3.49488 13.0957 6.48191 15.3619 10.0002 15.3619C13.5184 15.3619 16.5055 13.0957 17.5849 9.94555C17.6389 9.78797 17.6389 9.6169 17.5849 9.45932C16.5055 6.30919 13.5184 4.04297 10.0002 4.04297ZM9.99151 7.84413C8.96527 7.84413 8.13333 8.67606 8.13333 9.70231C8.13333 10.7286 8.96527 11.5605 9.99151 11.5605H10.0064C11.0326 11.5605 11.8646 10.7286 11.8646 9.70231C11.8646 8.67606 11.0326 7.84413 10.0064 7.84413H9.99151Z"
-                                            fill="#98A2B3" />
-                                    </svg>
-                                </span>
-                            </button>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-10 justify-between">
-                <label class="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                    <input type="checkbox" v-model="form.remember"
-                        class="rounded text-emerald-600 focus:ring-emerald-500 mr-2" />
-                    Remember me
-                </label>
-                <Link class="dark:text-white text-black" href="/forgot-password">
-                    Forgot your password?
-                </Link>
-            </div>
-
-            <button type="submit" :disabled="form.processing"
-                class="w-full mt-6 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-lg shadow-emerald-500/20">
-                {{ form.processing ? 'Signing In...' : 'Sign In' }}
-            </button>
-
-            <p class="text-center mt-6 text-sm text-gray-500">
-                Don't have an account?
-                <Link href="/register" class="text-emerald-600 font-bold">Register</Link>
-            </p>
-        </FormWrapper>
     </GuestLayout>
 </template>
+
+
+<style scoped>
+
+/* Pastikan scrollbar halus jika konten form panjang */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-emerald-500/20 rounded-full;
+}
+
+
+.modern-input {
+    @apply w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold;
+}
+
+
+.submit-btn {
+    @apply w-full bg-emerald-600 text-white py-3.5 rounded-xl font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50 text-xs;
+}
+
+.animate-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+</style>

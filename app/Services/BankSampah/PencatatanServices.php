@@ -24,32 +24,29 @@ class PencatatanServices
 
         try {
             $newSetoran =  DB::transaction(function () use ($data, $ip, $userAgent) {
-                // 1. Simpan ke tabel Induk (pencatatan_setoran)
                 $setoran = PencatatanSetoran::create([
                     'id_jadwal'     => $data['id_jadwal'],
                     'id_userdetail' => $data['id_userdetail'],
                     'total_setoran' => 0, // Akan di-update setelah loop item
                 ]);
 
-                 app(UserLogController::class)->log(
-            'SETORAN MASUK',
-            $ip,
-            $userAgent,
-            $data['id_userdetail']
-        );
+                app(UserLogController::class)->log(
+                    'SETORAN MASUK',
+                    $ip,
+                    $userAgent,
+                    $data['id_userdetail']
+                );
 
-         app(UserLogController::class)->log(
-            'SETORAN TERCATAT',
-            $ip,
-            $userAgent,
-            Auth::user()->user_detail->id
-        );
+                app(UserLogController::class)->log(
+                    'SETORAN TERCATAT',
+                    $ip,
+                    $userAgent,
+                    Auth::user()->user_detail->id
+                );
 
                 $grandTotal = 0;
 
-                // 2. Loop simpan ke tabel Detail (pencatatan_setoran_items)
                 foreach ($data['items'] as $item) {
-                    // Hanya simpan jika berat/jumlah lebih dari 0
 
                     $subtotal = $item['jumlah'] * $item['harga_satuan'];
                     $grandTotal += $subtotal;
@@ -57,17 +54,13 @@ class PencatatanServices
                     PencatatanSetoranItems::create([
                         'pencatatan_setoran_id' => $setoran->id,
                         'sampah_id'             => $item['sampah_id'],
-                        'jumlah'                => $item['jumlah'], // Di DB kamu namanya 'jumlah'
+                        'jumlah'                => $item['jumlah'],
                         'harga_satuan'          => $item['harga_satuan'],
                         'subtotal'              => $subtotal,
                     ]);
                 }
 
-                // 3. Update total_setoran di tabel Induk
                 $setoran->update(['total_setoran' => $grandTotal]);
-
-                // 4. (Opsional) Tambah saldo ke dompet Nasabah
-                // UserDetail::find($data['id_nasabah'])->increment('saldo', $grandTotal);
             });
 
             return $newSetoran;

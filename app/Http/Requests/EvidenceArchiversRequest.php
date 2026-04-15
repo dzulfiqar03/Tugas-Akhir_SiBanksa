@@ -23,7 +23,7 @@ class EvidenceArchiversRequest extends FormRequest
     {
         return [
             'imgEvidence'   => 'required|array',
-        'imgEvidence.*' => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'imgEvidence.*' => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
             'name' => 'required|string',
             'id_userdetail' => 'required|integer',
         ];

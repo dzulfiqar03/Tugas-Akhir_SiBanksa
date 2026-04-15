@@ -10,3 +10,15 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
  */
 
 import './echo';
+
+
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response && error.response.status === 419) {
+            // Kirim event ke Vue
+            window.dispatchEvent(new Event('session-expired'))
+        }
+        return Promise.reject(error)
+    }
+)

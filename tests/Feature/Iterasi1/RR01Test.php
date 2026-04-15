@@ -19,12 +19,15 @@ test('Seluruh data valid', function () {
         'id_rt' => 2,
         'telephone_number' => '081234567890',
         'address' => 'Gresik Kota',
+        'pencairan_via' => 'Non-Tunai'
 
     ];
     $userDetail = UserDetail::factory()->ketuaRW()->create($payload);
 
     $response = $this->post('/login', [
-        'email' => 'ketuarw@gmail.com',
+        'nama_bank' => 'Ketua RW',
+        'id_rt' => 2,
+        'phone' => '081234567890',
         'password' => 'ketuarw123'
     ]);
 
@@ -38,11 +41,13 @@ test('Seluruh field kosong', function () {
     $user = User::factory()->create();
 
     $response =  $this->post('/login', [
-        'email' => '',
-        'password' => '',
+        'nama_bank' => '',
+        'id_rt' => null,
+        'phone' => '',
+        'password' => ''
     ]);
 
-    $response->assertSessionHasErrors(['email', 'password']);
+    $response->assertSessionHasErrors(['nama_bank', 'id_rt', 'phone']);
 });
 
 
@@ -50,21 +55,25 @@ test('Format Field Salah', function () {
     $user = User::factory()->create();
 
     $response = $this->post('/login', [
-        'email' => 'muhammaddzulfiqar',
-        'password' => 123456,
+        'nama_bank' => '',
+        'id_rt'     => 'abc',
+        'phone'     => 1,
+        'password'  => ''
     ]);
 
-    $response->assertSessionHasErrors(['email', 'password']);
+    $response->assertSessionHasErrors(['nama_bank', 'id_rt', 'phone']);
 });
 
-test('Email Tidak Terdaftar', function () {
+test('Identitas Tidak Terdaftar', function () {
 
     $response = $this->post('/login', [
-        'email' => 'jul@gmail.com',
-        'password' => '12345678',
+        'nama_bank' => 'haloo',
+        'id_rt' => 3,
+        'phone' => '098909878909789',
+        'password' => 'ketuarw123'
     ]);
 
-    $response->assertSessionHasErrors(['email']);
+    $response->assertSessionHasErrors(['nama_bank']);
 });
 
 test('Dapat Logout dan seluruh session terhapus', function () {
@@ -86,13 +95,16 @@ test('Dapat Logout dan seluruh session terhapus', function () {
         'id_rt' => 2,
         'telephone_number' => '081234567890',
         'address' => 'Gresik Kota',
+        'pencairan_via' => 'Non-Tunai'
 
     ];
 
     $userDetail = UserDetail::factory()->create($payload);
 
     $response = $this->post('/login', [
-        'email' => 'ketuarw@gmail.com',
+        'nama_bank' => 'Ketua RW',
+        'id_rt' => 2,
+        'phone' => '081234567890',
         'password' => 'ketuarw123'
     ]);
 

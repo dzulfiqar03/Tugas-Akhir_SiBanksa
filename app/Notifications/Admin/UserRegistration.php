@@ -15,11 +15,11 @@ class UserRegistration extends Notification implements ShouldQueue
     public $message;
     public $url;
 
-    public function __construct($bankSampahId, $message)
+    public function __construct($bankSampahId, $message, $roles)
     {
         $this->bankSampahId = $bankSampahId;
-        $this->message = "Ada yang mendaftar akun";
-        $this->url = url("/bank-sampah/nasabah");
+        $this->message = $message;
+        $this->url = $roles === 2 ? url("/KetuaRW/Kelola-Bank-Sampah") : url("/bank-sampah/nasabah");
     }
 
     // Simpan ke Database & Kirim ke Broadcast (Reverb)

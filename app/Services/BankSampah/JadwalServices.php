@@ -23,7 +23,7 @@ class JadwalServices
     public function getAllJadwal()
     {
 
-        $jadwal = $this->jadwal::where('id_userdetail', operator: Auth::user()->user_detail->id)->with(['user_detail'])->orderBy('created_at', 'DESC')->get();
+        $jadwal = $this->jadwal::where('id_userdetail', operator: Auth::user()->user_detail->id)->with(['user_detail'])->orderBy('created_at', 'DESC')->limit(10)->get();
 
         return $jadwal;
     }

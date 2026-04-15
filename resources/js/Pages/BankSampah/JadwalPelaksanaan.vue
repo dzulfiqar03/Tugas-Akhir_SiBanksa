@@ -5,12 +5,10 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
 import { computed, ref } from 'vue';
 
-
 import InputLabel from '@/Components/InputLabel.vue';
 import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-
 
 // ================= DATATABLES =================
 import DataTablesCore from 'datatables.net';
@@ -374,7 +372,7 @@ const handleSubmit = () => {
     form[method](url, {
         onSuccess: () => {
             isEdit.value ?
-            Swal.fire('Berhasil!', 'Data jadwal berhasil diubah', 'success'):Swal.fire('Berhasil!', 'Data jadwal telah diproses.', 'success');
+                Swal.fire('Berhasil!', 'Data jadwal berhasil diubah', 'success') : Swal.fire('Berhasil!', 'Data jadwal telah diproses.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -416,6 +414,7 @@ const handleSubmit = () => {
 };
 
 const deleteData = (id) => {
+    showForm.value = false;
     Swal.fire({
         title: 'Hapus data?',
         text: "Tindakan ini tidak bisa dibatalkan!",

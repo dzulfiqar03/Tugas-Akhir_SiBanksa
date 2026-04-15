@@ -26,6 +26,7 @@ class NasabahRequest extends FormRequest
     {
         return [
             'fullName'        => 'required|string',
+            'phoneNumber' => 'required|string|min:10',
             'id_rt'              => 'required',
             'id_roles'       => 'required',
             'id_gender'       => 'required',
@@ -38,11 +39,13 @@ class NasabahRequest extends FormRequest
         return [
             'fullName.required'    => 'Nama lengkap wajib diisi',
             'id_rt.required'          => 'RT wajib diisi',
+            'phoneNumber.required' => 'Nomor telepon wajib diisi',
+            'phoneNumber.min' => 'Nomor telepon minimal 10 karakter',
             'id_roles.required'   => 'Roles wajib dipilih',
             'id_gender.required'   => 'Gender wajib dipilih',
             'status.required'   => 'Status wajib dipilih'
         ];
     }
 
-   
+
 }

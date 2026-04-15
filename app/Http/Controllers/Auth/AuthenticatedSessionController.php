@@ -39,11 +39,75 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
+    // public function store(LoginRequest $request): RedirectResponse
+    // {
+
+    //     $request->authenticate();
+    //     $request->session()->regenerate();
+
+    //     $user = Auth::user();
+
+    //     // Ambil role dari user_detail → roles
+    //     $role = $user->user_detail->roles->role;
+    //     $request->session()->put('user', $user);
+    //     $request->session()->put('login_time', time());
+
+
+    //     app(UserLogController::class)->log(
+    //         'LOGIN',
+    //         $request->ip(),
+    //         $request->userAgent(),
+    //         $user->user_detail->id
+    //     );
+
+    //     if ($role === 'Bank Sampah') {
+    //         return redirect()->intended(route('dashboard'));
+    //     }
+
+    //     if ($role === 'Ketua RW') {
+    //         return redirect()->intended(route('rw.dashboard'));
+    //     }
+
+    //     if ($role === 'Warga') {
+    //         return redirect()->intended(route('warga.dashboard'));
+    //     }
+
+
+    //     return redirect()->intended('/dashboard');
+    // }
+
+
     public function store(LoginRequest $request): RedirectResponse
     {
+        $inputName = strtolower(trim($request->nama_bank));
 
-        $request->authenticate();
-        $request->session()->regenerate();
+        $userDetail = \App\Models\UserDetail::whereRaw('LOWER(fullName) = ?', [$inputName])
+            ->where('id_rt', $request->id_rt)
+            ->where('telephone_number', $request->phone)
+            ->first();
+
+        if (!$userDetail) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'nama_bank' => 'Identitas tidak ditemukan. Periksa kembali penulisan nama Anda.',
+            ]);
+        }
+
+        // STEP 1: Jika identitas valid tapi password belum diisi
+        if (!$request->filled('password')) {
+            return back()->with('message', 'Identitas terverifikasi.');
+        }
+
+        // 3. Jika Identitas Benar & Password SUDAH DIISI (Verifikasi Akhir)
+        if (!\Illuminate\Support\Facades\Hash::check($request->password, $userDetail->user->password)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'password' => 'Password yang Anda masukkan salah.',
+            ]);
+        }
+
+        $user = $userDetail->user;
+
+        // Login jika semua valid
+        \Illuminate\Support\Facades\Auth::login($user, $request->boolean('remember'));
 
         $user = Auth::user();
 

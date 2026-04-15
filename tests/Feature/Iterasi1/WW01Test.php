@@ -26,8 +26,10 @@ test('Seluruh data valid', function () {
     $userDetail = UserDetail::factory()->warga()->create($payload);
 
     $response = $this->post('/login', [
-        'email' => 'muhammaddzulfiqar03@gmail.com',
-        'password' => 'dzulfiqar123'
+        'nama_bank' => 'Muhammad Dzulfiqar',
+        'id_rt'     => 2,
+        'phone'     => '081234567890',
+        'password'  => 'dzulfiqar123'
     ]);
 
     $response->assertSessionHasNoErrors();
@@ -40,8 +42,10 @@ test('Seluruh field kosong', function () {
     $user = User::factory()->create();
 
     $response =  $this->post('/login', [
-        'email' => '',
-        'password' => '',
+        'nama_bank' => '',
+        'id_rt'     => null,
+        'phone'     => '',
+        'password'  => ''
     ]);
 
     $response->assertSessionHasErrors();
@@ -52,21 +56,25 @@ test('Format Field Salah', function () {
     $user = User::factory()->create();
 
     $response = $this->post('/login', [
-        'email' => 'muhammaddzulfiqar03',
-        'password' => 123456,
+        'nama_bank' => '',
+        'id_rt'     => 'abc',
+        'phone'     => 1,
+        'password'  => ''
     ]);
 
-    $response->assertSessionHasErrors(['email', 'password']);
+    $response->assertSessionHasErrors(['nama_bank', 'id_rt', 'phone']);
 });
 
-test('Email Tidak Terdaftar', function () {
+test('Identitas Tidak Terdaftar', function () {
 
     $response = $this->post('/login', [
-        'email' => 'muhammaddzulfiqar23@gmail.com',
-        'password' => 'dzul12345',
+        'nama_bank' => 'Muhammad Dzulfiqar',
+        'id_rt'     => 2,
+        'phone'     => '081234567890',
+        'password'  => 'dzulfiqar123'
     ]);
 
-    $response->assertSessionHasErrors(['email']);
+    $response->assertSessionHasErrors(['nama_bank']);
 });
 
 test('Seluruh data register valid', function () {
@@ -79,6 +87,7 @@ test('Seluruh data register valid', function () {
         'id_roles' => 3, // Role Nasabah
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
+        'pencairan_via' => 'Non-Tunai',
         'nasabah' => [
             'userName' => 'dzulfiqar_nasabah',
             'fullName' => 'Muhammad Dzulfiqar',
@@ -112,6 +121,7 @@ test('Data Field Register Duplikat', function () {
         'id_roles' => 3,
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
+        'pencairan_via' => 'Non-Tunai',
         'nasabah' => [
             'userName' => 'dzulfiqar_nasabah',
             'fullName' => 'Muhammad Dzulfiqar',
@@ -145,6 +155,7 @@ test('Format Field Register Salah', function () {
         'id_roles' => 3, // Role Nasabah
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
+        'pencairan_via' => 'Non-Tunai',
         'nasabah' => [
             'userName' => 'dzulfiqar_nasabah',
             'fullName' => 'Muhammad Dzulfiqar',
@@ -177,6 +188,7 @@ test('Seluruh field register kosong', function () {
         'id_roles' => null, // Role Nasabah
         'status' => '',
         'status_transaction' => '',
+        'pencairan_via' => '',
         'nasabah' => [
             'userName' => '',
             'fullName' => '',
@@ -218,14 +230,17 @@ test('Dapat Logout dan seluruh session terhapus', function () {
         'id_rt' => 2,
         'telephone_number' => '081234567890',
         'address' => 'Gresik Kota',
+        'pencairan_via' => 'Non-Tunai',
 
     ];
 
     $userDetail = UserDetail::factory()->create($payload);
 
     $response = $this->post('/login', [
-        'email' => 'muhammaddzulfiqar03@gmail.com',
-        'password' => 'muhammaddzulfiqar123'
+        'nama_bank' => 'Muhammad Dzulfiqar',
+        'id_rt'     => 2,
+        'phone'     => '081234567890',
+        'password'  => 'muhammaddzulfiqar123'
     ]);
 
     $response->assertSessionHasNoErrors();

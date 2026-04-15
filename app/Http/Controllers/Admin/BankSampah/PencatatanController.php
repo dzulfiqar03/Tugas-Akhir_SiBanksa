@@ -32,7 +32,7 @@ class PencatatanController extends Controller
         $menu = (new DataResources(null))->toArray(request());
         $form = (new FormResources(null))->toArray(request());
 
-        $jadwalPelaksanaan = $this->userDetail::find(Auth::user()->user_detail->id)->jadwal()->get();
+        $jadwalPelaksanaan = $this->userDetail::find(Auth::user()->user_detail->id)->jadwal()->latest()->limit(10)->get();
         $nasabahList = $this->userDetail::where('id_rt', Auth::user()->user_detail->rt->id)->where('status', 'Disetujui')->where('id_roles', 3)->with(['sampah', 'pencatatan.pencatatan_items'])->get();
         $formName = 'formPencatatan';
 

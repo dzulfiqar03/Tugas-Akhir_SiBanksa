@@ -391,89 +391,116 @@ const breadcrumbItems = [
                             <Bar :data="leaderboardChartData" :options="chartOptions" />
                         </div>
                     </div>
-
-
-                    <div class="-z-0 space-y-4  flex-col md:flex-row h-[500px] w-full mt-4">
-
-
-                        <h1 class="font-bold text-xl text-black dark:text-white">Map Information</h1>
-
-
-                        <div :class="[
-                            !isPreviewOpen ? 'rounded-xl' : 'rounded-l-xl',
-                        ]" class="flex-1 h-[60vh] md:h-full overflow-hidden shadow-inner -z-0 border border-gray-200">
-
-                            <div id="map" class="h-full w-full"></div>
-                        </div>
-
-                        <div ref="detailMap" v-if="isPreviewOpen"
-                            class="w-full transition-all h-[40vh] md:h-full duration-700 md:w-1/3 bg-white dark:bg-gray-800 rounded-r-xl shadow-sm overflow-y-auto p-4">
-                            <div
-                                class=" h-full  bg-white space-y-0 md:space-y-3 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-
-
-                                <div @click="isPreviewOpen = !isPreviewOpen"
-                                    class="md:hidden cursor-pointer  w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-3">
-                                </div>
-                                <h1 class="font-black md:text-base text-sm text-black dark:text-white text-center">Map
-                                    Detail information</h1>
-
-                                <div
-                                    class="px-6 pb-6 md:grid grid-cols-1 flex space-x-3 md:space-x-0 space-y-0 md:space-y-5">
-
-                                    <div class="md:grid flex m-auto">
-
-                                        <div class=" flex flex-wrap m-auto justify-center lg:justify-between items-end">
-                                            <div class=" ">
-
-                                                <div :class="[
-                                                    selectedData.id_roles === 2 ? 'bg-red-500 dark:bg-red-900 text-red-700 dark:text-red-300 ' : 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 ',
-                                                ]"
-                                                    class="md:w-40 w-24 h-24 md:h-40  rounded-full flex items-center justify-center text-5xl font-bold uppercase border-4 border-white dark:border-gray-800 shadow-sm overflow-hidden">
-                                                    {{ selectedData.fullName.charAt(0) }}
-                                                </div>
-
-
-                                            </div>
-
-                                        </div>
-                                    </div>
-
-
-                                    <div class="flex flex-col space-y-0 md:space-y-3">
-                                        <div class="mt-4">
-                                            <h1
-                                                class="md:text-2xl text-sm  flex-wrap font-bold text-gray-900 capitalize dark:text-white flex items-center gap-2">
-                                                {{ selectedData.fullName }}
-                                                <span
-                                                    class="md:text-sm text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{{
-                                                        props.nasabah?.user_detail.location.open_street.type }}</span>
-                                            </h1>
-                                            <p class="text-gray-600 dark:text-gray-400 mt-1 md:text-base text-xs">
-                                                {{ selectedData.roles.role }} • RT0{{ selectedData.rt.RT }}
-                                            </p>
-                                            <p class="text-gray-400 dark:text-gray-500 text-xs  md:text-sm mt-1">
-                                                {{ selectedData.address }}
-                                            </p>
-                                        </div>
-                                        <a :href="`https://www.google.com/maps/search/?api=1&query=${selectedData.location.open_street.latitude},${selectedData.location.open_street.longitude}`"
-                                            target="_blank"
-                                            class="flex items-center justify-center gap-2 w-full bg-white border border-gray-300 text-gray-700 text-xs py-2 rounded-lg">
-                                            <i class="fas fa-map">
-                                            </i> Buka di Google Maps
-                                        </a>
-                                    </div>
-
-                                </div>
-
-
-
-
-
+                    <div class="space-y-4 mt-8">
+                        <div class="flex items-center justify-between">
+                            <h3
+                                class="font-bold text-xl text-gray-800 dark:text-white flex items-center gap-2 uppercase tracking-tighter">
+                                <i class="fas fa-map-marked-alt text-emerald-500"></i>
+                                Map Information
+                            </h3>
+                            <div class="flex gap-2">
+                                <span
+                                    class="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold uppercase border border-emerald-200">
+                                    Live Monitoring
+                                </span>
                             </div>
                         </div>
 
+                        <div
+                            class="flex flex-col lg:flex-row h-[600px] gap-0 overflow-hidden rounded-[2rem] border border-gray-200 dark:border-gray-700 shadow-2xl bg-white dark:bg-gray-800 relative">
 
+                            <div class="flex-1 relative bg-gray-100 dark:bg-gray-900">
+                                <div id="map" class="h-full w-full z-0"></div>
+
+                                <div
+                                    class="absolute bottom-6 left-6 z-[400] bg-white/80 dark:bg-gray-800/90 backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 space-y-3 min-w-[140px]">
+                                    <p
+                                        class="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b pb-2 mb-2">
+                                        Legenda Peta</p>
+                                    <div class="flex items-center gap-3">
+                                        <span
+                                            class="w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-indigo-500/20"></span>
+                                        <span class="text-[10px] font-bold dark:text-gray-300 uppercase">Unit
+                                            Bank</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span
+                                            class="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20"></span>
+                                        <span class="text-[10px] font-bold dark:text-gray-300 uppercase">Nasabah
+                                            Aktif</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div :class="isPreviewOpen ? 'w-full lg:w-[400px] border-l' : 'w-0 border-l-0'"
+                                class="transition-all duration-700 ease-in-out border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800 z-10 relative overflow-hidden">
+
+                                <div v-if="selectedData" class="p-8 h-full overflow-y-auto space-y-8 flex flex-col">
+                                    <div class="flex justify-between items-start">
+                                        <div
+                                            class="w-20 h-20 rounded-[1.5rem] bg-gray-50 dark:bg-gray-900 shadow-inner flex items-center justify-center text-4xl font-black text-emerald-500 border border-gray-100 dark:border-gray-700">
+                                            {{ selectedData.fullName.charAt(0) }}
+                                        </div>
+                                        <button @click="isPreviewOpen = false"
+                                            class="group p-3 bg-gray-50 dark:bg-gray-700 hover:bg-red-500 dark:hover:bg-red-500 text-gray-400 hover:text-white rounded-2xl transition-all duration-300">
+                                            <i class="fas fa-times group-hover:rotate-90 transition-transform"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <h4
+                                            class="text-3xl font-black text-gray-900 dark:text-white leading-none uppercase tracking-tighter">
+                                            {{ selectedData.fullName }}
+                                        </h4>
+                                        <div class="flex flex-wrap gap-2 pt-2">
+                                            <span
+                                                class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-[9px] font-black uppercase tracking-wider">
+                                                {{ selectedData.roles.role }}
+                                            </span>
+                                            <span
+                                                class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[9px] font-black uppercase tracking-wider">
+                                                RT 0{{ selectedData.rt.RT }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="space-y-4 flex-1">
+                                        <div
+                                            class="p-6 rounded-[1.5rem] bg-gray-50 dark:bg-gray-900/50 border-l-4 border-emerald-500">
+                                            <p
+                                                class="text-[10px] text-emerald-600 font-black mb-2 uppercase tracking-widest">
+                                                Lokasi Presisi</p>
+                                            <p
+                                                class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed font-bold">
+                                                {{ selectedData.address }}
+                                            </p>
+                                        </div>
+
+                                        <a :href="`https://www.google.com/maps/search/?api=1&query=${selectedData.location.open_street.latitude},${selectedData.location.open_street.longitude}`"
+                                            target="_blank"
+                                            class="flex items-center justify-center gap-3 w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white py-5 rounded-[1.5rem] font-black text-xs transition-all shadow-xl hover:shadow-emerald-500/20 uppercase tracking-widest">
+                                            <i class="fas fa-directions text-base"></i> Buka Navigasi
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div v-else
+                                    class="h-full flex flex-col items-center justify-center p-12 text-center space-y-4">
+                                    <div
+                                        class="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-[2rem] flex items-center justify-center border border-dashed border-gray-300 dark:border-gray-700">
+                                        <i
+                                            class="fas fa-mouse-pointer text-gray-300 dark:text-gray-600 text-2xl animate-bounce"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Map
+                                            Detail Information</p>
+                                        <p class="text-[11px] text-gray-500 mt-1 font-medium italic">Klik salah satu
+                                            marker pada peta untuk memuat profil nasabah/unit.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

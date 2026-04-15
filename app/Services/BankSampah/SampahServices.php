@@ -57,31 +57,33 @@ class SampahServices
         });
     }
 
-    public function updateSampah($id, array $data)
-    {
-        return DB::transaction(function () use ($id, $data) {
+public function updateSampah($id, array $data)
+{
+    return DB::transaction(function () use ($id, $data) {
+        // 1. Ambil data sampah yang mau diupdate berdasarkan ID
+        $sampah = $this->getSampah($id);
 
-            $sampahEksisting = $this->sampah->where('nama_sampah', $data['nama_sampah'])->first();
-            $sampahEksistingkas = $sampahEksisting->saldo;
+        if (!$sampah) {
+            throw new \Exception("Data sampah tidak ditemukan.");
+        }
 
-            $updateSampah = $this->getSampah($id)->update(
-                [
-                    'id_userdetail' => $data['id_userdetail'],
-                    'nama_sampah' => $data['nama_sampah'],
-                    'harga' => $data['harga'],
-                    'satuan' => $data['satuan'],
-                    'saldo' =>  $sampahEksistingkas + (int) $data['saldo'],
-                ]
+        // 2. Ambil saldo saat ini (dari record yang sama)
+        // Jika Anda ingin menambahkan saldo baru ke saldo lama:
+        $saldoLama = $sampah->saldo;
+        $saldoBaru = $saldoLama + (int) $data['saldo'];
 
+        // 3. Eksekusi Update
+        $updateBerhasil = $sampah->update([
+            'id_userdetail' => $data['id_userdetail'],
+            'nama_sampah'   => $data['nama_sampah'],
+            'harga'         => $data['harga'],
+            'satuan'        => $data['satuan'],
+            'saldo'         => $saldoBaru,
+        ]);
 
-
-
-            );
-
-
-            return $updateSampah;
-        });
-    }
+        return $updateBerhasil;
+    });
+}
 
     public function deleteSampah($id)
     {

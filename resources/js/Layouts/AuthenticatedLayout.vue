@@ -1,6 +1,19 @@
 <template>
+
+
     <div :class="{ 'dark': isDark }">
-        <div class="bg-gray-100 dark:bg-gray-900 flex min-h-screen transition-colors duration-300 overflow-hidden">
+
+        <div v-if="!isOnline">
+            <OfflinePage />
+        </div>
+
+
+
+        <div v-else-if="isSessionExpired">
+            <SessionExpired />
+        </div>
+        <div v-else
+            class="bg-gray-100 dark:bg-gray-900 flex min-h-screen transition-colors duration-300 overflow-hidden">
 
             <!-- SIDEBAR -->
             <Sidebar class="sm:flex hidden" :isOpen="sidebarOpen" @close="sidebarOpen = false"
@@ -33,7 +46,7 @@
 
                     <template v-if="show === false">
 
-              
+
                         <slot />
                     </template>
 
@@ -87,9 +100,13 @@
                 <button @click="toggleTheme"
                     class="w-12 h-12 md:w-14 md:h-14 bg-emerald-500 hover:bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-xl transition-all active:scale-95">
                     <!-- Sun -->
-                    <svg v-if="isDark" class="w-5 h-5 text-yellow-400 transition-all duration-500" fill="currentColor"
+                    <!-- Sun -->
+                    <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5 text-yellow-400 fill-current transition-all duration-300 hover:rotate-45"
                         viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="5" />
+                        <path
+                            d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z">
+                        </path>
                     </svg>
 
                     <!-- Moon -->
@@ -110,11 +127,13 @@
 
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { usePage, router } from '@inertiajs/vue3'
 import Sidebar from '@/Components/Sidebar.vue'
 import Navbar from '@/Components/Navbar.vue'
 import Preloader from '@/Components/Preloader.vue'
+import OfflinePage from '@/Errors/404.vue'
+import SessionExpired from '@/Errors/SessionExpired.vue'
 
 const props = defineProps({
     sidebardata: Object,
@@ -135,14 +154,8 @@ const isWarga = computed(() => {
     return Number(role) === 3
 })
 
-/* =========================
-   SIDEBAR
-========================= */
 const sidebarOpen = ref(false)
 
-/* =========================
-   DARK MODE
-========================= */
 const isDark = ref(localStorage.getItem('darkMode') === 'true')
 
 const toggleTheme = () => {
@@ -173,13 +186,88 @@ const isChatPage = computed(() => {
 ========================= */
 const show = ref(true)
 
+const notificationAudio = ref(null);
+
+const unlockAudio = () => {
+    const audio = new Audio('/sounds/notification.mp3');
+    audio.muted = true;
+
+    audio.play().then(() => {
+
+        audio.pause();
+        audio.currentTime = 0;
+        audio.muted = false;
+
+        window.notifAudio = audio;
+
+        console.log('🔊 Audio Unlocked');
+
+        document.removeEventListener('click', unlockAudio);
+    }).catch(err => {
+        console.log('Waiting for user interaction to unlock audio...');
+    });
+};
+
+
+const playNotification = () => {
+    const isEnabled = localStorage.getItem('notif_sound_enabled') === '1';
+
+    if (isEnabled && window.notifAudio) {
+        // Reset ke awal agar jika ada notifikasi beruntun tetap bunyi
+        window.notifAudio.currentTime = 0;
+        window.notifAudio.play().catch(err => console.error("Gagal putar:", err));
+    }
+};
+
+window.playNotif = playNotification;
+
+const isSessionExpired = ref(false)
+
 onMounted(() => {
     updateTheme()
+
+    document.addEventListener('click', unlockAudio);
 
     setTimeout(() => {
         show.value = false
     }, 1900)
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW Registered!', reg))
+            .catch(err => console.error('SW Registration Failed:', err));
+    }
+
+    router.on('invalid', (event) => {
+        const status = event.detail.response.status
+        if (status === 419) {
+            event.preventDefault()
+            isSessionExpired.value = true
+        }
+    })
+
+    // TAMBAH INI untuk handle response error dari Inertia request:
+    router.on('error', (event) => {
+        console.log('Router error:', event)
+    })
 })
+
+const isOnline = ref(navigator.onLine);
+
+const updateOnlineStatus = () => {
+    isOnline.value = navigator.onLine;
+};
+
+
+
+onUnmounted(() => {
+    window.removeEventListener('online', updateOnlineStatus);
+    window.removeEventListener('offline', updateOnlineStatus);
+});
+
 </script>
 
 <style>

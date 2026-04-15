@@ -45,9 +45,15 @@ const form = useForm({
     phoneNumber: props.nasabah?.user_detail?.telephone_number ?? '',
     email: props.nasabah?.email ?? '',
     bank: '',
+    pencairan_method: props.nasabah?.user_detail?.pencairan_via ?? '',
     id_bank: props.nasabah?.user_detail?.userbank?.id_bank ?? '',
     nomor_rekening: props.nasabah?.user_detail?.userbank?.nomor_rekening ?? '',
     password: '',
+
+
+    name: '',
+    id_jadwal: 1,
+    fileDoc: [],
 
     status: props.nasabah?.user_detail?.status ?? '',
     amenity: props.nasabah?.user_detail?.location?.amenity ?? '',
@@ -99,10 +105,8 @@ const submit = async () => {
     if (form.amenity) params.append('amenity', form.amenity)
     if (form.house_number) params.append('house_number', form.house_number)
     if (form.city) params.append('city', form.city)
-    if (form.state) params.append('state', form.state)
     if (form.country) params.append('country', form.country)
-    if (form.postalcode) params.append('postalcode', form.postalcode)
-
+    if (form.postal_code) params.append('postalcode', form.postal_code)
     const url = `${baseUrl}&${params.toString()}`
 
     const res = await fetch(url)
@@ -134,15 +138,15 @@ const submit = async () => {
                     {
                         onSuccess: () => {
                             Swal.fire('Terkirim!', 'Pesan pengingat telah dikirim.', 'success'), window.location.reload(),
-                            isEdit.value === true,
-                            form.id_bank = props.nasabah?.user_detail?.userbank?.id_bank ?? '',
-                            form.nomor_rekening = props.nasabah?.user_detail?.userbank?.nomor_rekening ?? '',
-                            form.amenity = props.nasabah?.user_detail?.location?.amenity ?? '',
-                            form.house_number = props.nasabah?.user_detail?.location?.house_number ?? '',
-                            form.city = props.nasabah?.user_detail?.location?.city ?? '',
-                            form.state = props.nasabah?.user_detail?.location?.state ?? '',
-                            form.country = props.nasabah?.user_detail?.location?.country ?? '',
-                            form.postal_code = props.nasabah?.user_detail?.location?.postal_code ?? ''
+                                isEdit.value === true,
+                                form.id_bank = props.nasabah?.user_detail?.userbank?.id_bank ?? '',
+                                form.nomor_rekening = props.nasabah?.user_detail?.userbank?.nomor_rekening ?? '',
+                                form.amenity = props.nasabah?.user_detail?.location?.amenity ?? '',
+                                form.house_number = props.nasabah?.user_detail?.location?.house_number ?? '',
+                                form.city = props.nasabah?.user_detail?.location?.city ?? '',
+                                form.state = props.nasabah?.user_detail?.location?.state ?? '',
+                                form.country = props.nasabah?.user_detail?.location?.country ?? '',
+                                form.postal_code = props.nasabah?.user_detail?.location?.postal_code ?? ''
 
                         }
                     });
@@ -317,6 +321,54 @@ onMounted(async () => {
     }, 2000) // sedikit lebih lama dari 1900
 })
 
+const renamedFileList = computed(() => {
+    return form.fileDoc.map((file, index) => {
+        const extension = file.name.split('.').pop();
+        return {
+            original: file.name,
+            dynamic: `Berkas ${form.name || 'Dokumen'}_${props.nasabah?.user_detail?.fullName}.${extension}`,
+            size: file.size,
+        };
+    })
+});
+
+
+const isPreviewOpen2 = ref(false);
+const selectedDoc = ref(null);
+
+const openPreview = (doc) => {
+    selectedDoc.value = doc;
+    isPreviewOpen2.value = true;
+};
+
+const closePreview = () => {
+    isPreviewOpen2.value = false;
+    selectedDoc.value = null;
+};
+
+const deleteDoc = (id) => {
+    Swal.fire({
+        title: 'Hapus Dokumen?',
+        text: "Berkas yang dihapus tidak dapat dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Gunakan router.delete (Inertia) atau axios
+            form.delete(route('delete-document', id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    Swal.fire('Terhapus!', 'Dokumen berhasil dihapus.', 'success');
+                }
+            });
+        }
+    });
+};
+
 const breadcrumbItems = [
     { label: 'Dashboard', url: props.id_role === 1 ? route('rw.dashboard') : route('dashboard') },
     { label: 'Profile', url: null },
@@ -414,7 +466,7 @@ const breadcrumbItems = [
                                 <span> </span>
                             </div>
                             <div v-else
-                                class="text-md hover:-rotate-6 transition-all duration-300  text-gray-800 dark:text-gray-200 item-center m-auto flex p-5 w-full text-center bg-white dark:bg-gray-900 rounded-xl shadow dark:shadow-gray-950 justify-between">
+                                class="text-md z-10 hover:-rotate-6 transition-all duration-300  text-gray-800 dark:text-gray-200 item-center m-auto flex p-5 w-full text-center bg-white dark:bg-gray-900 rounded-xl shadow dark:shadow-gray-950 justify-between">
                                 <span class="text-center px-5 items-center justify-center w-max m-auto font-black"><i
                                         class="fas fa-money-bill-wave text-shadow"></i> <br>Saldo:
                                     Rp{{ props.nasabah.saldoUser }}</span>
@@ -423,7 +475,8 @@ const breadcrumbItems = [
                             <div
                                 class="text-md hover:-rotate-6 transition-all duration-300   text-gray-800 dark:text-gray-200 flex p-5 w-full bg-white dark:bg-gray-900 rounded-xl shadow dark:shadow-gray-950 justify-between">
                                 <span class="text-center items-center justify-center w-max m-auto font-black"><i
-                                        class="fas fa-user-circle "></i><br>{{ props.nasabah.profile_completion.percentage }}%
+                                        class="fas fa-user-circle "></i><br>{{
+                                            props.nasabah.profile_completion.percentage }}%
                                     Completed</span>
                                 <span> </span>
                             </div>
@@ -517,69 +570,132 @@ const breadcrumbItems = [
 
 
 
+                                <div v-if="props.nasabah.user_detail.id_roles !== 2"
+                                    class="pt-6 border-t border-gray-100 dark:border-gray-700">
+                                    <InputLabel :value="isEdit ? 'Arsip Dokumen Digital' : 'Manajemen Berkas'"
+                                        class="mb-4 text-emerald-600 font-black uppercase tracking-widest text-[10px]" />
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div v-if="!isEdit"
+                                            class="space-y-4 bg-slate-50 dark:bg-white/[0.02] p-5 rounded-2xl border-2 border-dashed border-slate-200 dark:border-gray-700">
+                                            <select v-model="form.name"
+                                                class="w-full rounded-xl border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 text-sm">
+                                                <option value="">-- Pilih Jenis Dokumen --</option>
+                                                <option value="KTP">KTP</option>
+                                                <option value="KK">KK</option>
+                                            </select>
+                                            <input type="file"
+                                                @change="(e) => form.fileDoc = Array.from(e.target.files)"
+                                                class="text-xs">
+                                        </div>
+                                        <div class="space-y-3">
+                                            <template v-if="props.nasabah.user_detail.document.length > 0"
+                                                v-for="doc in props.nasabah.user_detail.document" :key="doc.id">
+                                                <div v-if="['KTP', 'KK', 'Akta Kelahiran'].includes(doc.name)"
+                                                    class="group flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm hover:border-emerald-500 transition-all">
+
+                                                    <div class="flex items-center gap-3">
+                                                        <div
+                                                            class="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-xl flex items-center justify-center">
+                                                            <i class="fas fa-file-shield text-emerald-500"></i>
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-[11px] font-black text-black dark:text-white uppercase tracking-tight">
+                                                                {{ doc.name }}</p>
+                                                            <p class="text-[9px] text-gray-400 uppercase font-bold">{{
+                                                                doc.created_at_human }}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="flex items-center gap-2">
+                                                        <button type="button" @click="openPreview(doc)"
+                                                            class="p-2 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all">
+                                                            <i class="fas fa-eye text-xs"></i>
+                                                        </button>
+
+                                                        <button v-if="!isEdit" type="button" @click="deleteDoc(doc.id)"
+                                                            class="p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 rounded-lg transition-all">
+                                                            <i class="fas fa-trash-alt text-xs"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </template>
+
+                                            <div v-else
+                                                class="flex items-center gap-3 p-3 bg-amber-50/50 dark:bg-amber-900/10 border border-dashed border-amber-200 dark:border-amber-900/30 rounded-2xl opacity-70">
+                                                >
+                                                <div
+                                                    class="w-10 h-10 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center text-amber-500">
+                                                    <i class="fas fa-exclamation-triangle text-xs"></i>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-[10px] font-bold text-amber-700 dark:text-amber-500 uppercase tracking-tighter">
+                                                        Belum Mengunggah Dokumen
+                                                    </p>
+                                                    <p
+                                                        class="text-[8px] text-amber-600/70 dark:text-amber-500/50 italic">
+                                                        Harap lengkapi dokumen identitas Anda.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
                             </div>
-                            <div v-if="isEdit === false" class="flex justify-between gap-4">
-                                <button v-if="isEdit === false" type="button" @click="step = 3"
-                                    class="w-max px-12 py-3 bg-emerald-600 text-white rounded-xl font-bold">Lanjut</button>
+                            <div
+                                class="flex justify-between items-center pt-4 border-t border-gray-50 dark:border-gray-800">
+
+                                <button v-if="!isEdit" type="button" @click="step = 2"
+                                    class="px-10 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg  transition-transform active:scale-95 flex items-center gap-2">
+                                    Lanjut
+                                    <i class="fas fa-arrow-right text-xs"></i>
+                                </button>
                             </div>
                         </div>
 
-                        <div v-if="step === 2" class="space-y-5">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div v-if="step === 2" class="space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div v-for="field in filteredFields" :key="field.name"
-                                    :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
+                                    :class="field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
 
-
-
-
-
-                                    <div v-if="field.type === 'radio'" class="col-span-full">
-
+                                    <div v-if="field.type === 'radio'" class="space-y-3">
                                         <InputLabel :for="field.name" :value="field.title" />
-
-
-                                        <div class="flex gap-3">
+                                        <div class="flex gap-4">
                                             <label v-for="(opt, idx) in field.options" :key="idx"
-                                                class="flex-1 cursor-pointer group">
-                                                <input type="radio" :disabled="isEdit"
-                                                    v-model="form.nasabah[field.name]" :value="idx + 1"
-                                                    class="peer sr-only " :class="[
-                                                        isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
-                                                    ]">
+                                                class="flex-1 cursor-pointer">
+                                                <input type="radio" :disabled="isEdit" v-model="form[field.name]"
+                                                    :value="idx + 1" class="peer text-black sr-only">
                                                 <div
-                                                    class="py-2 px-4 text-gray-600  dark:text-white rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
+                                                    class="py-3 px-4 rounded-xl border-2 text-center text-xs font-bold transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 dark:border-gray-700 dark:text-white">
                                                     {{ opt }}
                                                 </div>
                                             </label>
                                         </div>
-
                                     </div>
-                                    <div v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'"
-                                        class="col-span-1">
+
+                                    <div
+                                        v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'">
                                         <InputLabel :for="field.name" :value="field.title" />
-
-
-
-                                        <input :type="field.type" :id="field.name" :disabled="isEdit"
-                                            v-model="form[field.name]" :name="form[field.name]"
-                                            :placeholder="field.placeholder"
-                                            class="w-full text-black   h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
-                                            :class="[
-                                                isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
-                                            ]">
+                                        <input :type="field.type" :disabled="isEdit" v-model="form[field.name]"
+                                            class="mt-1 w-full h-12 rounded-xl text-black bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-emerald-500 transition-all text-sm dark:text-white">
                                     </div>
-
-
                                 </div>
                             </div>
-                            <div class="flex items-end justify-end w-full ">
+
+
+                            <div
+                                class="flex justify-between items-center pt-4 border-t border-gray-50 dark:border-gray-800">
                                 <button type="button" @click="step = 1"
-                                    class="text-gray-400 text-sm font-bold">Kembali</button>
+                                    class="text-sm font-bold text-gray-400 hover:text-gray-600">Kembali</button>
 
-                                <button v-if="isEdit === false" type="button" @click="step = 3"
-                                    class="  px-12  py-3 bg-emerald-600 text-white rounded-xl font-bold">Lanjut
-                                    -></button>
-
+                                <button v-if="!isEdit" type="button" @click="step = 3"
+                                    class="px-10 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg transition-transform active:scale-95 flex items-center gap-2">
+                                    Lanjut
+                                    <i class="fas fa-arrow-right text-xs"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -629,7 +745,32 @@ const breadcrumbItems = [
 
                         <div v-if="step === 4" class="space-y-5">
                             <div class="grid grid-cols-1  gap-x-6 gap-y-5">
-                                <div v-for="field in formdata.userBank" :key="field.name">
+
+
+                                        <div>
+                                            <InputLabel value="Via Pencairan Setoran"
+                                                class="mb-4 text-emerald-600 font-black uppercase tracking-widest text-[10px]" />
+
+                                            <select v-model="form.pencairan_method" :disabled="isEdit"
+                                                class="w-full h-11 rounded-xl bg-gray-50 text-black   dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
+                                                :class="[
+                                                    isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
+                                                ]">
+                                                <option value="" class="text-black dark:text-white">Pilih Metode
+                                                    Pencairan
+                                                </option>
+
+                                                <option value="Tunai" class="text-gray-900 dark:text-white">
+                                                    Tunai
+                                                </option>
+                                                <option value="Non-Tunai" class="text-gray-900 dark:text-white">
+                                                    Transfer Bank
+                                                </option>
+
+                                            </select>
+                                        </div>
+
+                                <div  v-if="form.pencairan_method === 'Non-Tunai'" v-for="field in formdata.userBank" :key="field.name">
 
 
                                     <input type="hidden" name="id_userdetail" :value="props.nasabah.user_detail.id">
@@ -676,9 +817,7 @@ const breadcrumbItems = [
 
 
                             </div>
-                            <p v-if="form.nomor_rekening > 0 && isEdit === false"
-                                class="dark:text-white text-black transition-all ease-in-out duration-300">Bank {{
-                                form.bank }}</p>
+
 
                             <div v-if="isEdit === false" class="flex justify-between gap-4">
                                 <button type="button" @click="step = 3"
@@ -723,7 +862,8 @@ const breadcrumbItems = [
 
                                             <div :class="[
                                                 selectedData.id_roles === 2 ? 'bg-red-500 dark:bg-red-900 text-red-700 dark:text-red-300 ' : 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 ',
-                                            ]" class="md:w-40 w-24 h-24 md:h-40  rounded-full flex items-center justify-center text-5xl font-bold uppercase border-4 border-white dark:border-gray-800 shadow-sm overflow-hidden">
+                                            ]"
+                                                class="md:w-40 w-24 h-24 md:h-40  rounded-full flex items-center justify-center text-5xl font-bold uppercase border-4 border-white dark:border-gray-800 shadow-sm overflow-hidden">
                                                 {{ selectedData.fullName.charAt(0) }}
                                             </div>
 
@@ -781,6 +921,37 @@ const breadcrumbItems = [
                 <div class="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
                     <DeleteUserForm class="max-w-xl" />
                 </div>
+            </div>
+        </div>
+
+        <div v-if="isPreviewOpen2"
+            class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full h-[90vh] p-2 relative shadow-2xl flex flex-col">
+
+                <div class="p-4 flex justify-between items-center border-b dark:border-gray-700">
+                    <h3 class="font-black dark:text-white uppercase tracking-widest text-sm">
+                        Preview: {{ selectedDoc?.original_filesname }}
+                    </h3>
+                    <button @click="closePreview" class="text-gray-500 hover:text-red-500 transition-colors">
+                        <i class="fas fa-times-circle text-2xl"></i>
+                    </button>
+                </div>
+
+               <div class="flex-1 bg-gray-100 dark:bg-gray-900 rounded-xl overflow-hidden mt-2">
+    <embed v-if="selectedDoc"
+        :src="`/storage/files/documentOther/Nasabah/${selectedDoc.id_userdetail}/${selectedDoc.original_filesname}`"
+        type="application/pdf"
+        width="100%"
+        height="100%"
+    />
+</div>
+
+<div class="p-3 text-center">
+    <p class="text-[10px] text-gray-400 font-mono italic">
+        Fisik File: {{ selectedDoc?.original_filesname }}
+    </p>
+</div>
             </div>
         </div>
     </AuthenticatedLayout>

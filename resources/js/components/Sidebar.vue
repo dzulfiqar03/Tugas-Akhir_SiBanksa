@@ -27,11 +27,22 @@ const userDetail = computed(() => user.value?.user_detail || {});
 const statusVerifikasi = computed(() => userDetail.value?.status);
 
 const countChat = computed(() => {
-    if (!userDetail.value.user_chat) return 0;
+    const chats = userDetail.value.user_chat;
+    if (!chats || !Array.isArray(chats)) return 0;
 
-    return userDetail.value.user_chat.filter(msg =>
-        msg.is_read === false || msg.is_read === 0
-    ).length;
+    return chats.filter(msg => {
+        // 1. Pastikan pesan ini dikirim oleh ORANG LAIN ke kita
+        // (Sesuaikan nama kolom receiver_id jika ada di tabelmu)
+        // const isIncoming = msg.receiver_id === user.value.id;
+
+        // 2. Cek apakah belum dibaca berdasarkan read_at yang kosong
+        const isUnread = msg.read_at === null || msg.read_at === '';
+
+        // 3. Atau cek is_read jika memang itu patokannya
+        const isReadFlag = msg.is_read == 0;
+
+        return isUnread || isReadFlag;
+    }).length;
 });
 const menus = computed(() => props.sidebardata?.['sub-data'] || []);
 
@@ -245,7 +256,7 @@ const sendLogout = () => {
                             </span>
                             <span v-show="sidebarExpanded || isOpen" class="truncate">{{ menu.nama }}</span>
                         </button>
-             
+
                     </div>
                 </div>
             </div>

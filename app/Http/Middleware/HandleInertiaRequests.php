@@ -42,23 +42,48 @@ class HandleInertiaRequests extends Middleware
                 'user_detail.rt',
                 'user_detail.roles',
                 'user_detail.userbank',
-                'user_detail.location.open_street'
+                'user_detail.location.open_street',
+                'user_detail.document'
             ])->find($userData->id) : null;
 
-        // Hitung persentase profil jika ada user
         if ($nasabah && $nasabah->user_detail) {
-            $fields = [
-                'User Name'      => $nasabah->user_detail->userName,
-                'Nama Lengkap'   => $nasabah->user_detail->fullName,
-                'RT'             => $nasabah->user_detail->id_rt,
-                'Nomor Telepon'  => $nasabah->user_detail->telephone_number,
-                'Status'         => $nasabah->user_detail->status,
-                'Nomor Rekening' => $nasabah->user_detail->userbank->nomor_rekening ?? '',
-            ];
+            $pencairanVia = $nasabah->user_detail->pencairan_via ?? '';
+
+            // 1. Tentukan field dasar berdasarkan Role
+            if ($nasabah->user_detail->id_roles === 2) {
+                $fields = [
+                    'User Name'      => $nasabah->user_detail->userName,
+                    'Nama Lengkap'   => $nasabah->user_detail->fullName,
+                    'RT'             => $nasabah->user_detail->id_rt,
+                    'Nomor Telepon'  => $nasabah->user_detail->telephone_number,
+                    'Status'         => $nasabah->user_detail->status,
+                    'Alamat'         => $nasabah->user_detail->location, // Sudah ada di sini
+                ];
+            } else {
+
+                $hasKtpKk = $nasabah->user_detail->document->contains(function ($doc) {
+                    return str_contains(strtoupper($doc->name), 'KTP') || str_contains(strtoupper($doc->name), 'KK');
+                });
+                $fields = [
+                    'User Name'      => $nasabah->user_detail->userName,
+                    'Nama Lengkap'   => $nasabah->user_detail->fullName,
+                    'RT'             => $nasabah->user_detail->id_rt,
+                    'Nomor Telepon'  => $nasabah->user_detail->telephone_number,
+                    'Status'         => $nasabah->user_detail->status,
+                    'KTP / KK'       => $hasKtpKk ? 'Tersedia' : '',
+                    'Alamat'         => $nasabah->user_detail->location,
+                ];
+            }
+
+            // 2. Tambahkan field bank HANYA jika Non-Tunai
+            if ($pencairanVia === 'Non-Tunai') {
+                $fields['Nomor Rekening'] = $nasabah->user_detail->userbank->nomor_rekening ?? '';
+            }
 
             $filledCount = 0;
             $emptyFields = [];
 
+            // 3. Loop satu kali saja untuk semua field yang sudah ditentukan
             foreach ($fields as $label => $value) {
                 if (!empty($value)) {
                     $filledCount++;
@@ -67,34 +92,33 @@ class HandleInertiaRequests extends Middleware
                 }
             }
 
-            $alamat = $nasabah->user_detail->location;
+            // 4. Perhitungan persentase yang akurat
+            $totalFields = count($fields);
 
-            if (!empty($alamat)) {
-                    $filledCount++;
-                } else {
-                    $emptyFields[] = 'Alamat';
-                }
             $nasabah->profile_completion = [
-                'percentage'   => round(($filledCount / count($fields)) * 100, 2),
+                'percentage'   => $totalFields > 0 ? round(($filledCount / $totalFields) * 100, 2) : 0,
                 'empty_fields' => $emptyFields,
                 'filled'       => $filledCount,
-                'total'        => count($fields),
+                'total'        => $totalFields,
             ];
         }
-
         return array_merge(parent::share($request), [
 
+            'flash' => [
+                'message' => fn() => $request->session()->get('message'),
+            ],
             'sharedForm'  => (new \App\Http\Resources\FormResources(null))->toArray($request),
             'nasabah2'    => $nasabah,
             'auth' => [
-                'user' => $request->user(),
+                // Di Laravel (Controller atau Middleware)
+                'user' => $request->user() ? $request->user()->load(['user_detail.user_chat']) : null,
             ],
 
             'sidebardata' => $userData ? (new DataResources([]))->toArray($request) : null,
 
             // Data notifikasi global
             'notifications' => [
-                'data' => $userData ? $userData->notifications->take(10) : [],
+                'data' => $userData ? $userData->unreadNotifications()->take(10)->get() : [],
                 'unreadCount' => $userData ? $userData->unreadNotifications->count() : 0,
             ],
         ]);

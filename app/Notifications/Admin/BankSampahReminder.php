@@ -43,6 +43,7 @@ class BankSampahReminder extends Notification implements ShouldQueue
     {
         return new BroadcastMessage([
             'message' => $this->message,
+            'body'    => $this->message,
             'url' => $this->url,
             'id_user' => $this->bankSampahId
         ]);

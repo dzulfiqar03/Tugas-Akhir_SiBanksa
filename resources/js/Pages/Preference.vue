@@ -66,6 +66,31 @@
                             ]" />
                         </button>
                     </div>
+
+                    <div class="border-t border-gray-100 dark:border-gray-700"></div>
+
+<div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <div class="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg">
+                                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+        </div>
+        <div>
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Notifikasi Perangkat
+                                </h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Terima info sampah saat browser
+                                    ditutup</p>
+        </div>
+    </div>
+
+    <button type="button" @click="requestNotificationPermission"
+        class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+        Aktifkan Izin
+    </button>
+</div>
                 </div>
 
             </div>
@@ -94,7 +119,6 @@ const props = defineProps({
 })
 
 const isDark = ref(localStorage.getItem('darkMode') === 'true');
-const notifEnable = ref(localStorage.getItem('notif_sound_enabled') || '0');
 
 
 
@@ -122,39 +146,57 @@ onMounted(() => {
 });
 
 
+const notifEnable = ref(localStorage.getItem('notif_sound_enabled') === '1');
+
 const toggleSound = () => {
-    const audio = new Audio('/sounds/notification.mp3');
+    // Balikkan nilai boolean
+    notifEnable.value = !notifEnable.value;
 
-    if (notifEnable.value === '0') {
+    // Simpan ke localStorage
+    localStorage.setItem('notif_sound_enabled', notifEnable.value ? '1' : '0');
 
-
-        audio.muted = true
-
-        audio.play().then(() => {
-            audio.pause()
-            audio.currentTime = 0
-            audio.muted = false
-
-            window.notificationAudio = audio
-            window.audioUnlocked = true
-
-            notifEnable.value = '1';
-            localStorage.setItem('notif_sound_enabled', '1');
-
-            window.notificationAudio = audio;
-            console.log('🔓 Sound Enabled');
-        }).catch(err => console.log('Izin ditolak browser', err));
-
-    } else {
-        // PROSES MEMATIKAN
-        audio.muted = false;
-        notifEnable.value = '0';
-        localStorage.setItem('notif_sound_enabled', '0');
-        console.log('🔒 Sound Disabled');
+    // Jika diaktifkan, berikan suara percobaan (Test Sound)
+    if (notifEnable.value) {
+        // Panggil fungsi global yang sudah kita buat di AuthenticatedLayout
+        if (typeof window.playNotif === 'function') {
+            window.playNotif();
+        } else {
+            // Fallback jika belum ter-unlock sempurna
+            const audio = new Audio('/sounds/notification.mp3');
+            audio.play().catch(e => console.log("User must click first"));
+        }
     }
 };
 
 
+const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+        alert('Browser ini tidak mendukung notifikasi.');
+        return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+        if ('serviceWorker' in navigator) {
+            try {
+                // Tambahkan await di sini
+                await navigator.serviceWorker.register('/sw.js');
+
+                // Pastikan Swal sudah terimport atau gunakan window.Swal
+                window.Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'Notifikasi SiBanksa telah aktif di perangkat ini.',
+                    icon: 'success',
+                    confirmButtonColor: '#10b981'
+                });
+            } catch (err) {
+                console.error('Registrasi SW gagal:', err);
+            }
+        }
+    } else {
+        window.Swal.fire('Izin Ditolak', 'Anda tidak akan menerima notifikasi di luar browser.', 'warning');
+    }
+};
 
 const emit = defineEmits(['update:modelValue'])
 

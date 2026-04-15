@@ -21,13 +21,16 @@ test('Seluruh data valid', function () {
         'id_rt' => $rt->id,
         'telephone_number' => 0,
         'address' => 'Gresik Kota',
+        'pencairan_via' => 'Non-Tunai'
 
     ];
 
     $userDetail = UserDetail::factory()->bankSampah()->create($payload);
 
     $response = $this->post('/login', [
-        'email' => 'banksampah03@gmail.com',
+        'nama_bank' => 'Petugas Bank Sampah XYZ',
+        'id_rt' => $rt->id,
+        'phone' => 0,
         'password' => 'banksampah123'
     ]);
 
@@ -41,8 +44,10 @@ test('Seluruh field kosong', function () {
     $user = User::factory()->create();
 
     $response =  $this->post('/login', [
-        'email' => '',
-        'password' => '',
+        'nama_bank' => '',
+        'id_rt' => null,
+        'phone' => '',
+        'password' => ''
     ]);
 
     $response->assertSessionHasErrors();
@@ -50,24 +55,26 @@ test('Seluruh field kosong', function () {
 
 
 test('Format Field Salah', function () {
-    $user = User::factory()->create();
-
     $response = $this->post('/login', [
-        'email' => 'banksampah03',
-        'password' => 123456,
+        'nama_bank' => '',
+        'id_rt'     => 'abc',
+        'phone'     => 1,
+        'password'  => ''
     ]);
 
-    $response->assertSessionHasErrors(['email', 'password']);
+    $response->assertSessionHasErrors(['nama_bank', 'id_rt', 'phone']);
 });
 
-test('Email Tidak Terdaftar', function () {
+test('Identitas Tidak Terdaftar', function () {
 
     $response = $this->post('/login', [
-        'email' => 'banksampah23@gmail.com',
-        'password' => 'banksampah123',
+        'nama_bank' => 'Bank Sampah',
+        'id_rt' => 3,
+        'phone' => '081252435804',
+        'password' => '12211111'
     ]);
 
-    $response->assertSessionHasErrors(['email']);
+    $response->assertSessionHasErrors(['nama_bank']);
 });
 
 test('Seluruh data register valid', function () {
@@ -81,6 +88,7 @@ test('Seluruh data register valid', function () {
         'id_gender' => 3,
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
+        'pencairan_via' => 'Non-Tunai',
         'bankSampah' => [
             'userName' => 'banksampah03',
             'fullName' => 'Petugas Bank Sampah XYZ',
@@ -90,6 +98,7 @@ test('Seluruh data register valid', function () {
             'id_rt' => $rt->id,
             'phoneNumber' => '081234567890',
             'address' => 'Gresik Kota',
+
         ]
     ];
 
@@ -114,6 +123,8 @@ test('Data Field Register Duplikat', function () {
         'id_gender' => $gender->id,
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
+        'pencairan_via' => 'Non-Tunai',
+
         'bankSampah' => [
             'userName' => 'banksampah03',
             'fullName' => 'Petugas Bank Sampah XYZ',
@@ -148,6 +159,8 @@ test('Format Field Register Salah', function () {
         'id_gender' => $gender->id,
         'status' => 'Pengajuan Verifikasi',
         'status_transaction' => 'Belum Disetujui',
+        'pencairan_via' => 'Non-Tunai',
+
         'bankSampah' => [
             'userName' => 'banksampah03',
             'fullName' => 'Petugas Bank Sampah XYZ',
@@ -178,6 +191,7 @@ test('Seluruh field register kosong', function () {
         'id_gender' => '',
         'status' => '',
         'status_transaction' => '',
+        'pencairan_via' => '',
         'bankSampah' => [
             'userName' => '',
             'fullName' => '',
@@ -214,15 +228,20 @@ test('Dapat Logout dan seluruh session terhapus', function () {
         'id_rt' => 2,
         'telephone_number' => '081234567890',
         'address' => 'Gresik Kota',
+        'pencairan_via' => 'Non-Tunai'
 
     ];
 
     $userDetail = UserDetail::factory()->bankSampah()->create($payload);
 
     $response = $this->post('/login', [
-        'email' => 'banksampah03@gmail.com',
+        'nama_bank' => 'Petugas Bank Sampah XYZ',
+        'id_rt' => 2,
+        'phone' => '081234567890',
         'password' => 'banksampah123'
     ]);
+
+
 
     $response->assertSessionHasNoErrors();
     $this->assertAuthenticatedAs($user);
