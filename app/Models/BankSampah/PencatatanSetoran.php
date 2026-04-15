@@ -4,11 +4,14 @@ namespace App\Models\BankSampah;
 
 use App\Models\Transaction\UserTransaction;
 use App\Models\UserDetail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PencatatanSetoran extends Model
 {
 
+        /** @use HasFactory<\Database\Factories\BankSampah\PencatatanSetoranFactory> */
+    use HasFactory;
     protected $table = 'pencatatan_setoran';
     protected $fillable = ['id_userdetail', 'id_jadwal', 'total_setoran'];
 

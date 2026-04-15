@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Models\Transaction\Bank;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class UserBank extends Model
 {
+    /** @use HasFactory<\Database\Factories\UserBankFactory> */
+    use HasFactory;
     protected $table = 'user_bank';
     protected $fillable = ['id_userdetail', 'id_bank', 'nomor_rekening'];
 
