@@ -5,6 +5,7 @@ namespace App\Http\Requests\BankSampah;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\Rule;
 use Symfony\Component\Routing\Route;
 
 class JadwalPelaksanaanRequest extends FormRequest
@@ -29,7 +30,23 @@ class JadwalPelaksanaanRequest extends FormRequest
                 'required',
                 'date',
                 'after_or_equal:today',
-                'unique:jadwal_pelaksanaan,tanggal_setoran',
+             function ($attribute, $value, $fail) {
+        $user = auth()->user();
+        $idRt = $user->user_detail->id_rt ?? null;
+
+        if (!$idRt) return;
+
+        // Ganti 'user_detail' menjadi 'user_details' jika itu nama tabel aslinya
+        $exists = \DB::table('jadwal_pelaksanaan')
+            ->join('user_details', 'jadwal_pelaksanaan.id_userdetail', '=', 'user_details.id')
+            ->where('user_details.id_rt', $idRt)
+            ->where('jadwal_pelaksanaan.tanggal_setoran', $value)
+            ->exists();
+
+        if ($exists) {
+            $fail('Tanggal setoran sudah dijadwalkan untuk RT Anda.');
+        }
+    },
             ],
             'id_userdetail' => 'required|integer',
 
