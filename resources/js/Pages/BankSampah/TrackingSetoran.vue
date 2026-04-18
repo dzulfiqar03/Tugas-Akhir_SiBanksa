@@ -36,6 +36,7 @@ const props = defineProps({
     kepengurusan: Array,
     sidebardata: Object,
     breadcrumbItems: Array,
+    pencatatanSetoranItems: Array
 });
 
 
@@ -283,6 +284,21 @@ const dtOptions = {
         },
         ...statusColumns,
 
+        {
+            data: null,
+            title: 'Aksi',
+            orderable: false,
+            className: 'text-center w-20',
+            render: (d, t, row) => {
+                return `
+                    <button @click="viewDetail(${row.user_detail?.id || row.id})" class="view-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm" data-id="${row.id}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                `
+
+            }
+        }
+
     ]
 };
 
@@ -316,8 +332,13 @@ const formatStatus = (status) => {
     return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
-const viewDetail = (id) => {
-    router.get(route('', id));
+
+const viewDetail = (userId) => {
+
+
+        // Karena route minta ID userdetail, kita kirim userId-nya
+        router.get(route('show-pencatatan', userId));
+    
 };
 
 const timelineSteps = computed(() => {

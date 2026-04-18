@@ -988,60 +988,69 @@ const deleteDoc = (id) => {
                                 <div v-for="item in props.priceList" :key="item.id"
                                     class="p-3 bg-gray-50 dark:bg-gray-700 rounded-2xl text-center">
                                     <p class="text-[10px] text-gray-500 uppercase font-bold">{{ item.nama }}</p>
-                                    <p class="text-sm font-bold text-emerald-600 mt-1">{{ item.harga }}/kg</p>
+                                    <p class="text-sm font-bold text-emerald-600 mt-1">Rp{{ item.harga }}/kg</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
 
-               <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-    <div class="p-6 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center">
-        <h3 class="font-bold text-gray-800 dark:text-gray-100">Riwayat Setoran</h3>
-        <button v-if="props.recentTransactions?.length > 0" @click="viewPencairan" class="text-xs text-emerald-600 font-bold">
-            Lihat Semua
-        </button>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
-            <thead class="bg-gray-50 dark:bg-gray-700 text-[10px] text-gray-400 uppercase font-bold">
-                <tr>
-                    <th class="px-6 py-3">Tanggal</th>
-                    <th class="px-6 py-3">Jenis</th>
-                    <th class="px-6 py-3 text-right">Berat</th>
-                    <th class="px-6 py-3 text-right">Subtotal</th>
-                </tr>
-            </thead>
-
-            <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-                <template v-if="props.recentTransactions?.length > 0">
-                    <tr v-for="trx in props.recentTransactions" :key="trx.id"
-                        class="text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
-                        <td class="px-6 py-4">{{ trx.tanggal }}</td>
-                        <td class="px-6 py-4 font-bold">{{ trx.kategori }}</td>
-                        <td class="px-6 py-4 text-right">{{ trx.berat }} kg</td>
-                        <td class="px-6 py-4 text-right text-emerald-600 font-bold">
-                            Rp {{ trx.total?.toLocaleString('id-ID') }}
-                        </td>
-                    </tr>
-                </template>
-
-                <tr v-else>
-                    <td colspan="4" class="px-6 py-12 text-center">
-                        <div class="flex flex-col items-center justify-center opacity-50">
-                            <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-3">
-                                <i class="fas fa-box-open text-gray-400 text-xl"></i>
-                            </div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Belum Ada Riwayat</p>
-                            <p class="text-[9px] text-gray-400/70 italic">Data setoran terbaru akan muncul di sini</p>
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        <div class="p-6 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-800 dark:text-gray-100">Riwayat Setoran</h3>
+                            <button v-if="props.recentTransactions?.length > 0" @click="viewPencairan"
+                                class="text-xs text-emerald-600 font-bold">
+                                Lihat Semua
+                            </button>
                         </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead
+                                    class="bg-gray-50 dark:bg-gray-700 text-[10px] text-gray-400 uppercase font-bold">
+                                    <tr>
+                                        <th class="px-6 py-3">Tanggal</th>
+                                        <th class="px-6 py-3">Jenis</th>
+                                        <th class="px-6 py-3 text-right">Berat</th>
+                                        <th class="px-6 py-3 text-right">Subtotal</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+                                    <template v-if="props.recentTransactions?.length > 0">
+                                        <tr v-for="trx in props.recentTransactions" :key="trx.id"
+                                            class="text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
+                                            <td class="px-6 py-4">{{ trx.tanggal }}</td>
+                                            <td class="px-6 py-4 font-bold">{{ trx.kategori }}</td>
+                                            <td class="px-6 py-4 text-right">{{ trx.berat }} kg</td>
+                                            <td class="px-6 py-4 text-right text-emerald-600 font-bold">
+                                                Rp {{ trx.total?.toLocaleString('id-ID') }}
+                                            </td>
+                                        </tr>
+                                    </template>
+
+                                    <tr v-else>
+                                        <td colspan="4" class="px-6 py-12 text-center">
+                                            <div class="flex flex-col items-center justify-center opacity-50">
+                                                <div
+                                                    class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-3">
+                                                    <i class="fas fa-box-open text-gray-400 text-xl"></i>
+                                                </div>
+                                                <p
+                                                    class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                                    Belum
+                                                    Ada Riwayat</p>
+                                                <p class="text-[9px] text-gray-400/70 italic">Data setoran terbaru akan
+                                                    muncul
+                                                    di sini</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="space-y-6">

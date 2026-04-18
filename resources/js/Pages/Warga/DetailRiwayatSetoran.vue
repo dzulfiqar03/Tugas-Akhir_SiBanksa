@@ -30,12 +30,12 @@ const printReceipt = () => {
 
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('warga.dashboard') },
-    { label: 'Tracking Setoran', url: route('warga.tracking-setoran') },
+    { label: 'Data Transaksi', url: route('warga.data-transaksi') },
     { label: 'Detail Kwitansi', url: '#' },
 ];
 
 const handlePage = () => {
-    router.get(route('warga.tracking-setoran'));
+    router.get(route('warga.data-transaksi'));
 };
 </script>
 

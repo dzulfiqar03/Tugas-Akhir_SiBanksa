@@ -55,18 +55,17 @@ class DataTransaksiController extends Controller
         $userRT = Auth::user()->user_detail->id_rt;
 
 
-        $nasabahList =  PencatatanSetoran::with(['user_detail', 'pencatatan_items'])
+
+        $nasabahList = PencatatanSetoran::with(['user_detail.userbank', 'pencatatan_items'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_rt', Auth::user()->user_detail->id_rt);
             })
-            ->whereHas('user_detail.userbank')
             ->whereDoesntHave('user_detail.user_transaction', function ($query) {
 
                 $query->whereColumn('pencatatan_setoran_id', 'pencatatan_setoran.id');
-            })
-            ->orderBy('created_at', 'desc')
+            })->where('total_setoran', '>', 0)
+            ->orderBy('created_at', 'desc')->latest()
             ->get();
-
 
         $nasabah = $nasabahList
             ->map(function ($user) {

@@ -6,6 +6,8 @@ import { computed, ref } from 'vue'
 const props = defineProps({
     nasabahList: Array,
     sidebardata: Object,
+        petugas: Array,
+        
 })
 
 const workflowSteps = [
@@ -98,7 +100,20 @@ const handlePage = (id) => {
 
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
 
-        <div class="max-w-6xl mx-auto px-4 py-10 space-y-10">
+
+                <div v-if="props.petugas.length == 0" class="flex flex-col space-y-5 m-auto h-max items-center justify-center py-10 text-center">
+        <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-users-slash text-3xl text-gray-400"></i>
+        </div>
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white">Struktur Kepengurusan Bank Sampah Anda Belum Diatur</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mt-2">
+            Tunggu admin mengatur struktur kepengurusan bank sampah Anda untuk mulai memantau status setoran Anda.
+        </p>
+
+
+    </div>
+
+        <div v-else class="max-w-6xl mx-auto px-4 py-10 space-y-10">
 
             <!-- ================= HEADER ================= -->
             <div class="text-center">

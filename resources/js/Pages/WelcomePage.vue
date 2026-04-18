@@ -461,7 +461,16 @@
                                     <p class="text-[10px] text-emerald-500 uppercase font-bold mb-1">Growth</p>
                                     <p class="text-xl font-black"
                                         :class="growthSampah.isUp ? 'text-emerald-500' : 'text-red-500'">
-                                        <span class="counter" :data-target="growthSampah.value">0</span>%
+
+                                        <span class="text-md font-bold text-black dark:text-white/50">
+                                            {{ growthSampah.value > 100 ? 'Lonjakan Pesat' : 'Pertumbuhan' }}
+                                        </span>
+                                    <h2 v-if="growthSampah.value <= 100" :data-target="growthSampah.value"
+                                        class="counter {{ growthSampah.value > 0 ? 'text-green-500' : 'text-red-500' }}">
+                                        0%
+                                    </h2>
+
+
                                     </p>
                                 </div>
                             </div>
@@ -619,15 +628,17 @@
                         movement?</p>
                     <div class="flex justify-center gap-4 mb-20 px-6 reveal">
                         <button
+                            onclick="window.open('https://wa.me/6281252218959?text=Halo%20Ketua%20RW%2C%20saya%20ingin%20bertanya%20terkait%20Sistem%20Bank%20Sampah%20SiBanksa.', '_blank')"
                             class="px-10 md:px-14 py-4 md:py-5 bg-[#1a3a2a] text-white font-black uppercase tracking-widest text-[10px] rounded-full hover:bg-emerald-600 transition-all transform hover:-translate-y-1 shadow-2xl">
-                            Hubungi Pengurus <i class="fab fa-whatsapp ml-2"></i>
+                            Hubungi Ketua RW <i class="fab fa-whatsapp ml-2"></i>
                         </button>
                     </div>
                     <div class="opacity-5 dark:opacity-10 pointer-events-none select-none">
                         <h2 class="text-[15vw] font-black italic uppercase tracking-tighter leading-none">SiBanksa.</h2>
                     </div>
                     <div class="mt-16 px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-slate-400">
-                        <p class="text-[10px] uppercase tracking-[0.3em] font-medium italic">© 2026 Sidorukun Indah •
+                        <p class="text-[10px] uppercase tracking-[0.3em] font-medium italic">© {{ new
+                            Date().getFullYear() }} Sidorukun Indah •
                             Ecosystem Digitized</p>
                         <div class="flex gap-8 text-[10px] font-black uppercase tracking-widest">
                             <a href="#" class="hover:text-emerald-600 transition-colors">Documentation</a>

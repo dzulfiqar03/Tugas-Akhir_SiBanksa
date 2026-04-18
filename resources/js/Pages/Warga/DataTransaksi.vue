@@ -222,6 +222,14 @@ const exportAsImage = async () => {
         Swal.fire('Gagal', 'Tidak dapat mengambil gambar.', 'error');
     }
 };
+
+const viewDetails = (transaction) => {
+    // Simpan data transaksi yang ingin dilihat detailnya ke localStorage
+    localStorage.setItem('selectedTransaction', JSON.stringify(transaction));
+
+    // Navigasi ke halaman detail kwitansi
+    router.get(route('warga.detail-setoran', transaction.id));
+}
 </script>
 
 <template>
@@ -344,10 +352,11 @@ const exportAsImage = async () => {
                 <p class="text-lg font-black text-gray-800 dark:text-white">{{ formatRupiah(rt.total) }}</p>
             </div>
 
-            <div v-if="rt.bukti" class="mt-4 pt-4 border-t border-gray-50 dark:border-gray-700">
-                <a :href="'/storage/' + rt.bukti" target="_blank" class="text-[10px] font-bold text-emerald-600 hover:underline">
-                    <i class="fas fa-image mr-1"></i> LIHAT BUKTI
-                </a>
+            <div  class="mt-4 pt-4 border-t border-gray-50 dark:border-gray-700">
+               <button @click="viewDetails(rt)"
+                    class="w-full flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-bold shadow-md transition">
+                    <i class="fas fa-file-pdf"></i> Cetak Kwitansi
+                </button>
             </div>
         </div>
 

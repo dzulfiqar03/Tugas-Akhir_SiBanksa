@@ -11,10 +11,7 @@ use App\Models\BankSampah\Sampah;
 use App\Models\Transaction\UserTransaction;
 use App\Models\User;
 use App\Models\UserBank;
-use App\Models\UserBot;
-use App\Models\UserChat;
 use App\Models\UserDetail;
-use App\Models\UserLog;
 use App\Services\BankSampah\JadwalServices;
 use App\Services\BankSampah\NasabahServices;
 use App\Services\ChatServices;
@@ -38,8 +35,8 @@ class DashboardController extends Controller
 
         $menu = (new DataResources(null))->toArray(request());
 
-        $getSaldo = \App\Models\BankSampah\PencatatanSetoran::where('id_userdetail', $detail->id)
-            ->whereHas('transaction') // Pastikan relasi ke bukti setor (document_archiver) ada
+        $getSaldo = PencatatanSetoran::where('id_userdetail', $detail->id)
+            ->whereHas('transaction')
             ->sum('total_setoran');
 
         $totalBeratPersonal = PencatatanSetoranItems::whereHas('setoran', function ($query) use ($detail) {
@@ -61,14 +58,12 @@ class DashboardController extends Controller
             });
 
         $recentTransactions = $detail->pencatatan()
-            // Pastikan memuat relasi items dan sampah agar tidak N+1
             ->with(['pencatatan_items.sampah', 'jadwal', 'transaction'])
-            ->whereHas('transaction') // Hanya yang sudah ada bukti pembayarannya
+            ->whereHas('transaction')
             ->latest()
             ->take(5)
             ->get()
             ->map(function ($p) {
-                // Ambil item pertama untuk menentukan kategori utama
                 $firstItem = $p->pencatatan_items->first();
 
                 return [
@@ -82,18 +77,16 @@ class DashboardController extends Controller
 
         $nasabahList = auth()->user()->user_detail->pencairan_via === 'Non-Tunai' ? PencatatanSetoran::with(['user_detail', 'pencatatan_items', 'jadwal', 'user_detail.document'])
             ->whereHas('user_detail', function ($query) {
-                // Filter spesifik untuk ID 28
                 $query->where('id_userdetail', auth()->user()->user_detail->id);
             })
             ->whereHas('user_detail.userbank')
-            ->whereHas('transaction') // Memastikan sudah ada bukti setor (id_pencatatan_setoran ada di user_transactions)
+            ->whereHas('transaction')
             ->orderBy('created_at', 'desc')
             ->get() : PencatatanSetoran::with(['user_detail', 'pencatatan_items', 'jadwal', 'user_detail.document'])
             ->whereHas('user_detail', function ($query) {
-                // Filter spesifik untuk ID 28
                 $query->where('id_userdetail', auth()->user()->user_detail->id);
             })
-            ->whereHas('transaction') // Memastikan sudah ada bukti setor (id_pencatatan_setoran ada di user_transactions)
+            ->whereHas('transaction')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -111,14 +104,15 @@ class DashboardController extends Controller
             return $setoran;
         });
 
-                $nasabahAll = User::with(['user_detail', 'user_detail.sampah', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan', 'user_detail.location', 'user_detail.location.open_street', 'user_detail.document'])->find(Auth::user()->id);
+        $nasabahAll = User::with(['user_detail', 'user_detail.sampah', 'user_detail.gender', 'user_detail.rt', 'user_detail.roles', 'user_detail.user_log', 'user_detail.userbank', 'user_detail.pencatatan', 'user_detail.location', 'user_detail.location.open_street', 'user_detail.document'])->find(Auth::user()->id);
 
         $jadwalRT =  JadwalPelaksanaan::whereHas('user_detail', function ($q) use ($detail) {
             $q->where('id_rt', $detail->id_rt);
         })->get();
 
-        $priceList = Sampah::select('nama_sampah as nama', 'harga as harga')
-            ->take(4)
+        $priceList = Sampah::select('nama_sampah as nama', 'harga as harga')->whereHas('user_detail', function ($q) {
+            $q->where('id_rt', auth()->user()->user_detail->id_rt);
+        })->orderBy('nama_sampah')->take(4)
             ->get();
 
 

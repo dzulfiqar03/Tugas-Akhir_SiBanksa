@@ -49,7 +49,6 @@ class TransactionServices
                 // ELOQUENT
                 $document = new UserTransaction();
                 $document->id_userdetail = $data['id_userdetail'];
-                $document->id_userbank = $data['id_userbank'];
                 $document->pencatatan_setoran_id = $data['pencatatan_setoran_id'];
 
                 if ($files != null) {

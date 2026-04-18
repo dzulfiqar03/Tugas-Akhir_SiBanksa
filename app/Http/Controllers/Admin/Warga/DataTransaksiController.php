@@ -42,11 +42,14 @@ class DataTransaksiController extends Controller
         });
         $user = Auth::user();
 
-        $transaction = $this->userDetail->where('id_rt', $user->user_detail->id_rt)->where('id_roles', 3)->whereHas('pencatatan')
-            ->get();
+        $transaction = $this->userDetail->where('id_rt', $user->user_detail->id_rt)->where('id', $user->user_detail->id)->where('id_roles', 3)->whereHas('pencatatan', function ($query) {
+            $query->whereHas('transaction');
+        })->with(['pencatatan' => function ($query) {
+            $query->with('transaction');
+        }])->get();
 
-        $reporting = $this->userDetail->where('id_rt', $user->user_detail->id_rt)->where('id_roles', 2)->whereHas('document')->whereHas('image')
-            ->get();
+        $reporting = $this->userDetail->where('id_rt', $user->user_detail->id_rt)->where('id_roles', 2)->whereHas('document')->whereHas('image')->where('id', auth()->user()->user_detail->id)->with(['document', 'image'])->get();
+
 
         $countTransaction = count($transaction);
         $IDRW = $this->userDetail::where('id_roles', 1)->first()->id_user;

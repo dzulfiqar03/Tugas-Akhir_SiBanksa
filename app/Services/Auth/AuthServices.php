@@ -45,8 +45,6 @@ class AuthServices
                 'pencairan_via'     => $data['pencairan_via'] ?? 'Non-Tunai',
             ]);
 
-            return $user;
-        });
 
         try {
             $targetRoles = ($data['id_roles'] == 2) ? 1 : 2;
@@ -69,6 +67,9 @@ class AuthServices
         } catch (\Exception $e) {
             Log::error("Gagal kirim notif registrasi: " . $e->getMessage());
         }
+            return $user;
+        });
+
 
         return $user;
     }

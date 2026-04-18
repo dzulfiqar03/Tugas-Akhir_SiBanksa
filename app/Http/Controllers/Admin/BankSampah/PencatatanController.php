@@ -103,7 +103,7 @@ class PencatatanController extends Controller
 
         $jenisSampah = $this->sampah::where('id_userdetail', $id)->get();
 
-        $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail','setoran.jadwal', 'sampah'])
+        $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'setoran.jadwal', 'sampah'])
             ->whereHas('setoran', function ($query) use ($id) {
                 $query->where('id_userdetail', $id);
             })

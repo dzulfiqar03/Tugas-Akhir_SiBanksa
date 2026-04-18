@@ -58,7 +58,6 @@ const isEdit = ref(false);
 const form = useForm({
     id: props.user.id,
     id_userdetail: props.user.user_detail.id,
-    id_userbank: '',
     id_jadwal: '',
     fullName: '',
     pencatatan_setoran_id: '',
@@ -96,7 +95,6 @@ const editData = (item) => {
     form.fullName = row.user_detail.fullName;
     form.id_userdetail = row.id_userdetail;
     form.id_jadwal = row.id_jadwal;
-    form.id_userbank = row.user_bank[0].id;
     form.pencatatan_setoran_id =
         row.pencatatan_items.find(i => i.pencatatan_setoran_id)?.pencatatan_setoran_id ?? null;
     form.bukti_pembayaran = '';
@@ -192,9 +190,8 @@ const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tun
         {
             data: 'user_bank',
             className: 'text-black dark:text-white capitalize',
-            visible: props.nasabah.some(n => n.user_detail?.pencairan_via === 'Non-Tunai'),
             render: (data, type, row) => {
-                return row.user_bank[0].nomor_rekening;
+                return row.user_detail.userbank ? row.user_bank[0].nomor_rekening : '-';
             },
 
         },
@@ -202,9 +199,8 @@ const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tun
         {
             data: 'user_bank',
             className: 'text-black dark:text-white capitalize',
-            visible: props.nasabah.some(n => n.user_detail?.pencairan_via === 'Non-Tunai'),
             render: (data, type, row) => {
-                return row.user_bank[0].bank.short_name || '-';
+                return  row.user_detail.userbank ? row.user_bank[0].bank.short_name : '-';
             }
         },
 
@@ -228,13 +224,13 @@ const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tun
         },
         {
             // Kolom 3: Status (Penting untuk filter kategori)
-            data: 'user_bank',
+            data: 'user_detail.pencairan_via',
+            title: 'Pencairan Via',
             className: 'text-black dark:text-white capitalize',
 
             render: (data, type, row) => {
-                // Menyesuaikan dengan badge di template
-                const status = row.user_bank.length === 0 ? 'Belum' : 'Selesai';
-                return `<span class="px-2 py-1 rounded-full text-[10px] bg-green-100 text-green-700">${status}</span>`;
+
+                return data === 'Tunai' ? `<span class="px-2 py-1 rounded-full text-[10px] bg-green-100 text-green-700">${data}</span>` : `<span class="px-2 py-1 rounded-full text-[10px] bg-red-100 text-red-700">${data}</span>`;
             },
             className: 'text-center'
         },
@@ -248,9 +244,9 @@ const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tun
             render: (data, type, row) => {
                 const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(row))));
                 return row.user_transaction.length === 0 ? !row.user_bank || row.user_bank.length === 0 ? ` <button
-                                            onclick="window.handleWA('${base64Data}')"
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
-                                            <i class="fas fa-bell"></i> Hubungi WA
+                                            onclick="window.uploadBukti('${base64Data}')"
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            <i class="fas fa-bell"></i> Kirim Bukti Pembayaran
                                         </button>`: ` <button
                                             onclick="window.uploadBukti('${base64Data}')"
                                             class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">

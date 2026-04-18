@@ -7,6 +7,7 @@ use App\Http\Resources\DataResources;
 use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\BankSampah\Kepengurusan;
 use App\Models\BankSampah\PencatatanSetoran;
+use App\Models\BankSampah\PencatatanSetoranItems;
 use App\Models\UserDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,8 @@ class TrackingSetoranController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    public function __construct(protected UserDetail $userDetail, protected Kepengurusan $kepengurusan, protected PencatatanSetoran $pencatatanSetoran, protected PencatatanSetoranItems $pencatatanSetoranItems) {}
     public function index()
     {
 
@@ -32,7 +35,7 @@ class TrackingSetoranController extends Controller
             $query->where('id_rt', Auth::user()->user_detail->id_rt);
             $query->where('status', 'Disetujui');
             $query->where('id_roles', 3);
-        })->with(['transaction', 'user_detail'])->get();
+        })->where('total_setoran', '>', 0)->with(['transaction', 'user_detail'])->get();
 
 
 
@@ -78,17 +81,17 @@ class TrackingSetoranController extends Controller
                 $pemilah = $petugas
                     ->pluck('kepengurusan')
                     ->flatten()
-                    ->firstWhere('divisi', 'Pemilah')?? '';
+                    ->firstWhere('divisi', 'Pemilah') ?? '';
 
                 $penimbang = $petugas
                     ->pluck('kepengurusan')
                     ->flatten()
-                    ->firstWhere('divisi', 'Penimbang')?? '';
+                    ->firstWhere('divisi', 'Penimbang') ?? '';
 
 
-                $workflow['Pencatatan']['petugas'] = [$sekretaris->fullName?? ''];
-                $workflow['Pemilahan']['petugas'] = [$pemilah->fullName?? ''];
-                $workflow['Penimbangan']['petugas'] = [$penimbang->fullName??''];
+                $workflow['Pencatatan']['petugas'] = [$sekretaris->fullName ?? ''];
+                $workflow['Pemilahan']['petugas'] = [$pemilah->fullName ?? ''];
+                $workflow['Penimbangan']['petugas'] = [$penimbang->fullName ?? ''];
             }
 
             if ($n->transaction && $n->transaction->count()) {
@@ -98,7 +101,7 @@ class TrackingSetoranController extends Controller
                 $bendahara = $petugas
                     ->pluck('kepengurusan')
                     ->flatten()
-                    ->firstWhere('divisi', 'Bendahara')??'';
+                    ->firstWhere('divisi', 'Bendahara') ?? '';
 
                 if ($bendahara) {
                     $workflow['Pencairan']['petugas'] = [$bendahara->fullName];
@@ -128,6 +131,11 @@ class TrackingSetoranController extends Controller
             ];
         });
 
+        $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+            ->whereHas('setoran', function ($query) {
+                $query->where('id_userdetail', Auth::user()->user_detail->id);
+            })
+            ->get();
 
         $menu = (new DataResources(null))->toArray(request());
         return Inertia::render('BankSampah/TrackingSetoran', [
@@ -135,7 +143,8 @@ class TrackingSetoranController extends Controller
             'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,
             'nasabahList' => $nasabahList,
-            'petugas' =>$pengurus
+            'petugas' => $pengurus,
+            'pencatatanSetoranItems' => $pencatatanSetoranItems
 
         ]);
     }

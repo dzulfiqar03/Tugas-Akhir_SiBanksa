@@ -23,8 +23,5 @@ class UserBank extends Model
         return $this->belongsTo(Bank::class, 'id_bank', 'id');
     }
 
-    public function transactions()
-    {
-        return $this->hasMany(Transaction\UserTransaction::class, 'id_userbank', 'id');
-    }
+
 }
