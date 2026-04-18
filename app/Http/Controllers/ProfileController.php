@@ -169,6 +169,7 @@ class ProfileController extends Controller
                 'userName' => $request->userName,
                 'address' => $request->display_name,
                 'telephone_number' => $request->phoneNumber,
+                'pencairan_via' => $request->pencairan_method,
             ]);
         } else {
             $nasabah->user_detail->update([
@@ -271,9 +272,7 @@ class ProfileController extends Controller
 
                 $pesan = "Profil Bank Sampah RT0{$rt} sudah dilengkapi/diperbarui, mohon verifikasi.";
                 $uri = '/KetuaRW/Kelola-Bank-Sampah';
-            }
-
-            elseif ($userDetail->id_roles === 3) {
+            } elseif ($userDetail->id_roles === 3) {
                 $targets = User::whereHas('user_detail', function ($q) use ($rt) {
                     $q->where('id_roles', 2)->where('id_rt', $rt);
                 })->where('id', '!=', auth()->id())->get();

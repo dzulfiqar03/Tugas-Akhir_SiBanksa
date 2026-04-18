@@ -814,7 +814,7 @@ const deleteDoc = (id) => {
                                             <InputLabel value="Via Pencairan Setoran"
                                                 class="mb-4 text-emerald-600 font-black uppercase tracking-widest text-[10px]" />
 
-                                            <select v-model="form2.pencairan_method" disabled
+                                            <select v-model="form2.pencairan_method"
                                                 class="w-full h-11 rounded-xl bg-gray-50 text-black   dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-white text-sm pl-5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm">
                                                 <option value="" class="text-black dark:text-white">Pilih Metode
                                                     Pencairan

@@ -102,14 +102,13 @@ class LoginRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Jika user sudah mengisi password, berarti dia di Step 2
         if ($this->filled('password')) {
             return [
                 'password' => 'required|string',
             ];
         }
 
-        // Jika belum, validasi identitas Step 1
+
         return [
             'nama_bank' => 'required|string',
             'id_rt'     => 'required|integer',
