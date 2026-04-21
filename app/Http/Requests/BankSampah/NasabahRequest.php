@@ -38,14 +38,14 @@ class NasabahRequest extends FormRequest
     {
         return [
             'fullName.required'    => 'Nama lengkap wajib diisi',
+            'fullName.string'      => 'Nama lengkap harus berupa string',
             'id_rt.required'          => 'RT wajib diisi',
             'phoneNumber.required' => 'Nomor telepon wajib diisi',
+            'phoneNumber.string'   => 'Nomor telepon harus berupa string',
             'phoneNumber.min' => 'Nomor telepon minimal 10 karakter',
             'id_roles.required'   => 'Roles wajib dipilih',
             'id_gender.required'   => 'Gender wajib dipilih',
             'status.required'   => 'Status wajib dipilih'
         ];
     }
-
-
 }

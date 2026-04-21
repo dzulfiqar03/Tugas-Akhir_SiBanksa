@@ -221,9 +221,7 @@
                             </h2>
                             <p
                                 class="text-slate-600 dark:text-slate-400 text-base md:text-lg leading-relaxed font-light italic">
-                                Sistem informasi SiBanksa memungkinkan monitoring real-time terhadap {{
-                                    nasabahAll.length }}
-                                nasabah aktif. Kami membangun kemandirian ekonomi melalui digitalisasi sampah anorganik.
+                                Sistem informasi SiBanksa memungkinkan monitoring real-time terhadap Bank Sampah. Kami membangun kemandirian ekonomi melalui digitalisasi sampah anorganik.
                             </p>
                         </div>
 
@@ -254,7 +252,7 @@
                         </div>
 
                         <p class="text-slate-500 text-sm leading-relaxed mb-8 italic">
-                            Aktivitas Bank Sampah SiBanksa Perumahan Sidorukun Indah Gresik
+                            Aktivitas Bank Sampah
                         </p>
 
                     </div>
@@ -638,7 +636,7 @@
                     </div>
                     <div class="mt-16 px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-slate-400">
                         <p class="text-[10px] uppercase tracking-[0.3em] font-medium italic">© {{ new
-                            Date().getFullYear() }} Sidorukun Indah •
+                            Date().getFullYear() }} Sibanksa •
                             Ecosystem Digitized</p>
                         <div class="flex gap-8 text-[10px] font-black uppercase tracking-widest">
                             <a href="#" class="hover:text-emerald-600 transition-colors">Documentation</a>
