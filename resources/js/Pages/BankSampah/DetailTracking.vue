@@ -5,7 +5,7 @@ import jszip from 'jszip';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import Swal from 'sweetalert2';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 // ================= DATATABLES =================
 import DataTablesCore from 'datatables.net';
 import Buttons from 'datatables.net-buttons';
@@ -70,6 +70,8 @@ const user = computed(() => page.props.auth.user);
 const mobileSearch = ref('');
 const mobilePage = ref(1);
 
+const activeCategory = ref('All');
+const categories = ['All', 'Daur Ulang', 'Non Daur Ulang'];
 
 const filteredMobileData = computed(() => {
     let data = props.pencatatanSetoranItems || [];
@@ -91,8 +93,33 @@ const paginatedMobileData = computed(() => {
 const totalMobilePages = computed(() => Math.ceil(filteredMobileData.value.length / mobilePerPage.value));
 
 
-const activeCategory = ref('All');
-const categories = ['All', 'Daur Ulang', 'Non Daur Ulang'];
+const selectedJadwalFilter = ref('');
+
+onMounted(() => {
+    // 1. Ambil parameter 'tanggal' dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tanggalParam = urlParams.get('tanggal');
+
+    if (tanggalParam) {
+        // 2. Set nilai ref filter
+        selectedJadwalFilter.value = tanggalParam;
+
+        // 3. Terapkan filter ke DataTable (Kolom index 1 adalah Tanggal)
+        setTimeout(() => {
+            if (dtInstance.value?.dt) {
+                dtInstance.value.dt.column(1).search(tanggalParam).draw();
+            }
+        }, 500); // Beri sedikit delay agar DT siap
+    }
+});
+
+// Watcher agar filter dropdown tetap sinkron dengan tabel jika diubah manual
+watch(selectedJadwalFilter, (newVal) => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.column(1).search(newVal).draw();
+    }
+    mobilePage.value = 1;
+});
 
 const deleteData = (id) => {
     Swal.fire({
@@ -117,12 +144,14 @@ const deleteData = (id) => {
 }
 
 const dtInstance = ref(null);
+
 const dtOptions = {
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
 
     columns: [
+
         {
             data: null,
             title: 'No',
@@ -159,18 +188,17 @@ const dtOptions = {
         },
 
         {
-            // Langsung akses user_detail (tanpa kata 'nasabah')
-            data: 'sampah.kategori',
-            title: 'Kategori',
-            visible: false,
-            className: 'capitalize text-black dark:text-gray-300',
-            render: (data, type, row) => {
-                return row.sampah?.kategori || '-'
-            },
-            defaultContent: '-',
+                // Langsung akses user_detail (tanpa kata 'nasabah')
+                data: 'sampah.kategori',
+                title: 'Kategori',
+                visible: false,
+                className: 'capitalize text-black dark:text-gray-300',
+                render: (data, type, row) => {
+                    return row.sampah?.kategori || '-'
+                },
+                defaultContent: '-',
 
         },
-
 
         {
             // Langsung akses user_detail (tanpa kata 'nasabah')
@@ -427,10 +455,10 @@ const handleLengthChange = (e) => {
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') },
     { label: 'Manajemen Bank Sampah', url: null },
-    { label: 'Penyetoran Sampah', url: route('pencatatan-setoran') },
+    { label: 'Tracking Setoran', url: route('data-tracking') },
     {
-        label: 'Detail Pencatatan Nasabah' + ' ' + props.nasabah.fullName,
-        url: route('show-pencatatan', props.nasabah.id),
+        label: 'Detail Tracking' + ' ' + props.nasabah.fullName,
+        url: null,
     },
 ]
 </script>
@@ -530,7 +558,6 @@ const breadcrumbItems = [
                             </div>
 
 
-
                             <div class="flex items-center gap-2 pl-3">
                                 <label
                                     class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Show:</label>
@@ -547,9 +574,8 @@ const breadcrumbItems = [
                     </div>
                 </div>
                 <div class="hidden md:block overflow-x-auto">
-                    <DataTable ref="dtInstance"
-                        :data="pencatatanSetoranItems.filter(item => item.sampah?.kategori === activeCategory || activeCategory === 'All')"
-                        :options="dtOptions" class="display stripe hover cell-border w-full dark:text-gray-200">
+                    <DataTable ref="dtInstance" :data="pencatatanSetoranItems.filter(item => item.sampah?.kategori === activeCategory || activeCategory === 'All')" :options="dtOptions"
+                        class="display stripe hover cell-border w-full dark:text-gray-200">
                         <template #column-7="data">
                             <div class="flex justify-center gap-1">
                                 <button @click="deleteData(data.rowData.id)"

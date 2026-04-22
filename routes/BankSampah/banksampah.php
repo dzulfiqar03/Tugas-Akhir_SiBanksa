@@ -31,13 +31,13 @@ Route::middleware(['roles:Bank Sampah'])->prefix('bank-sampah')->group(function 
             Route::delete('/Delete/{Jadwal}',  'destroy')->name('delete-jadwalBankSampah');
         });
 
-        Route::controller(ProfileController::class)
-            ->prefix('/Dashboard')
-            ->name('dashboard.')
-            ->group(function () {
+    Route::controller(ProfileController::class)
+        ->prefix('/Dashboard')
+        ->name('dashboard.')
+        ->group(function () {
 
-                Route::post('/edit', 'editAll')->name('profile-edit');
-            });
+            Route::post('/edit', 'editAll')->name('profile-edit');
+        });
     Route::controller(DataSampahController::class)
         ->prefix('Sampah')
         ->group(function () {
@@ -72,7 +72,14 @@ Route::middleware(['roles:Bank Sampah'])->prefix('bank-sampah')->group(function 
             Route::delete('/delete/{id}',  'destroy')->name('delete-kepengurusan');
         });
 
-    Route::get('/tracking', [TrackingSetoranController::class, 'index'])->name('data-tracking');
+
+    Route::controller(TrackingSetoranController::class)
+        ->prefix('tracking')
+        ->group(function () {
+
+            Route::get('/',  'index')->name('data-tracking');
+            Route::get('/detail/{id}/{idJadwal}',  'show')->name('show-tracking');
+        });
 
 
     Route::controller(DataTransaksiController::class)
@@ -92,6 +99,8 @@ Route::middleware(['roles:Bank Sampah'])->prefix('bank-sampah')->group(function 
             Route::get('/', 'index')->name('pencatatan-setoran');
             Route::post('/create',  'store')->name('add-setoran');
             Route::get('/detail/{id}',  'show')->name('show-pencatatan');
+            Route::get('/detail/{id}/{idJadwal}',  'showByJadwal')->name('show-pencatatanByBulan');
+
             Route::delete('/delete/{id}', 'destroy')->name('delete-pencatatan');
         });
 

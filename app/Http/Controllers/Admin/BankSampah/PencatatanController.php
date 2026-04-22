@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BankSampah\PencatatanRequest;
 use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
+use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\BankSampah\PencatatanSetoranItems;
 use App\Models\BankSampah\Sampah;
 use App\Models\UserDetail;
@@ -35,7 +36,6 @@ class PencatatanController extends Controller
         $jadwalPelaksanaan = $this->userDetail::find(Auth::user()->user_detail->id)->jadwal()->latest()->limit(10)->get();
         $nasabahList = $this->userDetail::where('id_rt', Auth::user()->user_detail->rt->id)->where('status', 'Disetujui')->where('id_roles', 3)->with(['sampah', 'pencatatan.pencatatan_items'])->get();
         $formName = 'formPencatatan';
-
         $jenisSampah = $this->sampah::where('id_userdetail', Auth::user()->user_detail->id)->get();
 
         $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
@@ -43,6 +43,8 @@ class PencatatanController extends Controller
                 $query->where('id_userdetail', Auth::user()->user_detail->id);
             })
             ->get();
+
+        $pencatatanSetoran = PencatatanSetoran::with(['user_detail', 'jadwal'])->get();
         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,
@@ -62,7 +64,8 @@ class PencatatanController extends Controller
             'jadwalPelaksanaan' => $jadwalPelaksanaan,
             'nasabahList' => $nasabahList,
             'jenisSampah' => $jenisSampah,
-            'pencatatanSetoranItems' => $pencatatanSetoranItems
+            'pencatatanSetoranItems' => $pencatatanSetoranItems,
+            'pencatatanSetoran' => $pencatatanSetoran
         ]);
     }
 
@@ -108,6 +111,55 @@ class PencatatanController extends Controller
                 $query->where('id_userdetail', $id);
             })
             ->get();
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+
+        return Inertia::render('BankSampah/DetailPencatatan', [
+            'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
+            'sidebardata' => $menu,
+            'formdata' => $form,
+            'formName' => $formName,
+            'jadwalPelaksanaan' => $jadwalPelaksanaan,
+            'nasabah' => $nasabahList,
+            'jenisSampah' => $jenisSampah,
+            'pencatatanSetoranItems' => $pencatatanSetoranItems
+        ]);
+    }
+
+    public function showByJadwal($id, $idJadwal)
+    {
+        $menu = (new DataResources(null))->toArray(request());
+        $form = (new FormResources(null))->toArray(request());
+        $nasabah = UserDetail::with('user')->findOrFail($id);
+
+        // 2. Jadwal Pelaksanaan KHUSUS untuk nasabah ini
+        // Pastikan relasi 'jadwal' ada di model UserDetail
+        $jadwalPelaksanaan = $nasabah->jadwal()->get();
+        $nasabahList = UserDetail::with('user')->findOrFail($id);;
+        $formName = 'formPencatatan';
+
+        $jenisSampah = $this->sampah::where('id_userdetail', $id)->get();
+
+
+
+        $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'setoran.jadwal', 'sampah'])
+            ->whereHas('setoran', function ($query) use ($id, $idJadwal) {
+                // Filter berdasarkan Nasabah
+                $query->where('id_userdetail', $id);
+
+                $query->where('id_jadwal', $idJadwal);
+            })
+            ->get();
+
+
         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
                 'id' => $n->id,

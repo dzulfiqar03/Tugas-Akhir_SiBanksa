@@ -24,7 +24,6 @@ class TrackingSetoranController extends Controller
             'Pemilahan'   => 'Pemilah',
             'Penimbangan' => 'Penimbang',
             'Pencatatan'  => 'Sekretaris',
-            'Verifikasi'  => 'Ketua RW',
             'Pencairan'   => 'Bendahara',
         ];
 
@@ -105,10 +104,6 @@ class TrackingSetoranController extends Controller
 
 
 
-            if ($petugas->firstWhere('status_transaction', 'Disetujui')) {
-                $workflow['Verifikasi']['completed'] = true;
-                $workflow['Verifikasi']['petugas'] = [UserDetail::where('id_roles', 1)->first()->fullName];
-            }
 
 
 

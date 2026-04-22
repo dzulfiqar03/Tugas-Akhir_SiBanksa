@@ -2,7 +2,7 @@
 import FormWrapper from '@/Components/FormWrapper.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Head, router, useForm, usePage } from '@inertiajs/vue3'
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, nextTick, ref, watch, onMounted } from 'vue'
 
 // ================= DATATABLES =================
 import DataTablesCore from 'datatables.net'
@@ -30,6 +30,8 @@ const props = defineProps({
     nasabahList: Array,
     jenisSampah: Array,
     sidebardata: Object,
+    pencatatanSetoranItems: Array,
+    pencatatanSetoran: Array
 })
 
 // State untuk Step Form
@@ -56,6 +58,30 @@ const form = useForm({
     }))
 });
 
+const filteredJadwal = computed(() => {
+
+    const semuaJadwal = props.jadwalPelaksanaan || [];
+    const itemsTercatat = props.pencatatanSetoran || [];
+
+    if (!form.id_userdetail) return [];
+
+    const idJadwalTerpakai = itemsTercatat
+        .filter(item =>
+            Number(item.id_userdetail) === Number(form.id_userdetail)
+        )
+        .map(item => Number(item.id_jadwal));
+
+    return semuaJadwal.filter(j =>
+        !idJadwalTerpakai.includes(Number(j.id))
+    );
+});
+
+
+
+// SESUDAH
+watch(() => form.id_userdetail, () => {
+    form.id_jadwal = "";
+});
 // Membagi data sampah menjadi per-step (seperti chunk di Blade)
 const chunks = computed(() => {
     const result = [];
@@ -368,6 +394,12 @@ watch(selectedJadwalFilter, (val) => {
         selectedSampah.value = '';
     }
 });
+
+const pencatatan = props.pencatatanSetoranItems.find(p =>
+    Number(p.id_userdetail) === Number(row.id) &&
+    Number(p.id_jadwal) === Number(selectedJadwalFilter.value)
+);
+
 // ================= DT OPTIONS =================
 const dtOptions = computed(() => ({
     scrollX: false,
@@ -399,12 +431,30 @@ const dtOptions = computed(() => ({
             data: null,
             orderable: false,
             className: 'text-center no-print',
-            render: (data, type, row) => `
-            <button class="btn-detail text-blue-600 hover:text-blue-800"
-                data-id="${row.id}">
-                <i class="fas fa-eye"></i>
-            </button>
-        `
+            render: (data, type, row) => {
+
+                if (selectedJadwalFilter.value) {
+
+                    const pencatatan = props.pencatatanSetoranItems.find(p =>
+                        Number(p.id_userdetail) === Number(row.id) &&
+                        Number(p.id_jadwal) === Number(selectedJadwalFilter.value)
+                    );
+
+                    const pencatatanId = pencatatan?.id ?? '';
+
+                    return `<button @click="viewDetail(${row.id}, ${selectedJadwalFilter.value})" class=" bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm"
+            data-id="${row.id}"
+            data-pencatatan="${pencatatanId}"
+            data-jadwal="${selectedJadwalFilter.value}">
+            <i class="fas fa-eye"></i>
+        </button>`;
+                }
+
+                return `<button class="btn-detail bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm"
+        data-id="${row.id}">
+        <i class="fas fa-eye"></i>
+    </button>`;
+            }
         }
     ],
     buttons: [
@@ -926,6 +976,22 @@ const dtOptions = computed(() => ({
     }
 }));
 
+window.viewDetail = (id, idJadwal) => viewDetail(id, idJadwal);
+
+const viewDetail = (userId, idJadwal) => {
+    // Validasi sederhana agar tidak error lagi
+    if (!userId || !idJadwal) {
+        console.error("Gagal navigasi: Parameter tidak lengkap", { userId, idJadwal });
+        return;
+    }
+
+    router.get(route('show-pencatatanByBulan', {
+        id: userId,
+        idJadwal: idJadwal  // Pastikan kunci ini sesuai dengan {idJadwal} di web.php
+    }));
+};
+
+
 const isMobile = ref(window.innerWidth < 768);
 
 window.addEventListener('resize', () => {
@@ -991,6 +1057,22 @@ onMounted(() => {
         // ATAU modal:
         // openModalDetail(id)
     });
+
+    $(document).on('click', '.btn-detailbyBulan', function () {
+        const nasabahId = $(this).data('id');
+        const jadwalId = $(this).data('jadwal');
+        const pencatatanId = $(this).data('pencatatan');
+
+        console.log('Nasabah ID:', nasabahId);
+        console.log('Jadwal ID:', jadwalId);
+        console.log('Pencatatan ID:', pencatatanId);
+
+        // Redirect pakai pencatatanId (lebih spesifik)
+        router.visit(route('show-pencatatanByBulan', {
+            id: nasabahId,
+            idJadwal: jadwalId
+        }));
+    });
 });
 
 const tableRows = computed(() => {
@@ -1011,6 +1093,21 @@ const tableRows = computed(() => {
 
 const goToDetail = (id) => {
     router.visit(route('show-pencatatan', id));
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return '-';
+
+    const date = new Date(dateString);
+
+    // Mengecek apakah date valid untuk menghindari 'Invalid Date'
+    if (isNaN(date.getTime())) return dateString;
+
+    return new Intl.DateTimeFormat('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    }).format(date);
 };
 
 const breadcrumbItems = [
@@ -1052,17 +1149,6 @@ const breadcrumbItems = [
                             @submit="handleSubmit">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium mb-1">Jadwal Pelaksanaan</label>
-                                    <select v-model="form.id_jadwal" class="w-full border rounded px-3 py-2 text-sm"
-                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_jadwal'] }">
-
-                                        <option value="" disabled>Pilih Jadwal</option>
-                                        <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
-                                            {{ j.tanggal_setoran }}
-                                        </option>
-                                    </select>
-                                </div>
-                                <div>
                                     <label class="block text-sm font-medium mb-1">Nasabah</label>
                                     <select v-model="form.id_userdetail"
                                         class="w-full border rounded capitalize px-3 py-2 text-sm"
@@ -1073,6 +1159,27 @@ const breadcrumbItems = [
                                         </option>
                                     </select>
                                 </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Jadwal Pelaksanaan</label>
+                                    <select v-model="form.id_jadwal" :key="form.id_userdetail"
+                                        class="w-full border rounded px-3 py-2 text-sm" :disabled="!form.id_userdetail"
+                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_jadwal'] }">
+
+                                        <option value="" disabled>
+                                            {{ !form.id_userdetail ? 'Pilih Nasabah dulu' : 'Pilih Jadwal' }}
+                                        </option>
+
+                                        <option v-for="j in filteredJadwal" :key="j.id" :value="j.id">
+                                            {{ formatDate(j.tanggal_setoran) }}
+                                        </option>
+                                    </select>
+
+                                    <p v-if="form.id_userdetail && filteredJadwal.length === 0"
+                                        class="text-[10px] text-amber-600 mt-1 italic">
+                                        * Semua jadwal untuk nasabah ini sudah tercatat.
+                                    </p>
+                                </div>
+
                             </div>
 
 
@@ -1084,47 +1191,47 @@ const breadcrumbItems = [
 
                             <div v-else>
 
-                            <div class="flex flex-col items-center gap-3">
-                                <span class="text-xs text-gray-500">Step {{ step }} dari {{ totalSteps }}</span>
-                                <div class="flex gap-2">
-                                    <button v-for="i in totalSteps" :key="i" type="button" @click="step = i"
-                                        :class="step === i ? 'bg-emerald-600 text-white' : 'bg-gray-200'"
-                                        class="w-8 h-8 rounded-full text-xs font-bold transition">
-                                        {{ i }}
-                                    </button>
-                                </div>
-                            </div>
-
-                               <div  v-for="(chunk, index) in chunks" :key="index">
-                                <div v-show="step === index + 1" class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div v-for="item in chunk" :key="item.sampah_id"
-                                        class="p-3 rounded-lg border bg-white shadow-sm">
-                                        <div class="text-sm font-medium truncate capitalize">{{ item.nama }}</div>
-                                        <div class="text-xs text-gray-500 mb-2 capitalize">Satuan: {{ item.satuan }}
-                                        </div>
-                                        <input type="number" step="0.01" v-model="item.jumlah"
-                                            class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-emerald-500"
-                                            placeholder="0">
+                                <div class="flex flex-col items-center gap-3">
+                                    <span class="text-xs text-gray-500">Step {{ step }} dari {{ totalSteps }}</span>
+                                    <div class="flex gap-2">
+                                        <button v-for="i in totalSteps" :key="i" type="button" @click="step = i"
+                                            :class="step === i ? 'bg-emerald-600 text-white' : 'bg-gray-200'"
+                                            class="w-8 h-8 rounded-full text-xs font-bold transition">
+                                            {{ i }}
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
 
-                               <div class="flex justify-between pt-4 border-t">
-                                <button type="button" @click="step = Math.max(step - 1, 1)" :disabled="step === 1"
-                                    class="text-gray-500 disabled:opacity-30">
-                                    ← Kembali
-                                </button>
+                                <div v-for="(chunk, index) in chunks" :key="index">
+                                    <div v-show="step === index + 1" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <div v-for="item in chunk" :key="item.sampah_id"
+                                            class="p-3 rounded-lg border bg-white shadow-sm">
+                                            <div class="text-sm font-medium truncate capitalize">{{ item.nama }}</div>
+                                            <div class="text-xs text-gray-500 mb-2 capitalize">Satuan: {{ item.satuan }}
+                                            </div>
+                                            <input type="number" step="0.01" v-model="item.jumlah"
+                                                class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-emerald-500"
+                                                placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <button v-if="step < totalSteps" type="button" @click="step++"
-                                    class="px-6 py-2 bg-blue-600 text-white rounded-lg">
-                                    Lanjut →
-                                </button>
+                                <div class="flex justify-between pt-4 border-t">
+                                    <button type="button" @click="step = Math.max(step - 1, 1)" :disabled="step === 1"
+                                        class="text-gray-500 disabled:opacity-30">
+                                        ← Kembali
+                                    </button>
 
-                                <button v-else type="submit" :disabled="form.processing"
-                                    class="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold">
-                                    {{ form.processing ? 'Menyimpan...' : 'Simpan Setoran' }}
-                                </button>
-                            </div>
+                                    <button v-if="step < totalSteps" type="button" @click="step++"
+                                        class="px-6 py-2 bg-blue-600 text-white rounded-lg">
+                                        Lanjut →
+                                    </button>
+
+                                    <button v-else type="submit" :disabled="form.processing"
+                                        class="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold">
+                                        {{ form.processing ? 'Menyimpan...' : 'Simpan Setoran' }}
+                                    </button>
+                                </div>
                             </div>
 
 
@@ -1223,7 +1330,7 @@ const breadcrumbItems = [
                                     class="rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-emerald-500">
                                     <option value="">Semua Jadwal</option>
                                     <option v-for="j in jadwalPelaksanaan" :key="j.id" :value="j.id">
-                                        {{ j.tanggal_setoran }}
+                                        {{ formatDate(j.tanggal_setoran) }}
                                     </option>
                                 </select>
                             </div>

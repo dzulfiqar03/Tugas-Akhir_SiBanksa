@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, usePage, Link } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, render } from 'vue';
 
 
 import jszip from 'jszip';
@@ -20,6 +20,7 @@ import DataTable from 'datatables.net-vue3';
 // CSS (WAJIB)
 import 'datatables.net-dt/css/dataTables.dataTables.css';
 import 'datatables.net-responsive-dt/css/responsive.dataTables.css';
+import { filter } from 'lodash';
 
 // Register
 DataTable.use(DataTablesCore)
@@ -44,7 +45,6 @@ const workflowSteps = [
     'Pemilahan',
     'Penimbangan',
     'Pencatatan',
-    'Verifikasi',
     'Pencairan'
 ]
 
@@ -52,8 +52,11 @@ const dtInstance = ref(null);
 
 const statusColumns = workflowSteps.map(step => ({
     title: step,
+    searchable: false,
+    orderable: false,
+
     data: null,
-    className: 'text-center min-w-[120px] text-black dark:text-white',
+    className: 'text-center min-w-[150px] text-black dark:text-white',
     render: (d, t, row) => {
         const wf = row.workflow?.[step]
 
@@ -88,6 +91,7 @@ const userDetail = computed(() => user.value?.user_detail || {});
 
 const dtOptions = {
     responsive: true,
+    pageLength: 5,
     autoWidth: false,
     // Gunakan props.nasabahList sebagai sumber data
     data: props.nasabahList,
@@ -274,7 +278,12 @@ const dtOptions = {
         {
             title: 'Jadwal Kegiatan',
             data: 'jadwalPelaksanaan',
-            className: 'text-center w-10 text-black dark:text-white'
+            className: 'text-center min-w-[200px] w-10 text-black dark:text-white',
+            render: (d) => {
+                if (!d) return '-';
+                const date = new Date(d);
+                return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
         },
 
         {
@@ -288,10 +297,13 @@ const dtOptions = {
             data: null,
             title: 'Aksi',
             orderable: false,
-            className: 'text-center w-20',
+            className: 'text-center min-w-[100px] w-20',
             render: (d, t, row) => {
+                const userId = row.user_detail?.id || row.id;
+    const idJadwal = row.id_jadwal;
+    console.log("Render tombol aksi untuk userId:", userId, "idJadwal:", idJadwal); // Debug log
                 return `
-                    <button @click="viewDetail(${row.user_detail?.id || row.id})" class="view-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm" data-id="${row.id}">
+                    <button @click="viewDetail(${userId}, ${idJadwal})" class="view-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm shadow-sm" data-id="${row.id}">
                         <i class="fas fa-eye"></i>
                     </button>
                 `
@@ -303,7 +315,7 @@ const dtOptions = {
 };
 
 
-window.viewDetail = (id) => viewDetail(id);
+window.viewDetail = (id, idJadwal) => viewDetail(id, idJadwal);
 const searchQuery = ref(''); // Tambahkan ini
 const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
 const nextPage = () => dtInstance.value.dt.page('next').draw('page');
@@ -333,12 +345,17 @@ const formatStatus = (status) => {
 };
 
 
-const viewDetail = (userId) => {
+const viewDetail = (userId, idJadwal) => {
+    // Validasi sederhana agar tidak error lagi
+    if (!userId || !idJadwal) {
+        console.error("Gagal navigasi: Parameter tidak lengkap", { userId, idJadwal });
+        return;
+    }
 
-
-        // Karena route minta ID userdetail, kita kirim userId-nya
-        router.get(route('show-pencatatan', userId));
-    
+    router.get(route('show-tracking', {
+        id: userId,
+        idJadwal: idJadwal  // Pastikan kunci ini sesuai dengan {idJadwal} di web.php
+    }));
 };
 
 const timelineSteps = computed(() => {
@@ -439,38 +456,8 @@ const breadcrumbItems = [
         <div v-else class="container mx-auto px-4 space-y-8">
             <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white">Tracking Workflow Proses</h1>
             <div
-                class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                class="bg-white md:hidden dark:bg-gray-800 p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
 
-
-
-                <div class="hidden md:flex items-center justify-between w-full">
-                    <template v-for="(step, index) in timelineSteps" :key="'desktop-' + index">
-                        <div class="flex flex-col items-center relative z-10">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all duration-500 shadow-lg"
-                                :class="[
-                                    step.completed ? 'bg-green-500 animate-pulse' :
-                                        step.status === 'in_progress' ? 'bg-blue-500 animate-bounce' : 'bg-gray-300'
-                                ]">
-                                <i v-if="step.status === 'completed'" class="fas fa-check text-sm"></i>
-                                <span v-else>{{ index + 1 }}</span>
-                            </div>
-                            <span class="text-xs md:text-sm mt-3 font-bold transition-colors"
-                                :class="step.status === 'pending' ? 'text-gray-400' : 'text-gray-700 dark:text-gray-200'">
-                                {{ step.name }}
-                            </span>
-                        </div>
-
-                        <div v-if="index < timelineSteps.length - 1"
-                            class="flex-1 h-1 mx-2 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                            <div class="h-full transition-all duration-700" :class="{
-                                'progress-flow': step.status === 'in_progress',
-                                'bg-green-500 w-full': step.status === 'completed',
-                                'w-0': step.status === 'pending'
-                            }">
-                            </div>
-                        </div>
-                    </template>
-                </div>
 
                 <div class="md:hidden space-y-0">
                     <div v-for="(step, index) in timelineSteps" :key="'mobile-' + index" class="flex">

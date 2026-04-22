@@ -7,14 +7,13 @@ const props = defineProps({
     nasabahList: Array,
     sidebardata: Object,
         petugas: Array,
-        
+
 })
 
 const workflowSteps = [
     'Pemilahan',
     'Penimbangan',
     'Pencatatan',
-    'Verifikasi',
     'Pencairan'
 ]
 
@@ -92,6 +91,21 @@ const breadcrumbItems = [
 const handlePage = (id) => {
     router.get(route('warga.detail-setoran', { id }));
 };
+
+const formatDates = (dateString) => {
+    if (!dateString) return '-';
+
+    const date = new Date(dateString);
+
+    // Mengecek apakah date valid untuk menghindari 'Invalid Date'
+    if (isNaN(date.getTime())) return dateString;
+
+    return new Intl.DateTimeFormat('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    }).format(date);
+};
 </script>
 
 <template>
@@ -135,7 +149,7 @@ const handlePage = (id) => {
                 <select v-model="selectedId"
                     class="w-full border rounded-lg px-4 py-2 bg-white text-gray-700 dark:bg-gray-700 dark:text-white">
                     <option v-for="item in nasabahList" :key="item.id" :value="item.id">
-                        {{ item.jadwalPelaksanaan }}
+                    {{ formatDates(item.jadwalPelaksanaan) }}
                     </option>
                 </select>
 
@@ -269,14 +283,22 @@ const handlePage = (id) => {
 
                                 <p class="text-sm mt-1 text-gray-500">
                                     Status:
-                                    <span class="font-semibold text-emerald-600">
+                                    <span class="font-semibold " :class="{
+                                        'text-emerald-500': getOverallStatus(item.workflow) === 'Selesai',
+                                        'text-blue-500': getOverallStatus(item.workflow) === 'Diproses',
+                                        'text-gray-500': getOverallStatus(item.workflow) === 'Menunggu'
+                                    }">
                                         {{ getOverallStatus(item.workflow) }}
                                     </span>
                                 </p>
                             </div>
 
-                            <button @click="handlePage(item.id)"
-                                class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 text-xs rounded-lg transition">
+                            <button v-if="getOverallStatus(item.workflow) === 'Selesai'" @click="handlePage(item.id)"
+                                class=" text-white px-4 py-2 text-xs rounded-lg transition" :class="{
+                                    'bg-emerald-500 hover:bg-emerald-600': getOverallStatus(item.workflow) === 'Selesai',
+                                    'bg-blue-500 hover:bg-blue-600': getOverallStatus(item.workflow) === 'Diproses',
+                                    'bg-gray-500 cursor-not-allowed': getOverallStatus(item.workflow) === 'Menunggu'
+                                }" :disabled="getOverallStatus(item.workflow) === 'Menunggu'">
                                 Lihat
                             </button>
 

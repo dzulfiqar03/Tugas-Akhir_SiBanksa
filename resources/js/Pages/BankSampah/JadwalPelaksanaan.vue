@@ -67,8 +67,16 @@ const dtOptions = {
         {
             // Langsung akses user_detail (tanpa kata 'jadwal')
             data: 'tanggal_setoran',
-            render: (data, type, row) => {
-                return row.tanggal_setoran || '-';
+          render: (data, type, row) => {
+                const tanggalRaw = row.tanggal_setoran;
+                if (!tanggalRaw) return '-';
+
+                // Mengubah string "2026-04-22" menjadi "22 April 2026"
+                return new Date(tanggalRaw).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
             },
             defaultContent: '-'
         },

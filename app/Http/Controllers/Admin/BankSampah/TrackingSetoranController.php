@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin\BankSampah;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
+use App\Http\Resources\FormResources;
 use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\BankSampah\Kepengurusan;
 use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\BankSampah\PencatatanSetoranItems;
+use App\Models\BankSampah\Sampah;
 use App\Models\UserDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +21,7 @@ class TrackingSetoranController extends Controller
      * Display a listing of the resource.
      */
 
-    public function __construct(protected UserDetail $userDetail, protected Kepengurusan $kepengurusan, protected PencatatanSetoran $pencatatanSetoran, protected PencatatanSetoranItems $pencatatanSetoranItems) {}
+    public function __construct(protected UserDetail $userDetail, protected Sampah $sampah, protected Kepengurusan $kepengurusan, protected PencatatanSetoran $pencatatanSetoran, protected PencatatanSetoranItems $pencatatanSetoranItems) {}
     public function index()
     {
 
@@ -27,7 +29,6 @@ class TrackingSetoranController extends Controller
             'Pemilahan'   => 'Pemilah',
             'Penimbangan' => 'Penimbang',
             'Pencatatan'  => 'Sekretaris',
-            'Verifikasi'  => 'Ketua RW',
             'Pencairan'   => 'Bendahara',
         ];
 
@@ -66,6 +67,7 @@ class TrackingSetoranController extends Controller
 
             $n->nasabah = $n->user_detail->fullName;
             $n->jadwalPelaksanaan = $n->jadwal->tanggal_setoran;
+            $n->id_jadwal = $n->jadwal->id;
 
             if ($n && $n->count() !== 0) {
 
@@ -109,10 +111,6 @@ class TrackingSetoranController extends Controller
             }
 
 
-            if ($petugas->firstWhere('status_transaction', 'Disetujui')) {
-                $workflow['Verifikasi']['completed'] = true;
-                $workflow['Verifikasi']['petugas'] = [UserDetail::where('id_roles', 1)->first()->fullName];
-            }
 
 
 
@@ -168,9 +166,53 @@ class TrackingSetoranController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id, $idJadwal)
     {
-        //
+        $menu = (new DataResources(null))->toArray(request());
+        $form = (new FormResources(null))->toArray(request());
+
+        $nasabah = UserDetail::with('user')->findOrFail($id);
+
+    // 2. Jadwal Pelaksanaan KHUSUS untuk nasabah ini
+    // Pastikan relasi 'jadwal' ada di model UserDetail
+    $jadwalPelaksanaan = $nasabah->jadwal()->get();
+        $nasabahList = UserDetail::with('user')->findOrFail($id);;
+        $formName = 'formPencatatan';
+
+        $jenisSampah = $this->sampah::where('id_userdetail', $id)->get();
+
+
+
+    $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'setoran.jadwal', 'sampah'])
+        ->whereHas('setoran', function ($query) use ($id, $idJadwal) {
+            // Filter berdasarkan Nasabah
+            $query->where('id_userdetail', $id);
+
+                $query->where('id_jadwal', $idJadwal);
+
+        })
+        ->get();
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+
+        return Inertia::render('BankSampah/DetailTracking', [
+            'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
+            'sidebardata' => $menu,
+            'formdata' => $form,
+            'formName' => $formName,
+            'jadwalPelaksanaan' => $jadwalPelaksanaan,
+            'nasabah' => $nasabahList,
+            'jenisSampah' => $jenisSampah,
+            'pencatatanSetoranItems' => $pencatatanSetoranItems
+        ]);
     }
 
     /**
