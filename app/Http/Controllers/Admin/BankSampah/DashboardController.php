@@ -67,7 +67,7 @@ class DashboardController extends Controller
         $lastMonthDate = $now->copy()->subMonth();
         $lastMonth = $lastMonthDate->month;
         $lastMonthYear = $lastMonthDate->year;
-        $bankSampahList = $this->kelolaBankSampahServices->getAllNasabah();
+        $bankSampahList = $this->kelolaBankSampahServices->getAllNasabahByRT();
 
         $allBankSampah = $bankSampahList->map(function ($user) use ($now, $currentMonth, $lastMonth, $currentYear, $lastMonthYear) {
 
@@ -109,7 +109,9 @@ class DashboardController extends Controller
             return $user;
         });
 
-        $sampahPeringkat = PencatatanSetoranItems::with('sampah') // Pastikan ada relasi ke tabel sampah
+        $sampahPeringkat = PencatatanSetoranItems::with('sampah')->whereHas('setoran.user_detail', function ($q) {
+            $q->where('id_rt', auth()->user()->user_detail->id_rt);
+        }) // Pastikan ada relasi ke tabel sampah
             ->select('sampah_id', DB::raw('SUM(jumlah) as total_berat'))
             ->groupBy('sampah_id')
             ->orderBy('total_berat', 'desc')

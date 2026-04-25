@@ -433,6 +433,22 @@ const breadcrumbItems = [
         url: route('show-pencatatan', props.nasabah.id),
     },
 ]
+
+const openedNumbers = ref([]); // Menyimpan list ID yang sedang di-show
+
+const togglePhone = (id) => {
+    if (openedNumbers.value.includes(id)) {
+        openedNumbers.value = openedNumbers.value.filter(item => item !== id);
+    } else {
+        openedNumbers.value.push(id);
+    }
+};
+
+const maskPhone = (phone) => {
+    if (!phone) return 'Belum diisi';
+    // Menampilkan 4 angka depan dan 2 angka belakang
+    return phone.slice(0, 4) + '****' + phone.slice(-2);
+};
 </script>
 
 <template>
@@ -472,13 +488,30 @@ const breadcrumbItems = [
                             {{ nasabah.id_rt || '-' }}
                         </p>
                     </div>
-                    <div class="space-y-1">
+                        <div class="space-y-1">
                         <p class="text-xs font-semibold uppercase text-gray-500">
                             No. Telepon
                         </p>
-                        <p class="text-black dark:text-gray-300">
-                            {{ nasabah.telephone_number || 'Belum diisi' }}
-                        </p>
+                        <div class="flex space-x-2 items-center">
+                                                  <p class="text-black dark:text-gray-300 mt-0.5 flex items-center gap-2">
+
+
+                                <span v-if="nasabah.telephone_number">
+                                    {{ openedNumbers.includes(nasabah.id)
+                                        ? nasabah.telephone_number
+                                    : maskPhone(nasabah.telephone_number)
+                                    }}
+                                </span>
+                                <span v-else class="italic text-gray-400">Belum diisi</span>
+
+                                <button v-if="nasabah.telephone_number" @click.stop="togglePhone(nasabah.id)"
+                                    class="ml-1 text-gray-400 hover:text-emerald-500 transition-colors focus:outline-none">
+                                    <i :class="openedNumbers.includes(nasabah.id) ? 'fas fa-eye-slash' : 'fas fa-eye'"
+                                        class="text-[10px]"></i>
+                                </button>
+                            </p>
+                        </div>
+
                     </div>
                     <div class="space-y-1 md:col-span-2">
                         <p class="text-xs font-semibold uppercase text-gray-500">

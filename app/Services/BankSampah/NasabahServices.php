@@ -43,7 +43,7 @@ class NasabahServices
 
     public function getNasabah($id)
     {
-        $findNasabah = $this->user::with('user_detail')->findOrFail($id);
+        $findNasabah = $this->user::with('user_detail', 'user_detail.image', 'user_detail.document', 'user_detail.pencatatan', 'user_detail.sampah')->findOrFail($id);
 
         return $findNasabah;
     }
@@ -54,7 +54,7 @@ class NasabahServices
         return DB::transaction(function () use ($data) {
 
             // 1. Ambil nama depan (huruf kecil, tanpa spasi)
-            $firstName = strtolower(explode(' ', $data['fullName'])[0]);
+            $firstName = strtolower(explode(' ', $data['fullName'])[1] ?? $data['fullName']);
 
             $autoUsername = $firstName . '_rt0' . str_pad($data['id_rt'], 1,);
 
@@ -83,6 +83,7 @@ class NasabahServices
                 'status_transaction'=> auth()->user()->user_detail->status_transaction,
                 'pencairan_via' => auth()->user()->user_detail->pencairan_via,
             ];
+
 
 
 

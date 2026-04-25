@@ -242,6 +242,55 @@ const onRowClick = (event) => {
     }
 };
 
+
+// --- STATE MOBILE ---
+const mobileSearch = ref('');
+const mobileCategory = ref('');
+const currentPage = ref(1);
+const itemsPerPage = 5;
+
+// Filter Data Khusus Mobile
+const filteredMobileData = computed(() => {
+    let data = combinedData.value;
+
+    if (mobileSearch.value) {
+        const s = mobileSearch.value.toLowerCase();
+        data = data.filter(item =>
+            item.fullName.toLowerCase().includes(s) ||
+            item.id_rt.toString().includes(s)
+        );
+    }
+
+    if (mobileCategory.value) {
+        data = data.filter(item => item.id_rt.toString() === mobileCategory.value);
+    }
+
+    return data;
+});
+
+// Pagination Mobile
+const paginatedMobileData = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    return filteredMobileData.value.slice(start, start + itemsPerPage);
+});
+
+const totalMobilePages = computed(() => Math.ceil(filteredMobileData.value.length / itemsPerPage));
+
+// Update Handle Search agar sinkron
+const handleSearchSync = (e) => {
+    const val = e.target.value;
+    handleSearch(e); // Tetap panggil fungsi DataTables asli
+    mobileSearch.value = val;
+    currentPage.value = 1;
+};
+
+const handleCategorySync = (e) => {
+    const val = e.target.value;
+    handleCategoryFilter(e); // Tetap panggil fungsi DataTables asli
+    mobileCategory.value = val;
+    currentPage.value = 1;
+};
+
 const dtOptions = {
     pageLength: 5,
     responsive: true,
@@ -589,7 +638,7 @@ const updateVerification = (item) => {
                         <div class="flex items-end gap-2">
                             <label
                                 class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                            <input @keyup="handleSearch" type="text"
+                            <input @keyup="handleSearchSync" type="text"
                                 class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
                                 placeholder="Ketik...">
                         </div>
@@ -597,7 +646,7 @@ const updateVerification = (item) => {
                         <div class="flex items-center gap-2">
                             <label
                                 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                            <select @change="handleCategoryFilter"
+                            <select @change="handleCategorySync"
                                 class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
                                 <template v-for="field in formdata.nasabah" :key="field.name">
                                     <div v-if="field.name === 'rt'" class="col-span-1">
@@ -622,7 +671,7 @@ const updateVerification = (item) => {
                     </div>
 
                 </div>
-                <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
+                <div class=" hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow">
                     <DataTable :data="combinedData" ref="dtInstance" :options="dtOptions"
                         class="w-full display stripe hover cell-border dark:text-white">
                         <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
@@ -674,6 +723,68 @@ const updateVerification = (item) => {
 
                     </DataTable>
                 </div>
+
+                <div class="block md:hidden space-y-4">
+    <div v-for="item in paginatedMobileData" :key="item.id"
+        class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 relative">
+
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h4 class="font-bold text-gray-900 dark:text-white capitalize">{{ item.fullName }}</h4>
+                <p class="text-[10px] font-bold text-emerald-600">RT-0{{ item.id_rt }} • RW-01</p>
+            </div>
+            <span :class="[
+                'px-2 py-1 rounded-lg text-[9px] font-bold uppercase',
+                item.user_detail.status_transaction === 'Belum Disetujui' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'
+            ]">
+                {{ item.user_detail.status_transaction }}
+            </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mb-4">
+            <div class="p-2 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
+                <p class="text-[9px] text-gray-400 font-bold uppercase">Total Nasabah</p>
+                <p class="text-sm font-bold dark:text-white">{{ item.total_nasabah }}</p>
+            </div>
+            <div class="p-2 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
+                <p class="text-[9px] text-gray-400 font-bold uppercase">Total Setoran</p>
+                <p class="text-sm font-bold text-emerald-600">Rp {{ new Intl.NumberFormat('id-ID').format(item.total_setoran_rt || 0) }}</p>
+            </div>
+        </div>
+
+        <div class="flex gap-1 mb-4">
+            <div class="flex-1 h-1.5 bg-yellow-400 rounded-full" :title="'Pengajuan: '+item.nasabah_pengajuan"></div>
+            <div class="flex-1 h-1.5 bg-emerald-400 rounded-full" :title="'Setuju: '+item.nasabah_terverifikasi"></div>
+            <div class="flex-1 h-1.5 bg-red-400 rounded-full" :title="'Tolak: '+item.nasabah_ditolak"></div>
+            <div class="flex-1 h-1.5 bg-gray-400 rounded-full" :title="'Pending: '+item.nasabah_pending"></div>
+        </div>
+
+        <div class="flex gap-2">
+            <button @click="viewDetail(item.id)"
+                class="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                <i class="fas fa-eye"></i> DETAIL
+            </button>
+
+            <button v-if="item.user_detail.status_transaction === 'Belum Disetujui'"
+                @click="updateVerification(item)"
+                class="flex-[1.5] bg-red-500 text-white py-2 rounded-xl text-xs font-bold shadow-lg shadow-red-500/20">
+                <i class="fas fa-bell mr-1"></i> BUKA TRANSAKSI
+            </button>
+            <button v-else disabled
+                class="flex-[1.5] bg-emerald-500/10 text-emerald-600 py-2 rounded-xl text-xs font-bold border border-emerald-500/20">
+                <i class="fas fa-check-circle mr-1"></i> AKTIF
+            </button>
+        </div>
+    </div>
+
+    <div v-if="totalMobilePages > 1" class="flex items-center justify-between px-2 pt-4 pb-10">
+        <button @click="currentPage--" :disabled="currentPage === 1"
+            class="p-2 text-gray-500 disabled:opacity-20"><i class="fas fa-chevron-left"></i></button>
+        <span class="text-xs font-bold text-gray-400">Halaman {{ currentPage }} dari {{ totalMobilePages }}</span>
+        <button @click="currentPage++" :disabled="currentPage === totalMobilePages"
+            class="p-2 text-gray-500 disabled:opacity-20"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    </div>
 
             </div>
 

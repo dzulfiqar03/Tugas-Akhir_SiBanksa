@@ -31,6 +31,7 @@ class UserDetailSeeder extends Seeder
                 'id_gender' => $role === 'Ketua RW' ? 1 : 3,
                 'id_roles' => $this->mapRoleToId($user->email, $role),
                 'status' => 'Disetujui',
+                'status_transaction' => 'Disetujui',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

@@ -29,6 +29,73 @@ class UserSeeder extends Seeder
                 'updated_at' => now(),
             ],
 
+            // =====================
+            // 2. 8 USER BANK SAMPAH
+            // =====================
+            [
+                'id' => Str::uuid(),
+                'email' => 'banksampah01@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('banksampah123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'email' => 'banksampah02@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('banksampah123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'email' => 'banksampah03@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('banksampah123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'email' => 'banksampah04@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('banksampah123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'email' => 'banksampah05@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('banksampah123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'email' => 'banksampah06@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('banksampah123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'email' => 'banksampah07@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('banksampah123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'email' => 'banksampah08@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('banksampah123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
 
         ]);
     }

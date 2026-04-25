@@ -30,7 +30,7 @@ class NasabahRequest extends FormRequest
             'id_rt'              => 'required',
             'id_roles'       => 'required',
             'id_gender'       => 'required',
-            'status'       => 'required'
+            'status'       => 'required',
         ];
     }
 

@@ -57,11 +57,36 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
 // --- DATATABLES CONFIG (Mengadopsi data-sampah.js Anda) ---
+
+
+const filteredNasabah = ref([]);
+
+const pageInfo = ref({
+    page: 0,
+    pages: 0,
+    start: 0,
+    end: 0,
+    recordsDisplay: 0
+});
+
+const updateMobileData = (api) => {
+    if (api) {
+        // Ambil data hanya untuk halaman yang sedang aktif
+        filteredNasabah.value = api.rows({ search: 'applied', page: 'current' }).data().toArray();
+        // Ambil info detail pagination
+        pageInfo.value = api.page.info();
+    }
+};
+
+
 const dtOptions = {
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
-
+    drawCallback: function () {
+        const api = this.api();
+        updateMobileData(api);
+    },
     columns: [
         {
             data: null,
@@ -336,8 +361,20 @@ const dtOptions = {
     }
 };
 
-const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
-const nextPage = () => dtInstance.value.dt.page('next').draw('page');
+
+const prevMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('previous').draw('page');
+    }
+};
+
+const nextMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('next').draw('page');
+    }
+};
+
+
 const handleSearch = (e) => {
     dtInstance.value.dt.search(e.target.value).draw();
 };
@@ -447,6 +484,14 @@ const breadcrumbItems = [
     { label: 'Manajemen Nasabah', url: null },
     { label: 'Data Kepengurusan', url: route('data-kepengurusan') },
 ];
+
+const showNumber = ref(false);
+
+const maskPhone = (telp) => {
+    return telp?.replace(/(^.{3})(.+)/, (match, p1, p2) => {
+        return p1 + '*'.repeat(p2.length);
+    });
+};
 </script>
 
 <template>
@@ -624,39 +669,157 @@ const breadcrumbItems = [
 
                 </div>
 
-                <DataTable ref="dtInstance" :data="kepengurusan" :options="dtOptions"
-                    class="w-full display stripe hover cell-border">
+                <div class="hidden md:block">
+                    <DataTable ref="dtInstance" :data="kepengurusan" :options="dtOptions"
+                        class="w-full display stripe hover cell-border">
 
-                    <thead>
-                        <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                            <th>No</th>
-                            <th>Nama Lengkap</th>
-                            <th class="text-center">Divisi</th>
-                            <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi</th>
-                        </tr>
-                    </thead>
+                        <thead>
+                            <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
+                                <th>No</th>
+                                <th>Nama Lengkap</th>
+                                <th class="text-center">Divisi</th>
+                                <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <template #column-0="data">
-                        <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
-                    </template>
+                        <template #column-0="data">
+                            <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
+                        </template>
 
-                    <template #column-3="data">
-                        <div class="flex justify-center gap-1">
+                        <template #column-3="data">
+                            <div class="flex justify-center gap-1">
 
-                            <button @click="editData(data.rowData)"
-                                class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                                title="Edit">
-                                <i class="fas fa-edit"></i>
+                                <button @click="editData(data.rowData)"
+                                    class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                                    title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button @click="deleteData(data.rowData.id)"
+                                    class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                                    title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </DataTable>
+                </div>
+
+
+                <div class="block md:hidden space-y-4">
+                    <div v-if="filteredNasabah.length > 0" class="text-[10px] text-gray-500 font-bold uppercase mb-2">
+                        Menampilkan {{ filteredNasabah.length }} Data Terfilter
+                    </div>
+
+                    <div v-for="(item, index) in filteredNasabah" :key="item.id"
+                        class="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all active:scale-[0.98]">
+
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full flex items-center justify-center font-bold text-sm">
+                                    {{ index + 1 }}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 dark:text-white capitalize leading-tight">
+                                        {{ item.fullName }}
+                                    </h4>
+                                    <div class="flex items-center gap-4">
+                                        <p class="text-[11px] text-gray-500 mt-0.5">
+                                            <i class="fas fa-phone mr-1"></i>
+                                            {{ item.telephone_number !== null ? (showNumber ? item.telephone_number :
+                                                maskPhone(item.telephone_number)) || 'Belum diisi' : 'Belum diisi'}}
+                                        </p>
+
+
+
+                                        <button type="button" @click="showNumber = !showNumber" class="">
+                                            <span
+                                                class="text-gray-500 dark:text-gray-400 hover:text-emerald-500 transition-colors">
+                                                <svg v-if="!showNumber" class="w-5 h-5 fill-current"
+                                                    viewBox="0 0 20 20">
+                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                                    <path fill-rule="evenodd"
+                                                        d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                                <svg v-else class="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.515 1.515a2.046 2.046 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
+                                                        clip-rule="evenodd" />
+                                                    <path
+                                                        d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <span :class="[
+                                'px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider',
+                                item.divisi === 'Ketua' ? 'bg-emerald-500 text-white' :
+                                    item.divisi === 'Sekretaris' ? 'bg-yellow-500 text-white' :
+                                        item.divisi === 'Bendahara' ? 'bg-gray-900 text-white' :
+                                            item.divisi === 'Pemilah' ? 'bg-blue-900 text-white' :
+                                                item.divisi === 'Penimbang' ? 'bg-black text-white' : 'bg-red-600 text-white'
+                            ]">
+                                {{ item.divisi }}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-gray-50 dark:border-gray-800">
+
+
+                            <button @click="editData(item)"
+                                class="flex items-center justify-center gap-2 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 rounded-xl text-[11px] font-bold">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
-                            <button @click="deleteData(data.rowData.id)"
-                                class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
-                                title="Hapus">
-                                <i class="fas fa-trash"></i>
+
+                            <button @click="deleteData(item.id)"
+                                class="flex items-center justify-center gap-2 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl text-[11px] font-bold">
+                                <i class="fas fa-trash"></i> Hapus
                             </button>
                         </div>
-                    </template>
-                </DataTable>
+                    </div>
 
+                    <div v-if="filteredNasabah.length === 0"
+                        class="flex flex-col items-center justify-center py-12 text-gray-400 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                        <i class="fas fa-search text-4xl mb-3 opacity-20"></i>
+                        <p class="text-sm font-medium">Data tidak ditemukan</p>
+                        <p class="text-[10px]">Coba gunakan kata kunci pencarian lain</p>
+                    </div>
+
+                    <div v-if="pageInfo.recordsDisplay > 0" class="mt-6 flex flex-col items-center gap-4">
+                        <span class="text-xs text-gray-500 font-medium">
+                            Menampilkan <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.start + 1
+                            }}-{{ pageInfo.end
+                                }}</span>
+                            dari <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.recordsDisplay
+                            }}</span> data
+                        </span>
+
+                        <div class="flex items-center gap-2 w-full">
+                            <button @click="prevMobilePage" :disabled="pageInfo.page === 0"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                <i class="fas fa-chevron-left text-[10px]"></i> Sebelumnya
+                            </button>
+
+                            <button @click="nextMobilePage" :disabled="pageInfo.page >= pageInfo.pages - 1"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                Berikutnya <i class="fas fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex gap-1.5">
+                            <div v-for="n in pageInfo.pages" :key="n"
+                                class="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                                :class="n === pageInfo.page + 1 ? 'bg-emerald-500 w-4' : 'bg-gray-300 dark:bg-gray-700'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
 

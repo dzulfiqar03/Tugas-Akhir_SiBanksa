@@ -87,18 +87,36 @@ const renamedFileList = computed(() => {
 
 
 const editData = (item) => {
-    const row = JSON.parse(decodeURIComponent(escape(atob(item))));
+    // 1. Cek tipe data: Jika string berarti dari DataTables (Base64), jika object berarti dari Mobile
+    let row;
+    if (typeof item === 'string') {
+        try {
+            row = JSON.parse(decodeURIComponent(escape(atob(item))));
+        } catch (e) {
+            console.error("Gagal mendecode Base64:", e);
+            return;
+        }
+    } else {
+        // Jika sudah berupa object (dari mobile), langsung pakai
+        row = item;
+    }
 
-    console.log(row)
+    // 2. Sekarang variabel 'row' sudah pasti berisi Object, jalankan logika sisanya
+    console.log("Data yang akan diedit:", row);
+
     isEdit.value = true;
-    form.id = row.user_detail.id_user;
-    form.fullName = row.user_detail.fullName;
+    form.id = row.user_detail?.id_user;
+    form.fullName = row.user_detail?.fullName;
     form.id_userdetail = row.id_userdetail;
     form.id_jadwal = row.id_jadwal;
+
+    // Pastikan pengambilan ID aman
     form.pencatatan_setoran_id =
-        row.pencatatan_items.find(i => i.pencatatan_setoran_id)?.pencatatan_setoran_id ?? null;
+        row.pencatatan_items?.find(i => i.pencatatan_setoran_id)?.pencatatan_setoran_id ?? null;
+
     form.bukti_pembayaran = '';
     showForm.value = true;
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
@@ -165,6 +183,26 @@ const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
 
 const dtInstance = ref(null);
+
+const filteredTransaksi = ref([]);
+
+const pageInfo = ref({
+    page: 0,
+    pages: 0,
+    start: 0,
+    end: 0,
+    recordsDisplay: 0
+});
+
+const updateMobileData = (api) => {
+    if (api) {
+        // Ambil data hanya untuk halaman yang sedang aktif
+        filteredTransaksi.value = api.rows({ search: 'applied', page: 'current' }).data().toArray();
+        // Ambil info detail pagination
+        pageInfo.value = api.page.info();
+    }
+};
+
 const dtOptions =computed(() => {
 
 const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tunai');
@@ -173,6 +211,10 @@ const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tun
         pageLength: 5,
         responsive: true,
         lengthMenu: [5, 10, 25, 50],
+            drawCallback: function () {
+        const api = this.api();
+        updateMobileData(api);
+    },
         columns: [
             {
                 data: null,
@@ -187,14 +229,39 @@ const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tun
             },
             defaultContent: '-'
         },
-        {
-            data: 'user_bank',
-            className: 'text-black dark:text-white capitalize',
-            render: (data, type, row) => {
-                return row.user_detail.userbank ? row.user_bank[0].nomor_rekening : '-';
-            },
+{
+    data: 'user_bank',
+    className: 'text-black dark:text-white',
+render: (data, type, row) => {
+    if (!row.user_bank || row.user_bank.length === 0) return '<span class="text-gray-400">-</span>';
 
-        },
+    const noRek = row.user_bank[0].nomor_rekening;
+    const masked = noRek.length > 7
+        ? noRek.slice(0, 4) + ' •••• ' + noRek.slice(-3)
+        : '••••' + noRek.slice(-3);
+
+    return `
+        <div class="flex items-center gap-2 font-mono">
+            <span id="rek-${row.id}" data-full="${noRek}" data-mask="${masked}" class="text-xs">${masked}</span>
+            <button type="button"
+                onclick="
+                    const span = document.getElementById('rek-${row.id}');
+                    const isMasked = span.innerText.includes('•');
+                    if (isMasked) {
+                        span.innerText = span.getAttribute('data-full');
+                        this.innerHTML = '<i class=\\'fas fa-eye-slash text-[10px]\\'></i>';
+                    } else {
+                        span.innerText = span.getAttribute('data-mask');
+                        this.innerHTML = '<i class=\\'fas fa-eye text-[10px]\\'></i>';
+                    }
+                "
+                class="text-gray-400 hover:text-emerald-500 p-1">
+                <i class="fas fa-eye text-[10px]"></i>
+            </button>
+        </div>
+    `;
+}
+},
 
         {
             data: 'user_bank',
@@ -633,8 +700,19 @@ const dtOptions2 = {
     }
 };
 
-const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
-const nextPage = () => dtInstance.value.dt.page('next').draw('page');
+
+const prevMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('previous').draw('page');
+    }
+};
+
+const nextMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('next').draw('page');
+    }
+};
+
 const handleSearch = (e) => {
     dtInstance.value.dt.search(e.target.value).draw();
 };
@@ -741,6 +819,34 @@ const handleSubmit = () => {
         },
 
     });
+};
+
+const hitungTotal = (items) => {
+    if (!items || items.length === 0) return 'Rp 0';
+    const total = items.reduce((acc, curr) => acc + parseFloat(curr.subtotal || 0), 0);
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(total);
+};
+
+const openedNumbers = ref([]); // Menyimpan list ID yang sedang di-show
+
+const togglePhone = (id) => {
+    if (openedNumbers.value.includes(id)) {
+        // Jika sudah ada, hapus (tutup kembali)
+        openedNumbers.value = openedNumbers.value.filter(item => item !== id);
+    } else {
+        // Jika belum ada, tambahkan (buka)
+        openedNumbers.value.push(id);
+    }
+};
+
+const maskPhone = (phone) => {
+    if (!phone) return 'Belum diisi';
+    // Menampilkan 4 angka depan dan 2 angka belakang
+    return phone.slice(0, 4) + '••••' + phone.slice(-2);
 };
 </script>
 
@@ -969,7 +1075,9 @@ const handleSubmit = () => {
                                 </div>
 
                             </div>
-                            <DataTable ref="dtInstance" :data="nasabah" :options="dtOptions"
+
+                            <div class="hidden md:block">
+    <DataTable ref="dtInstance" :data="nasabah" :options="dtOptions"
                                 class="w-full stripe hover">
                                 <thead>
                                     <tr>
@@ -985,6 +1093,151 @@ const handleSubmit = () => {
 
 
                             </DataTable>
+
+
+                            </div>
+
+
+                                     <div class="block md:hidden space-y-4">
+                    <div v-if="filteredTransaksi.length > 0" class="text-[10px] text-gray-500 font-bold uppercase mb-2">
+                        Menampilkan {{ filteredTransaksi.length }} Data Terfilter
+                    </div>
+
+                    <div v-for="(item, index) in filteredTransaksi" :key="item.id"
+                        class="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all active:scale-[0.98]">
+
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full flex items-center justify-center font-bold text-sm">
+                                    {{ index + 1 }}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 dark:text-white capitalize leading-tight">
+                                        {{ item.user_detail.fullName }}
+                                    </h4>
+                                <p class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2">
+    <i class="fas fa-phone"></i>
+
+    <span v-if="item.user_detail.telephone_number">
+        {{ openedNumbers.includes(item.id)
+            ? item.user_detail.telephone_number
+            : maskPhone(item.user_detail.telephone_number)
+        }}
+    </span>
+    <span v-else class="italic text-gray-400">Belum diisi</span>
+
+    <button v-if="item.user_detail.telephone_number"
+            @click.stop="togglePhone(item.id)"
+            class="ml-1 text-gray-400 hover:text-emerald-500 transition-colors focus:outline-none">
+        <i :class="openedNumbers.includes(item.id) ? 'fas fa-eye-slash' : 'fas fa-eye'" class="text-[10px]"></i>
+    </button>
+</p>
+
+
+                                        <div class="mt-2 space-y-1">
+    <div v-if="item.user_detail?.pencairan_via !== 'Tunai'" class="flex items-center gap-2">
+        <div class="flex flex-col">
+            <span class="text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                <i class="fas fa-university mr-1 opacity-50"></i>
+                {{ item.user_bank?.[0]?.bank?.short_name || '-' }}
+            </span>
+            <span class="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+                {{ item.user_bank?.[0]?.nomor_rekening || '-' }}
+            </span>
+        </div>
+    </div>
+
+    <div v-else class="flex items-center gap-2 py-1 px-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg w-max">
+        <i class="fas fa-hand-holding-usd text-gray-400 text-[10px]"></i>
+        <span class="text-[10px] italic text-gray-500">Penerimaan Tunai</span>
+    </div>
+</div>
+
+                                        <h1>
+                                            <span class="text-[10px] text-gray-500">Total: {{ hitungTotal(item.pencatatan_items) }}</span>
+                                        </h1>
+
+
+
+                                </div>
+
+
+                            </div>
+              <span :class="[
+                                'px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider',
+                                item.user_detail.pencairan_via === 'Tunai' ? 'bg-emerald-500 text-white' :'bg-amber-600 text-white'
+                            ]">
+                                {{ item.user_detail.pencairan_via }}
+                            </span>
+                        </div>
+<div class="grid grid-cols-1 gap-2 mt-4 pt-3 border-t border-gray-50 dark:border-gray-800">
+
+    <template v-if="item.user_transaction.length === 0">
+
+        <button
+            @click="editData(item)"
+            class="flex items-center justify-center gap-2 px-3 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-xl transition shadow-md shadow-red-500/20">
+            <i class="fas fa-bell"></i> Kirim Bukti Pembayaran
+        </button>
+
+    </template>
+
+    <template v-else>
+        <div class="flex flex-col gap-2">
+            <button disabled
+                class="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-500 text-white text-[11px] font-bold rounded-xl shadow-md shadow-blue-500/20">
+                <i class="fas fa-check"></i> Transaksi Telah Dilakukan
+            </button>
+
+            <button
+                @click="deleteData(item.id)"
+                class="flex items-center justify-center gap-2 px-3 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-xl transition shadow-md shadow-red-500/20">
+                <i class="fas fa-trash"></i> Hapus Transaksi
+            </button>
+        </div>
+    </template>
+
+</div>
+                    </div>
+
+                    <div v-if="filteredTransaksi.length === 0"
+                        class="flex flex-col items-center justify-center py-12 text-gray-400 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                        <i class="fas fa-search text-4xl mb-3 opacity-20"></i>
+                        <p class="text-sm font-medium">Data tidak ditemukan</p>
+                        <p class="text-[10px]">Coba gunakan kata kunci pencarian lain</p>
+                    </div>
+
+                    <div v-if="pageInfo.recordsDisplay > 0" class="mt-6 flex flex-col items-center gap-4">
+                        <span class="text-xs text-gray-500 font-medium">
+                            Menampilkan <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.start + 1
+                                }}-{{ pageInfo.end
+                                }}</span>
+                            dari <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.recordsDisplay
+                                }}</span> data
+                        </span>
+
+                        <div class="flex items-center gap-2 w-full">
+                            <button @click="prevMobilePage" :disabled="pageInfo.page === 0"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                <i class="fas fa-chevron-left text-[10px]"></i> Sebelumnya
+                            </button>
+
+                            <button @click="nextMobilePage" :disabled="pageInfo.page >= pageInfo.pages - 1"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                Berikutnya <i class="fas fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex gap-1.5">
+                            <div v-for="n in pageInfo.pages" :key="n"
+                                class="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                                :class="n === pageInfo.page + 1 ? 'bg-emerald-500 w-4' : 'bg-gray-300 dark:bg-gray-700'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                         </div>
                     </div>
 

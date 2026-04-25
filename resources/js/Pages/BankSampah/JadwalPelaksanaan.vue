@@ -54,11 +54,35 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
 
+
+const filteredJadwal = ref([]);
+
+const pageInfo = ref({
+    page: 0,
+    pages: 0,
+    start: 0,
+    end: 0,
+    recordsDisplay: 0
+});
+
+const updateMobileData = (api) => {
+    if (api) {
+        // Ambil data hanya untuk halaman yang sedang aktif
+        filteredJadwal.value = api.rows({ search: 'applied', page: 'current' }).data().toArray();
+        // Ambil info detail pagination
+        pageInfo.value = api.page.info();
+    }
+};
+
 const dtOptions = {
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
 
+    drawCallback: function () {
+        const api = this.api();
+        updateMobileData(api);
+    },
     columns: [
         {
             data: null,
@@ -67,7 +91,7 @@ const dtOptions = {
         {
             // Langsung akses user_detail (tanpa kata 'jadwal')
             data: 'tanggal_setoran',
-          render: (data, type, row) => {
+            render: (data, type, row) => {
                 const tanggalRaw = row.tanggal_setoran;
                 if (!tanggalRaw) return '-';
 
@@ -328,8 +352,19 @@ const dtOptions = {
     }
 };
 
-const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
-const nextPage = () => dtInstance.value.dt.page('next').draw('page');
+
+const prevMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('previous').draw('page');
+    }
+};
+
+const nextMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('next').draw('page');
+    }
+};
+
 const handleSearch = (e) => {
     dtInstance.value.dt.search(e.target.value).draw();
 };
@@ -545,7 +580,7 @@ const breadcrumbItems = [
 
 
 
-                        <div class="flex items-center gap-2  pl-3">
+                        <div class="flex items-center gap-2  pl-0 md:pl-3">
                             <label
                                 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
                             <select @change="handleLengthChange"
@@ -559,38 +594,124 @@ const breadcrumbItems = [
 
                 </div>
 
-                <DataTable ref="dtInstance" :data="jadwal" :options="dtOptions"
-                    class="w-full display stripe hover cell-border">
+                <div class="hidden md:block">
+                    <DataTable ref="dtInstance" :data="jadwal" :options="dtOptions"
+                        class="w-full display stripe hover cell-border">
 
-                    <thead>
-                        <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                            <th>No</th>
-                            <th>Jadwal Pelaksanaan</th>
-                            <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi</th>
-                        </tr>
-                    </thead>
+                        <thead>
+                            <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
+                                <th>No</th>
+                                <th>Jadwal Pelaksanaan</th>
+                                <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <template #column-0="data">
-                        <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
-                    </template>
+                        <template #column-0="data">
+                            <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
+                        </template>
 
-                    <template #column-2="data">
-                        <div class="flex justify-center gap-1">
+                        <template #column-2="data">
+                            <div class="flex justify-center gap-1">
 
-                            <button @click="editData(data.rowData)"
-                                class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                                title="Edit">
-                                <i class="fas fa-edit"></i>
+                                <button @click="editData(data.rowData)"
+                                    class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                                    title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button @click="deleteData(data.rowData.id)"
+                                    class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                                    title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </DataTable>
+                </div>
+
+
+                <div class="block md:hidden space-y-4">
+                    <div v-if="filteredJadwal.length > 0" class="text-[10px] text-gray-500 font-bold uppercase mb-2">
+                        Menampilkan {{ filteredJadwal.length }} Data Terfilter
+                    </div>
+
+                    <div v-for="(item, index) in filteredJadwal" :key="item.id"
+                        class="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all active:scale-[0.98]">
+
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full flex items-center justify-center font-bold text-sm">
+                                    {{ index + 1 }}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 dark:text-white capitalize leading-tight">
+                                        {{ item.tanggal_setoran ? new
+                                            Date(item.tanggal_setoran).toLocaleDateString('id-ID', {
+                                                day:
+                                        'numeric', month: 'long', year: 'numeric' }) : '-' }}
+                                    </h4>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Jadwal Pelaksanaan</span>
+
+
+                                </div>
+                            </div>
+                            <span class="text-[10px] text-gray-400 font-medium">
+                                {{ new Date(item.tanggal_setoran).toLocaleDateString('id-ID', { weekday: 'long' }) }}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-gray-50 dark:border-gray-800">
+
+
+                            <button @click="editData(item)"
+                                class="flex items-center justify-center gap-2 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 rounded-xl text-[11px] font-bold">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
-                            <button @click="deleteData(data.rowData.id)"
-                                class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
-                                title="Hapus">
-                                <i class="fas fa-trash"></i>
+
+                            <button @click="deleteData(item.id)"
+                                class="flex items-center justify-center gap-2 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl text-[11px] font-bold">
+                                <i class="fas fa-trash"></i> Hapus
                             </button>
                         </div>
-                    </template>
-                </DataTable>
+                    </div>
 
+                    <div v-if="filteredJadwal.length === 0"
+                        class="flex flex-col items-center justify-center py-12 text-gray-400 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                        <i class="fas fa-search text-4xl mb-3 opacity-20"></i>
+                        <p class="text-sm font-medium">Data tidak ditemukan</p>
+                        <p class="text-[10px]">Coba gunakan kata kunci pencarian lain</p>
+                    </div>
+
+                    <div v-if="pageInfo.recordsDisplay > 0" class="mt-6 flex flex-col items-center gap-4">
+                        <span class="text-xs text-gray-500 font-medium">
+                            Menampilkan <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.start + 1
+                            }}-{{ pageInfo.end
+                                }}</span>
+                            dari <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.recordsDisplay
+                            }}</span> data
+                        </span>
+
+                        <div class="flex items-center gap-2 w-full">
+                            <button @click="prevMobilePage" :disabled="pageInfo.page === 0"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                <i class="fas fa-chevron-left text-[10px]"></i> Sebelumnya
+                            </button>
+
+                            <button @click="nextMobilePage" :disabled="pageInfo.page >= pageInfo.pages - 1"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                Berikutnya <i class="fas fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex gap-1.5">
+                            <div v-for="n in pageInfo.pages" :key="n"
+                                class="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                                :class="n === pageInfo.page + 1 ? 'bg-emerald-500 w-4' : 'bg-gray-300 dark:bg-gray-700'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
 

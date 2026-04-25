@@ -60,7 +60,11 @@ class JadwalServices
                 ));
                 $user = Auth::user();
 
+                $message = "Jadwal Pelaksanaan Bank Sampah Baru pada tanggal " . $data['tanggal_setoran'];
+                $phone = $adminUser->user_detail->telephone_number;
 
+
+                // $sendWA = "https://wa.me/" . $phone . "?text=" . urlencode($message);
                 $recipientDetailId = $adminUser->user_detail->id;
                 $this->chatServices->createChat([
                     'id_userdetail' => $recipientDetailId,

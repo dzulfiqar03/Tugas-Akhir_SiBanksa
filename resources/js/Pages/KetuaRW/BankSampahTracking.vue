@@ -149,12 +149,33 @@ const onRowClick = (event) => {
     }
 };
 
+const filteredBankSampah = ref([]);
+
+const pageInfo = ref({
+    page: 0,
+    pages: 0,
+    start: 0,
+    end: 0,
+    recordsDisplay: 0
+});
+
+const updateMobileData = (api) => {
+    if (api) {
+        // Ambil data hanya untuk halaman yang sedang aktif
+        filteredBankSampah.value = api.rows({ search: 'applied', page: 'current' }).data().toArray();
+        // Ambil info detail pagination
+        pageInfo.value = api.page.info();
+    }
+};
+
 const dtOptions = {
-    searching: false,
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
-
+    drawCallback: function () {
+        const api = this.api();
+        updateMobileData(api);
+    },
     layout: {
         topStart: null,
         topEnd: null,
@@ -360,8 +381,39 @@ const dtOptions = {
     }
 };
 
+
+
+const prevMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('previous').draw('page');
+    }
+};
+
+const nextMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('next').draw('page');
+    }
+};
+
+// 1. Tambahkan ref untuk pencarian mobile
+const mobileSearch = ref('');
+
+// 2. Update handleSearch agar sinkron ke DataTables dan Mobile Card
 const handleSearch = (e) => {
-    dtInstance.value.dt.search(e.target.value).draw();
+    const value = e.target.value;
+
+    // Sinkronkan ke DataTables (Desktop)
+    if (dtInstance.value && dtInstance.value.dt) {
+        dtInstance.value.dt.search(value).draw();
+    }
+
+    // Sinkronkan ke Vue State (Mobile)
+    mobileSearch.value = value;
+
+    // Reset halaman mobile ke 1 saat mencari
+    if (typeof resetMobilePage === 'function') {
+        resetMobilePage();
+    }
 };
 
 const handleCategoryFilter = (e) => {
@@ -414,7 +466,7 @@ const handleSubmit = () => {
 
     form[method](url, {
         onSuccess: () => {
-            Swal.fire('Berhasil!', 'Data bank sampahh telah diproses.', 'success');
+            Swal.fire('Berhasil!', 'Data bank sampah telah diproses.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -555,19 +607,7 @@ const viewDetail = (id) => {
                                 placeholder="Ketik...">
                         </div>
 
-                        <div class="flex items-center gap-2">
-                            <label
-                                class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                            <select @change="handleCategoryFilter"
-                                class="border border-gray-200 text-black dark:text-white dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                                <option value="">Semua</option>
-                                <option value="Ketua">Ketua</option>
-                                <option value="Sekretaris">Sekretaris</option>
-                                <option value="Bendahara">Bendahara</option>
-                                <option value="Pemilah">Pemilah</option>
-                                <option value="Penimbang">Penimbang</option>
-                            </select>
-                        </div>
+
 
                         <div class="flex items-center gap-2  pl-3">
                             <label
@@ -582,7 +622,7 @@ const viewDetail = (id) => {
                     </div>
 
                 </div>
-                <div class=" bg-white dark:bg-gray-800 rounded-xl shadow">
+                <div class=" hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow">
                     <DataTable ref="dtInstance" :options="dtOptions"
                         class="w-full display stripe hover cell-border dark:text-white">
                         <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
@@ -637,6 +677,116 @@ const viewDetail = (id) => {
                         </template>
 
                     </DataTable>
+                </div>
+
+                <div class="block md:hidden space-y-4">
+    <div v-for="item in filteredBankSampah" :key="item.id"
+        class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+
+        <div class="absolute top-4 right-4">
+            <span :class="[
+                'px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5',
+                item.status_online === 'Online' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'
+            ]">
+                <span v-if="item.status_online === 'Online'" class="relative flex h-1.5 w-1.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                {{ item.status_online }}
+            </span>
+        </div>
+
+        <div class="flex items-center gap-3 mb-4">
+            <div class="h-10 w-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl flex items-center justify-center text-emerald-600 font-bold">
+                {{ item.user_detail.id_rt }}
+            </div>
+            <div>
+                <h4 class="font-bold text-gray-900 dark:text-white text-sm">{{ item.fullName }}</h4>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ item.user_detail.status }}</p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <div class="flex justify-between items-center mb-1.5">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase">Kelengkapan Profil</span>
+                <span class="text-[10px] font-bold text-emerald-600">{{ Math.round(item.percentage) }}%</span>
+            </div>
+            <div class="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                <div class="h-full progress-flow transition-all duration-700"
+                     :class="item.percentage === 100 ? 'bg-emerald-500' : 'bg-orange-400'"
+                     :style="{ width: item.percentage + '%' }">
+                </div>
+            </div>
+            <p v-if="item.percentage < 100 && item.empty_fields?.length > 0"
+               class="text-[9px] text-red-500 mt-1.5 italic">
+                Data kurang: {{ item.empty_fields.join(', ') }}
+            </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl mb-4 border border-gray-100 dark:border-gray-700">
+            <div>
+                <p class="text-[9px] text-gray-400 uppercase font-bold">Nasabah</p>
+                <p class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ item.total_nasabah }} Orang</p>
+            </div>
+            <div>
+                <p class="text-[9px] text-gray-400 uppercase font-bold">Setoran Terakhir</p>
+                <p class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ item.tanggal_setoran }}</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button @click="viewDetail(item.id)"
+                class="flex-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                <i class="fas fa-eye"></i> Detail
+            </button>
+
+            <button v-if="item.percentage < 100" @click="sendReminder(item.id)"
+                class="p-2.5 bg-red-500 text-white rounded-xl shadow-lg shadow-red-500/20 active:scale-90 transition-all">
+                <i class="fas fa-bell"></i>
+            </button>
+
+            <button @click="editData(item.id, item.user_detail.fullName, item.user_detail.status, item.user_detail.id_gender, item.user_detail.id_rt)"
+                class="p-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-200 rounded-xl active:scale-90 transition-all">
+                <i class="fas fa-edit"></i>
+            </button>
+        </div>
+    </div>
+
+                  <div v-if="filteredBankSampah.length === 0"
+                        class="flex flex-col items-center justify-center py-12 text-gray-400 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                        <i class="fas fa-search text-4xl mb-3 opacity-20"></i>
+                        <p class="text-sm font-medium">Data tidak ditemukan</p>
+                        <p class="text-[10px]">Coba gunakan kata kunci pencarian lain</p>
+                    </div>
+
+                    <div v-if="pageInfo.recordsDisplay > 0" class="mt-6 flex flex-col items-center gap-4">
+                        <span class="text-xs text-gray-500 font-medium">
+                            Menampilkan <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.start + 1
+                                }}-{{ pageInfo.end
+                                }}</span>
+                            dari <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.recordsDisplay
+                                }}</span> data
+                        </span>
+
+                        <div class="flex items-center gap-2 w-full">
+                            <button @click="prevMobilePage" :disabled="pageInfo.page === 0"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                <i class="fas fa-chevron-left text-[10px]"></i> Sebelumnya
+                            </button>
+
+                            <button @click="nextMobilePage" :disabled="pageInfo.page >= pageInfo.pages - 1"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                Berikutnya <i class="fas fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex gap-1.5">
+                            <div v-for="n in pageInfo.pages" :key="n"
+                                class="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                                :class="n === pageInfo.page + 1 ? 'bg-emerald-500 w-4' : 'bg-gray-300 dark:bg-gray-700'">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>

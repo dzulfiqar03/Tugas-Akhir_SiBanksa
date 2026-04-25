@@ -58,11 +58,36 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 const userDetail = computed(() => user.value?.user_detail || {});
 
+
+const filteredNasabah = ref([]);
+
+const pageInfo = ref({
+    page: 0,
+    pages: 0,
+    start: 0,
+    end: 0,
+    recordsDisplay: 0
+});
+
+const updateMobileData = (api) => {
+    if (api) {
+        // Ambil data hanya untuk halaman yang sedang aktif
+        filteredNasabah.value = api.rows({ search: 'applied', page: 'current' }).data().toArray();
+        // Ambil info detail pagination
+        pageInfo.value = api.page.info();
+    }
+};
+
+
+
 const dtOptions = {
     pageLength: 5,
     responsive: true,
     lengthMenu: [5, 10, 25, 50],
-
+    drawCallback: function () {
+        const api = this.api();
+        updateMobileData(api);
+    },
     columns: [
         {
             data: null,
@@ -97,7 +122,7 @@ const dtOptions = {
             orderable: false,
             className: 'no-print text-center'
         },
-            {
+        {
             // Langsung akses user_detail (tanpa kata 'nasabah')
             data: 'user_detail.telephone_number',
             className: 'capitalize',
@@ -355,8 +380,18 @@ const dtOptions = {
     }
 };
 
-const prevPage = () => dtInstance.value.dt.page('previous').draw('page');
-const nextPage = () => dtInstance.value.dt.page('next').draw('page');
+const prevMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('previous').draw('page');
+    }
+};
+
+const nextMobilePage = () => {
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page('next').draw('page');
+    }
+};
+
 const handleSearch = (e) => {
     dtInstance.value.dt.search(e.target.value).draw();
 };
@@ -372,7 +407,10 @@ const handleCategoryFilter = (e) => {
         .draw();
 };
 const handleLengthChange = (e) => {
-    dtInstance.value.dt.page.len(parseInt(e.target.value)).draw();
+    // Tambahkan pengecekan dtInstance.value?.dt
+    if (dtInstance.value?.dt) {
+        dtInstance.value.dt.page.len(parseInt(e.target.value)).draw();
+    }
 };
 
 const exportData = (index) => {
@@ -410,7 +448,7 @@ const handleSubmit = () => {
     form[method](url, {
         onSuccess: () => {
             isEdit.value ?
-            Swal.fire('Berhasil!', 'Data nasabah telah diubah.', 'success'):Swal.fire('Berhasil!', 'Data nasabah telah disimpan.', 'success');
+                Swal.fire('Berhasil!', 'Data nasabah telah diubah.', 'success') : Swal.fire('Berhasil!', 'Data nasabah telah disimpan.', 'success');
             showForm.value = false;
             form.reset();
         },
@@ -506,171 +544,262 @@ const breadcrumbItems = [
 
                         </div>
                         <div v-for="field in formdata.nasabah" :key="field.name">
-                                    <div v-if="field.type === 'radio'"  class=" col-span-full">
+                            <div v-if="field.type === 'radio'" class=" col-span-full">
 
-                            <InputLabel :for="field.name" :value="field.title" />
-
-
-                            <div class="flex gap-3">
-                                <label v-for="(opt, idx) in field.options" :key="idx"
-                                    class="flex-1 cursor-pointer group w-full dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
-                                    >
-                                    <input type="radio" v-model="form[field.name]" :value="idx + 1"
-                                        class="peer sr-only">
-                                    <div
-                                        class="py-2 px-4 dark:text-white text-gray-500 rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700"
-                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }">
-                                        {{ opt }}
-                                    </div>
-                                </label>
-                            </div>
-
-                        </div>
-
-                        <div v-else-if="field.name === 'status'">
-                            <div class="col-span-2">
                                 <InputLabel :for="field.name" :value="field.title" />
-                                <select :id="field.name" :name="field.name" v-model="form[field.name]"
-                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
-                                    class="w-full dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
-                                    <option value="">Pilih Status</option>
-                                    <option v-for="opt in field.options" :key="opt" :value="opt"
-                                        class="text-gray-900 dark:text-white">
-                                        {{ opt }}
-                                    </option>
-                                </select>
-                            </div>
 
-                        </div>
 
-                        <div v-else-if="!['address', 'userName', 'status'].includes(field.name) && field.type != 'file' &&
-                            field.type != 'select' &&
-                            field.type != 'radio'">
-                            <div class="col-span-1">
-                                <InputLabel :for="field.name" :value="field.title" />
-                                <input :type="field.type" :id="field.name" :name="field.name"
-                                    :placeholder="field.placeholder" v-model="form[field.name]"
-                                    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
-                                    class="w-full dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+                                <div class="flex gap-3">
+                                    <label v-for="(opt, idx) in field.options" :key="idx"
+                                        class="flex-1 cursor-pointer group w-full dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+                                        <input type="radio" v-model="form[field.name]" :value="idx + 1"
+                                            class="peer sr-only">
+                                        <div class="py-2 px-4 dark:text-white text-gray-500 rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700"
+                                            :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }">
+                                            {{ opt }}
+                                        </div>
+                                    </label>
+                                </div>
 
                             </div>
 
+                            <div v-else-if="field.name === 'status'">
+                                <div class="col-span-2">
+                                    <InputLabel :for="field.name" :value="field.title" />
+                                    <select :id="field.name" :name="field.name" v-model="form[field.name]"
+                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
+                                        class="w-full dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+                                        <option value="">Pilih Status</option>
+                                        <option v-for="opt in field.options" :key="opt" :value="opt"
+                                            class="text-gray-900 dark:text-white">
+                                            {{ opt }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <div v-else-if="!['address', 'userName', 'status'].includes(field.name) && field.type != 'file' &&
+                                field.type != 'select' &&
+                                field.type != 'radio'">
+                                <div class="col-span-1">
+                                    <InputLabel :for="field.name" :value="field.title" />
+                                    <input :type="field.type" :id="field.name" :name="field.name"
+                                        :placeholder="field.placeholder" v-model="form[field.name]"
+                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }"
+                                        class="w-full dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+
+                                </div>
+
+                            </div>
+
+
                         </div>
 
 
+
+
+                        <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
+                            <button type="submit"
+                                class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50"
+                                :disabled="form.processing">
+                                <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Nasabah' : 'Simpan Nasabah' }}
+                            </button>
+                        </div>
+                    </FormWrapper>
                 </div>
+            </Transition>
 
+            <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 
+                    <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
+                        <button @click="exportData(0)"
+                            class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button @click="exportData(1)"
+                            class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button @click="exportData(2)"
+                            class="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
+                        <div class="flex items-end gap-2">
+                            <label
+                                class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
+                            <input @keyup="handleSearch" type="text"
+                                class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
+                                placeholder="Ketik...">
+                        </div>
 
+                        <div class="flex items-center gap-2">
+                            <label
+                                class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
+                            <select @change="handleCategoryFilter"
+                                class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+                                <option value="">Semua</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Pengajuan Verifikasi">Pengajuan Verifikasi</option>
+                                <option value="Ditolak">Ditolak</option>
+                                <option value="Disetujui">Disetujui</option>
+                            </select>
+                        </div>
 
-                <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
-                    <button type="submit"
-                        class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50"
-                        :disabled="form.processing">
-                        <i class="fas fa-save mr-2"></i> {{ isEdit ? 'Update Nasabah' : 'Simpan Nasabah' }}
-                    </button>
-                </div>
-                </FormWrapper>
-        </div>
-        </Transition>
-
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
-
-                <div class="flex flex-wrap mb-5 lg:mb-0 items-center gap-2">
-                    <button @click="exportData(0)"
-                        class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                        <i class="fas fa-file-pdf"></i> PDF
-                    </button>
-                    <button @click="exportData(1)"
-                        class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                        <i class="fas fa-file-excel"></i> Excel
-                    </button>
-                    <button @click="exportData(2)"
-                        class="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-sm transition shadow-sm">
-                        <i class="fas fa-print"></i> Print
-                    </button>
-                </div>
-                <div class="flex flex-wrap md:flex-nowrap items-end justify-start gap-3">
-                    <div class="flex items-end gap-2">
-                        <label
-                            class="text-xs m-auto font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cari:</label>
-                        <input @keyup="handleSearch" type="text"
-                            class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none w-40 transition-all"
-                            placeholder="Ketik...">
+                        <div class="flex items-center gap-2  pl-3">
+                            <label
+                                class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
+                            <select @change="handleLengthChange"
+                                class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <label
-                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
-                        <select @change="handleCategoryFilter"
-                            class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                            <option value="">Semua</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Pengajuan Verifikasi">Pengajuan Verifikasi</option>
-                            <option value="Ditolak">Ditolak</option>
-                            <option value="Disetujui">Disetujui</option>
-                        </select>
+                </div>
+
+                <div class="hidden md:block">
+                    <DataTable ref="dtInstance" :data="nasabah" :options="dtOptions"
+                        class="w-full display stripe hover cell-border">
+
+                        <thead>
+                            <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
+                                <th>No</th>
+                                <th>Nama Lengkap</th>
+                                <th class="text-center">Status</th>
+                                <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <template #column-0="data">
+                            <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
+                        </template>
+
+
+
+                        <template #column-3="data">
+                            <div class="flex justify-center gap-1">
+                                <button @click="viewDetail(data.rowData.id)"
+                                    class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
+                                    title="Lihat Profil Lengkap">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                                <template v-if="data.rowData.user_detail.status !== 'Disetujui'">
+
+                                    <button @click="editData(data.rowData)"
+                                        class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                                        title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </template>
+
+                                <button @click="deleteData(data.rowData.id)"
+                                    class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                                    title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </DataTable>
+                </div>
+
+                <div class="block md:hidden space-y-4">
+                    <div v-if="filteredNasabah.length > 0" class="text-[10px] text-gray-500 font-bold uppercase mb-2">
+                        Menampilkan {{ filteredNasabah.length }} Data Terfilter
                     </div>
 
-                    <div class="flex items-center gap-2  pl-3">
-                        <label
-                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Show:</label>
-                        <select @change="handleLengthChange"
-                            class="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer">
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="25">25</option>
-                        </select>
+                    <div v-for="(item, index) in filteredNasabah" :key="item.id"
+                        class="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all active:scale-[0.98]">
+
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full flex items-center justify-center font-bold text-sm">
+                                    {{ index + 1 }}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 dark:text-white capitalize leading-tight">
+                                        {{ item.user_detail.fullName }}
+                                    </h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">
+                                        <i class="fas fa-phone mr-1"></i>
+                                        {{ item.user_detail.telephone_number.replace(/(?<=^.{3}). /g, '*') }} </p>
+                                </div>
+                            </div>
+
+                            <span :class="[
+                                'px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider',
+                                item.user_detail.status === 'Disetujui' ? 'bg-emerald-500 text-white' :
+                                    item.user_detail.status === 'Pengajuan Verifikasi' ? 'bg-yellow-500 text-white' :
+                                        item.user_detail.status === 'Pending' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'
+                            ]">
+                                {{ item.user_detail.status }}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-gray-50 dark:border-gray-800">
+                            <button @click="viewDetail(item.id)"
+                                class="flex items-center justify-center gap-2 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl text-[11px] font-bold">
+                                <i class="fas fa-eye"></i> Detail
+                            </button>
+
+                            <button v-if="item.user_detail.status !== 'Disetujui'" @click="editData(item)"
+                                class="flex items-center justify-center gap-2 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 rounded-xl text-[11px] font-bold">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+
+                            <button @click="deleteData(item.id)"
+                                class="flex items-center justify-center gap-2 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl text-[11px] font-bold">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="filteredNasabah.length === 0"
+                        class="flex flex-col items-center justify-center py-12 text-gray-400 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                        <i class="fas fa-search text-4xl mb-3 opacity-20"></i>
+                        <p class="text-sm font-medium">Data tidak ditemukan</p>
+                        <p class="text-[10px]">Coba gunakan kata kunci pencarian lain</p>
+                    </div>
+
+                    <div v-if="pageInfo.recordsDisplay > 0" class="mt-6 flex flex-col items-center gap-4">
+                        <span class="text-xs text-gray-500 font-medium">
+                            Menampilkan <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.start + 1
+                                }}-{{ pageInfo.end
+                                }}</span>
+                            dari <span class="text-gray-800 dark:text-white font-bold">{{ pageInfo.recordsDisplay
+                                }}</span> data
+                        </span>
+
+                        <div class="flex items-center gap-2 w-full">
+                            <button @click="prevMobilePage" :disabled="pageInfo.page === 0"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                <i class="fas fa-chevron-left text-[10px]"></i> Sebelumnya
+                            </button>
+
+                            <button @click="nextMobilePage" :disabled="pageInfo.page >= pageInfo.pages - 1"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:grayscale bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 active:scale-95">
+                                Berikutnya <i class="fas fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex gap-1.5">
+                            <div v-for="n in pageInfo.pages" :key="n"
+                                class="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                                :class="n === pageInfo.page + 1 ? 'bg-emerald-500 w-4' : 'bg-gray-300 dark:bg-gray-700'">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
             </div>
-
-            <DataTable ref="dtInstance" :data="nasabah" :options="dtOptions"
-                class="w-full display stripe hover cell-border">
-
-                <thead>
-                    <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                        <th>No</th>
-                        <th>Nama Lengkap</th>
-                        <th class="text-center">Status</th>
-                        <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi</th>
-                    </tr>
-                </thead>
-
-                <template #column-0="data">
-                    <span class="font-medium text-gray-700 dark:text-gray-200">{{ data.cellData }}</span>
-                </template>
-
-
-
-                <template #column-3="data">
-                    <div class="flex justify-center gap-1">
-                        <button @click="viewDetail(data.rowData.id)"
-                            class="p-2  text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
-                            title="Lihat Profil Lengkap">
-                            <i class="fas fa-eye text-sm"></i>
-                        </button>
-                        <template v-if="data.rowData.user_detail.status !== 'Disetujui'">
-
-                            <button @click="editData(data.rowData)"
-                                class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                                title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </template>
-
-                        <button @click="deleteData(data.rowData.id)"
-                            class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
-                            title="Hapus">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </template>
-            </DataTable>
-
-        </div>
 
 
         </div>

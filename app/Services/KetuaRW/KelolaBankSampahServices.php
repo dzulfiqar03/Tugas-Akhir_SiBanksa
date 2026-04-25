@@ -24,7 +24,7 @@ class KelolaBankSampahServices
     public function getAllBankSampah()
     {
 
-        
+
         $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.pencatatan'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 2);
@@ -50,6 +50,23 @@ class KelolaBankSampahServices
         $nasabah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.pencatatan'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 3);
+            })->whereHas('user_detail.pencatatan.pencatatan_items')->orderBy(
+                $this->userDetail::select('id_rt')
+                    ->whereColumn('user_details.id_user', 'users.id'),
+                'ASC'
+            )
+            ->get();
+
+        return $nasabah;
+    }
+
+
+     public function getAllNasabahByRT()
+    {
+        $nasabah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.pencatatan'])
+            ->whereHas('user_detail', function ($query) {
+                $query->where('id_roles', 3);
+                $query->where('id_rt', auth()->user()->user_detail->id_rt);
             })->whereHas('user_detail.pencatatan.pencatatan_items')->orderBy(
                 $this->userDetail::select('id_rt')
                     ->whereColumn('user_details.id_user', 'users.id'),
