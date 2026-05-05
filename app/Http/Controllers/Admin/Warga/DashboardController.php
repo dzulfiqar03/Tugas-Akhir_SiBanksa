@@ -14,8 +14,11 @@ use App\Models\UserBank;
 use App\Models\UserDetail;
 use App\Services\BankSampah\JadwalServices;
 use App\Services\BankSampah\NasabahServices;
+use App\Services\BankSampah\PencatatanServices;
+use App\Services\BankSampah\PencatatanSetoranItemsServices;
 use App\Services\ChatServices;
 use App\Services\KetuaRW\KelolaBankSampahServices;
+use App\Services\Warga\DashboardWargaServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +29,15 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function __construct(protected UserDetail $userDetail, protected JadwalServices $jadwalServices, protected ChatServices $chatServices, protected KelolaBankSampahServices $kelolaBankSampahServices, protected NasabahServices $nasabahServices) {}
+    public function __construct(
+        protected UserDetail $userDetail,
+        protected JadwalServices $jadwalServices,
+        protected ChatServices $chatServices,
+        protected KelolaBankSampahServices $kelolaBankSampahServices,
+        protected NasabahServices $nasabahServices,
+        protected PencatatanServices $pencatatanSetoran,
+        protected DashboardWargaServices $dashboardWargaServices
+    ) {}
     public function index()
     {
         $user = Auth::user();
@@ -35,13 +46,35 @@ class DashboardController extends Controller
 
         $menu = (new DataResources(null))->toArray(request());
 
-        $getSaldo = PencatatanSetoran::where('id_userdetail', $detail->id)
-            ->whereHas('transaction')
-            ->sum('total_setoran');
+        $getSaldo = $this->dashboardWargaServices->getSaldoWarga($detail);
 
-        $totalBeratPersonal = PencatatanSetoranItems::whereHas('setoran', function ($query) use ($detail) {
-            $query->where('id_userdetail', $detail->id);
-        })->sum('jumlah');
+        $totalBeratPersonal = $this->dashboardWargaServices->getWeightNasabah();
+
+        $formattedChats = $this->dashboardWargaServices->groupedMessage()->values();
+
+        $botMessages = $this->dashboardWargaServices->getBotMessage();
+
+        $aiRoom = [
+            'id' => 'AI_BOT', // ID Unik sebagai penanda
+            'fullName' => 'AI Banksa',
+            'email' => 'ai.assistant@banksampah.com',
+            'rt' => '00',
+            'online' => 'Online', // AI selalu online
+            'countUnreadMessage' => 0,
+            'imageCount' => 0,
+            'documentCount' => 0,
+            'user_chat' => $botMessages->map(fn($m) => [
+                'id' => $m->id,
+                'is_ai' => true, // Penanda untuk UI
+                'sender_id' => 'AI_BOT',
+                'message' => $m->bot_response, // Jawaban AI
+                'user_msg' => $m->chat,         // Pertanyaan User
+                'time' => $m->created_at->format('H:i'),
+            ])->values()
+        ];
+
+        $finalChatList = $formattedChats->values()->toArray();
+        array_unshift($finalChatList, $aiRoom);
 
         $komposisiSampah = PencatatanSetoranItems::whereHas('setoran', function ($query) use ($detail) {
             $query->where('id_userdetail', $detail->id);
@@ -128,33 +161,6 @@ class DashboardController extends Controller
         $breadcrumbItems = [
             ['label' => 'Dashboard', 'url' => route('warga.dashboard')]
         ];
-
-
-        $formattedChats = $this->chatServices->groupedMessage()->values();
-
-        $botMessages = $this->chatServices->getBotMessage();
-
-        $aiRoom = [
-            'id' => 'AI_BOT', // ID Unik sebagai penanda
-            'fullName' => 'AI Banksa',
-            'email' => 'ai.assistant@banksampah.com',
-            'rt' => '00',
-            'online' => 'Online', // AI selalu online
-            'countUnreadMessage' => 0,
-            'imageCount' => 0,
-            'documentCount' => 0,
-            'user_chat' => $botMessages->map(fn($m) => [
-                'id' => $m->id,
-                'is_ai' => true, // Penanda untuk UI
-                'sender_id' => 'AI_BOT',
-                'message' => $m->bot_response, // Jawaban AI
-                'user_msg' => $m->chat,         // Pertanyaan User
-                'time' => $m->created_at->format('H:i'),
-            ])->values()
-        ];
-
-        $finalChatList = $formattedChats->values()->toArray();
-        array_unshift($finalChatList, $aiRoom);
 
 
         return Inertia::render('Warga/Dashboard', [

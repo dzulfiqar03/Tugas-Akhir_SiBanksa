@@ -58,6 +58,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserDetail::class, 'sender_id', 'id');
     }
+
+    public function pushSubscriptions()
+{
+    // HasMany karena 1 user bisa punya banyak device (Laptop, HP, dll)
+    return $this->hasMany(PushSubscription::class, 'user_id', 'id');
+}
+
     public function sendPasswordResetNotification($token)
 {
     // gunakan nama user untuk dynamic FROM NAME

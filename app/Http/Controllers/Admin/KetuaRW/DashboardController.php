@@ -12,6 +12,8 @@ use App\Models\UserDetail;
 use App\Models\UserLog;
 use App\Services\BankSampah\JadwalServices;
 use App\Services\BankSampah\NasabahServices;
+use App\Services\BankSampah\PencatatanSetoranItemsServices;
+use App\Services\KetuaRW\DashboardKetuaRWServices;
 use App\Services\KetuaRW\KelolaBankSampahServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +25,13 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function __construct(protected UserDetail $userDetail, protected JadwalServices $jadwalServices, protected KelolaBankSampahServices $kelolaBankSampahServices, protected NasabahServices $nasabahServices) {}
+    public function __construct(
+        protected UserDetail $userDetail,
+        protected JadwalServices $jadwalServices,
+        protected KelolaBankSampahServices $kelolaBankSampahServices,
+        protected NasabahServices $nasabahServices,
+        protected DashboardKetuaRWServices $dashboardKetuaRWServices
+    ) {}
     public function index()
     {
         $menu = (new DataResources(null))->toArray(request());
@@ -39,12 +47,30 @@ class DashboardController extends Controller
             ];
         });
 
+        $sampahPeringkat = $this->dashboardKetuaRWServices->getPeringkatBankSampah();
+
+        $bankSampah = $this->dashboardKetuaRWServices->getBankSampah(auth()->user()->id);
+        $nasabah = $this->dashboardKetuaRWServices->getAllNasabah()->take(5);
+        $id_rt = $bankSampah->user_detail->id_rt;
+
+
+        $nasabahIds = UserDetail::where('id_rt', $id_rt)->pluck('id');
+        $total_nasabah = $nasabahIds->count();
+        $online_saat_ini = UserLog::whereIn('id_userdetail', $nasabahIds)
+            ->whereIn('id', function ($query) use ($nasabahIds) {
+                $query->selectRaw('max(id)')
+                    ->from('user_logs')
+                    ->whereIn('id_userdetail', $nasabahIds)
+                    ->groupBy('id_userdetail');
+            })
+            ->where('action', 'LOGIN')
+            ->count();
 
         $setoran = PencatatanSetoranItems::all();
         $user = Auth::user();
         $detail = $user->user_detail;
         $unitBankSampah = User::whereHas('user_detail', function ($q) use ($detail) {
-            $q->where('id_roles', 2)->where('fullName', 'LIKE', '%Petugas Bank Sampah%'); // Role 2 = Bank Sampah
+            $q->where('id_roles', 2)->where('fullName', 'LIKE', '%Petugas Bank Sampah%')->orWhere('fullName', 'LIKE', '%Bank Sampah%'); // Role 2 = Bank Sampah
         })->with('user_detail')->get();
 
         $allNasabah = User::whereHas('user_detail', function ($q) use ($detail) {
@@ -64,49 +90,11 @@ class DashboardController extends Controller
             ];
         });
 
-        $sampahPeringkat = PencatatanSetoranItems::with('sampah') // Pastikan ada relasi ke tabel sampah
-            ->select('sampah_id', DB::raw('SUM(jumlah) as total_berat'))
-            ->groupBy('sampah_id')
-            ->orderBy('total_berat', 'desc')
-            ->take(10) // Ambil Top 10
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'nama_sampah' => $item->sampah->nama_sampah ?? 'Tidak Diketahui',
-                    'total_berat' => (float) $item->total_berat
-                ];
-            });
-
         // 3. Statistik Global RW
         $totalSaldoRW = $processedNasabah->sum('balance');
         $totalBeratRW = PencatatanSetoranItems::sum('jumlah');
 
-        $sampahPeringkat = PencatatanSetoranItems::with('sampah')
-            ->select('sampah_id', DB::raw('SUM(jumlah) as total_berat'))
 
-            ->groupBy('sampah_id')
-            ->orderBy('total_berat', 'desc')
-            ->get()
-            ->map(fn($item) => [
-                'nama_sampah' => $item->sampah->nama_sampah ?? 'Lainnya',
-                'total_berat' => (float) $item->total_berat
-            ]);
-
-        $bankSampah = $this->kelolaBankSampahServices->getBankSampah(auth()->user()->id);
-        $id_rt = $bankSampah->user_detail->id_rt;
-
-        $nasabahIds = UserDetail::where('id_rt', $id_rt)
-            ->pluck('id');
-        $total_nasabah = $nasabahIds->count();
-        $online_saat_ini = UserLog::whereIn('id_userdetail', $nasabahIds)
-            ->whereIn('id', function ($query) use ($nasabahIds) {
-                $query->selectRaw('max(id)')
-                    ->from('user_logs')
-                    ->whereIn('id_userdetail', $nasabahIds)
-                    ->groupBy('id_userdetail');
-            })
-            ->where('action', 'LOGIN')
-            ->count();
         $breadcrumbItems    = [
             ['label' => 'Dashboard', 'url' => route('dashboard')],
         ];
@@ -114,8 +102,9 @@ class DashboardController extends Controller
         $lastActivity = Auth::user()->user_detail->user_log()->limit(4)->latest();
         $user = Auth::user();
         $jadwal = JadwalPelaksanaan::with('user_detail')->get();
-        $nasabah = $this->nasabahServices->getAllNasabah()->take(5);
         $nasabahAll = UserDetail::with(['sampah', 'gender', 'rt', 'roles', 'user_log', 'userbank', 'pencatatan', 'location', 'location.open_street'])->get();
+
+
 
         return Inertia::render('KetuaRW/Dashboard', [
             'initialNotifications' => $notifications,

@@ -348,7 +348,6 @@ const viewDetails = (transaction) => {
             </div>
 
             <div class="space-y-1">
-                <p class="text-xs text-gray-400 font-medium">{{ rt.kategori }} ({{ rt.berat }} Kg)</p>
                 <p class="text-lg font-black text-gray-800 dark:text-white">{{ formatRupiah(rt.total) }}</p>
             </div>
 

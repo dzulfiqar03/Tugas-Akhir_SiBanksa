@@ -32,54 +32,64 @@ class ChatServices
         return $getAllMessage;
     }
 
-    public function groupedMessage()
-    {
+public function groupedMessage()
+{
+    $user = auth()->user();
+    $myUserId = (string) $user->id;
+    $myUserDetailId = $user->user_detail->id;
 
-        $user = auth()->user();
-        $myUserId = (string) $user->id;
-        $myUserDetailId = $user->user_detail->id;
-        $groupedMessage = $this->getAllMessage()->groupBy(function ($chat) use ($myUserId) {
-            if ((string) $chat->sender_id === $myUserId) {
-                return (string) optional($chat->userDetail)->id_user;
-            }
-
-            return (string) $chat->sender_id;
+    $groupedMessage = $this->getAllMessage()
+        ->sortByDesc('created_at') // Pastikan pesan terbaru ada di urutan teratas
+        ->groupBy(function ($chat) use ($myUserId) {
+            // Logika pengelompokan berdasarkan ID lawan bicara
+            return (string) $chat->sender_id === $myUserId
+                ? (string) optional($chat->userDetail)->id_user
+                : (string) $chat->sender_id;
         })
-            ->filter(fn($msgs, $key) => !empty($key) && $key !== $myUserId)
-            ->map(function ($messages, $opponentUuid) use ($myUserId) {
-                $sample = $messages->first();
-                $isMeSender = (string) $sample->sender_id === $myUserId;
+        ->filter(fn($msgs, $key) => !empty($key) && $key !== $myUserId)
+        ->map(function ($messages, $opponentUuid) use ($myUserId, $myUserDetailId) {
+            // Ambil pesan terbaru untuk data profil lawan
+            $lastMessage = $messages->first();
+            $isMeSender = (string) $lastMessage->sender_id === $myUserId;
+            $opponent = $isMeSender ? optional($lastMessage->userDetail)->user : $lastMessage->sender;
 
-                $opponent = $isMeSender ? optional($sample->userDetail)->user : $sample->sender;
+            // Logika Status Online
+            $lastLog = $opponent?->user_detail?->user_log->sortByDesc('id')->first();
+            $isOnline = ($lastLog && $lastLog->action === 'LOGIN');
 
-                $lastLog = $opponent?->user_detail?->user_log->sortByDesc('id')->first();
+            return [
+                'id' => $opponentUuid,
+                'fullName' => $opponent?->user_detail?->fullName ?? 'User Tidak Dikenal',
+                'email' => $opponent?->email ?? 'Email Tidak Dikenal',
+                'rt' => $opponent?->user_detail?->id_rt ?? 'RT Tidak Dikenal',
+                'address' => $opponent?->user_detail?->address ?? null,
+                'telephone_number' => $opponent?->user_detail?->telephone_number ?? null, // Perbaikan: sebelumnya fullName
+                'imageCount' => $opponent?->user_detail?->image->count() ?? 0,
+                'documentCount' => $opponent?->user_detail?->document->count() ?? 0,
+                'online' => $isOnline ? 'Online' : 'Offline',
 
-                $isOnline = ($lastLog && $lastLog->action === 'LOGIN');
+                // MENGHITUNG PESAN BELUM DIBACA
+                // Hanya hitung jika saya adalah penerima (id_userdetail cocok dengan saya) dan is_read false
+                'countUnreadMessage' => $messages->where('is_read', false)
+                                                ->where('id_userdetail', $myUserDetailId)
+                                                ->count(),
 
-                $documentCount = $opponent?->user_detail?->document->count();
-                $imageCount = $opponent?->user_detail?->image->count();
+                // DAFTAR PESAN (Urutkan dari yang terlama ke terbaru untuk tampilan chat)
+                'user_chat' => $messages->sortBy('created_at')->map(fn($m) => [
+                    'id' => $m->id,
+                    'sender_id' => (string) $m->sender_id,
+                    'message' => $m->message,
+                    'is_read' => (bool)$m->is_read,
+                    'time' => \Carbon\Carbon::parse($m->time)->format('H:i'),
+                ])->values()
+            ];
+        })
+        // Terakhir, urutkan list chat berdasarkan pesan masuk terbaru
+        ->sortByDesc(fn($chat) => $chat['user_chat']->last()['id'] ?? 0)
+        ->values();
 
-                return [
-                    'id' => $opponentUuid,
-                    'fullName' => $opponent?->user_detail?->fullName ?? 'User Tidak Dikenal',
-                    'email' => $opponent?->email ?? 'Email Tidak Dikenal',
-                    'rt' => $opponent?->user_detail?->id_rt ?? 'RT Tidak Dikenal',
-                    'address' => $opponent?->user_detail?->address ?? null,
-                    'telephone_number' => $opponent?->user_detail?->fullName ?? null,
-                    'imageCount' => $imageCount,
-                    'documentCount' => $documentCount,
-                    'online' => $isOnline ? 'Online' : 'Offline',
-                    'countUnreadMessage' => $messages->where('is_read', false)->where('id_userdetail', Auth::user()->user_detail->id)->count(),
-                    'user_chat' => $messages->map(fn($m) => [
-                        'id' => $m->id,
-                        'sender_id' => (string) $m->sender_id,
-                        'message' => $m->message,
-                        'time' => \Carbon\Carbon::parse($m->time)->format('H:i'),
-                    ])->values()
-                ];
-            });
-        return $groupedMessage;
-    }
+    return $groupedMessage;
+}
     public function getBotMessage()
     {
         $user = auth()->user();

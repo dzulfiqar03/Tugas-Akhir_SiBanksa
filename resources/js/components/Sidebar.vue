@@ -72,7 +72,16 @@ const sections = computed(() => {
             else if (menu.data || ['Transaksi', 'Transaksi Setoran'].includes(menu.nama)) grouped['TRANSAKSI'].push(menu);
             else grouped['LAINNYA'].push(menu);
         });
-    } else {
+    }else if (role === 'Developer') {
+        grouped = { 'MAIN': [], 'MANAJEMEN': [], 'LAINNYA': [] };
+        menus.value.forEach(menu => {
+            if (['Dashboard'].includes(menu.nama)) grouped['MAIN'].push(menu);
+            else if (menu.data || [].includes(menu.nama)) grouped['MANAJEMEN'].push(menu);
+            else grouped['LAINNYA'].push(menu);
+        });
+    }
+
+    else {
         grouped = { 'MAIN': [], 'MANAJEMEN': [], 'LAINNYA': [] };
         menus.value.forEach(menu => {
             if (['Dashboard', 'Tracking Setoran'].includes(menu.nama)) grouped['MAIN'].push(menu);

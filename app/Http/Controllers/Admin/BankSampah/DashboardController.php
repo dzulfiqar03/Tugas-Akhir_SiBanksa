@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Admin\BankSampah;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
+use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\BankSampah\PencatatanSetoranItems;
 use App\Models\BankSampah\Sampah;
 use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\UserLog;
+use App\Services\BankSampah\DashboardBankSampahServices;
 use App\Services\BankSampah\JadwalServices;
 use App\Services\BankSampah\NasabahServices;
+use App\Services\BankSampah\SampahServices;
+use App\Services\BankSampah\UserLogServices;
 use App\Services\KetuaRW\KelolaBankSampahServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -25,11 +29,17 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function __construct(protected UserDetail $userDetail, protected JadwalServices $jadwalServices, protected KelolaBankSampahServices $kelolaBankSampahServices, protected NasabahServices $nasabahServices) {}
+    public function __construct(
+        protected UserDetail $userDetail,
+        protected JadwalServices $jadwalServices,
+        protected KelolaBankSampahServices $kelolaBankSampahServices,
+        protected NasabahServices $nasabahServices,
+        protected DashboardBankSampahServices $dashboardBankSampahServices,
+        protected SampahServices $sampahServices,
+        protected UserLogServices $userLogServices) {}
     public function index()
     {
         $menu = (new DataResources(null))->toArray(request());
-
 
         $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
             return [
@@ -51,25 +61,14 @@ class DashboardController extends Controller
             : '';
 
         $role === 'Bank Sampah' ?
-            $getSampah = PencatatanSetoranItems::whereHas('setoran.user_detail', function ($query) {
-                $query->where('id_rt', auth()->user()->user_detail->id_rt);
-            })->where('created_at', '>=', now()->startOfMonth())->sum('jumlah')
+            $getSampah = $this->dashboardBankSampahServices->getJumlahSampah()
             : '';
 
-        $setoran = PencatatanSetoranItems::whereHas('setoran.user_detail', function ($query) {
-            $query->where('id_rt', auth()->user()->user_detail->id_rt);
-        })->get();
+        $setoran = $this->dashboardBankSampahServices->getSetoran();
 
-        $now = Carbon::now();
-        $currentMonth = $now->month;
-        $currentYear = $now->year;
+        $bankSampahList = $this->dashboardBankSampahServices->getAllNasabahByRT();
 
-        $lastMonthDate = $now->copy()->subMonth();
-        $lastMonth = $lastMonthDate->month;
-        $lastMonthYear = $lastMonthDate->year;
-        $bankSampahList = $this->kelolaBankSampahServices->getAllNasabahByRT();
-
-        $allBankSampah = $bankSampahList->map(function ($user) use ($now, $currentMonth, $lastMonth, $currentYear, $lastMonthYear) {
+        $allBankSampah = $bankSampahList->map(function ($user) {
 
             $detail = $user->user_detail;
 
@@ -78,75 +77,39 @@ class DashboardController extends Controller
             $user->name = $detail->fullName;
 
             $user->balance = $detail->pencatatan->sum('total_setoran');
-            $now = Carbon::now();
-            $currentMonth = $now->month;
-            $currentYear = $now->year;
 
-            $lastMonthDate = $now->copy()->subMonth();
-            $lastMonth = $lastMonthDate->month;
-            $lastMonthYear = $lastMonthDate->year;
+            $user->saldo = $this->dashboardBankSampahServices->getSaldoBankSampah();
 
-            $user->saldo = (float) Sampah::where('id_userdetail', auth()->user()->user_detail->id)
-                ->whereMonth('created_at', $currentMonth)
-                ->whereYear('created_at', $currentYear)
-                ->sum('saldo');
+            $user->last_month_balance = $this->dashboardBankSampahServices->getSaldoLastMonthBankSampah();
 
-            $user->last_month_balance = (float) Sampah::where('id_userdetail', auth()->user()->user_detail->id)
-                ->whereMonth('created_at', $lastMonth)
-                ->whereYear('created_at', $lastMonthYear)
-                ->sum('saldo');
+            $user->weight = $this->dashboardBankSampahServices->getWeightNasabah();
 
-                $user->weight = (float) PencatatanSetoranItems::whereHas('setoran.user_detail', function ($q) use ($detail, $now, $currentMonth, $lastMonth, $currentYear, $lastMonthYear) {
-                $q->where('id_rt', auth()->user()->user_detail->id_rt);
-            })->whereMonth('created_at', $currentMonth)
-                ->whereYear('created_at', $currentYear)->sum('jumlah');
+            $user->last_month_weight = $this->dashboardBankSampahServices->getWeightLastMonthNasabah();
 
-            $user->last_month_weight = (float) PencatatanSetoranItems::whereHas('setoran.user_detail', function ($q) use ($detail, $lastMonth, $lastMonthYear) {
-                $q->where('id_rt', auth()->user()->user_detail->id_rt);
-            })->whereMonth('created_at', $lastMonth)
-                ->whereYear('created_at', $lastMonthYear)->sum('jumlah');
-
+        ;
             return $user;
         });
 
-        $sampahPeringkat = PencatatanSetoranItems::with('sampah')->whereHas('setoran.user_detail', function ($q) {
-            $q->where('id_rt', auth()->user()->user_detail->id_rt);
-        }) // Pastikan ada relasi ke tabel sampah
-            ->select('sampah_id', DB::raw('SUM(jumlah) as total_berat'))
-            ->groupBy('sampah_id')
-            ->orderBy('total_berat', 'desc')
-            ->take(10) // Ambil Top 10
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'nama_sampah' => $item->sampah->nama_sampah ?? 'Tidak Diketahui',
-                    'total_berat' => (float) $item->total_berat
-                ];
-            });
-
-        $bankSampah = $this->kelolaBankSampahServices->getBankSampah(auth()->user()->id);
+        $sampahPeringkat = $this->dashboardBankSampahServices->getPeringkatNasabah();
+        $bankSampah = $this->dashboardBankSampahServices->getBankSampah(auth()->user()->id);
         $id_rt = $bankSampah->user_detail->id_rt;
 
-        $nasabahIds = UserDetail::where('id_rt', $id_rt)
-            ->pluck('id');
+        $nasabahIds = UserDetail::where('id_rt', $id_rt)->where('id_roles', 3)->pluck('id');
         $total_nasabah = $nasabahIds->count();
-        $online_saat_ini = UserLog::whereIn('id_userdetail', $nasabahIds)
-            ->whereIn('id', function ($query) use ($nasabahIds) {
-                $query->selectRaw('max(id)')
-                    ->from('user_logs')
-                    ->whereIn('id_userdetail', $nasabahIds)
-                    ->groupBy('id_userdetail');
-            })
-            ->where('action', 'LOGIN')
-            ->count();
+
+        $online_saat_ini = $this->dashboardBankSampahServices->getOnlineUsers($nasabahIds);
         $breadcrumbItems    = [
             ['label' => 'Dashboard', 'url' => route('dashboard')],
         ];
 
-        $lastActivity = Auth::user()->user_detail->user_log()->limit(4)->latest();
+        $lastActivity = auth()->user()->user_detail->user_log()->limit(4)->latest();
         $user = Auth::user();
-        $jadwal = $this->jadwalServices->getAllJadwal();
-        $nasabah = $this->nasabahServices->getAllNasabah()->take(5);
+        $jadwal = $this->dashboardBankSampahServices->getAllJadwal();
+        $nasabah = $this->dashboardBankSampahServices->getAllNasabah()->take(5);
+
+        $jadwalList = JadwalPelaksanaan::whereHas('user_detail', function ($query) {
+            $query->where('id_rt', auth()->user()->user_detail->id_rt);
+        })->with('user_detail')->latest()->get();
         return Inertia::render('BankSampah/Dashboard', [
             'initialNotifications' => $notifications,
             'unreadCount' => $user->unreadNotifications->count(),
@@ -180,6 +143,7 @@ class DashboardController extends Controller
             'total_nasabah' => $total_nasabah,
             'online_saat_ini' => $online_saat_ini,
             'sampahPeringkat' => $sampahPeringkat,
+            'jadwalList' => $jadwalList
         ]);
     }
 

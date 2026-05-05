@@ -149,6 +149,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('warga.dashboard'));
         }
 
+         if ($role === 'Developer') {
+             return redirect()->intended(route('developer.dashboard'));
+        }
+
 
         return redirect()->intended('/dashboard');
     }

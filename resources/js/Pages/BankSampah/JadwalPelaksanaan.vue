@@ -448,10 +448,10 @@ const handleSubmit = () => {
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
-                text: result.message,
+                text: 'Data jadwal berhasil disimpan.',
                 timer: 1500,
                 showConfirmButton: false
-            }).then(() => location.reload());
+            });
         }
     });
 };

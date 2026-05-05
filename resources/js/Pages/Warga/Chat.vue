@@ -406,6 +406,7 @@ const sendMessage = () => {
                         activeChat.value = updatedChat;
                     }
                     scrollToBottom();
+                      location.reload()
                 }
             }
         ) : router.put(
@@ -419,6 +420,7 @@ const sendMessage = () => {
                     chatID.value = ''
 
                     scrollToBottom()
+                      location.reload()
                 },
                 onError: (errors) => {
                     console.error("Gagal mengirim pesan:", errors)

@@ -1011,8 +1011,6 @@ const deleteDoc = (id) => {
                                     class="bg-gray-50 dark:bg-gray-700 text-[10px] text-gray-400 uppercase font-bold">
                                     <tr>
                                         <th class="px-6 py-3">Tanggal</th>
-                                        <th class="px-6 py-3">Jenis</th>
-                                        <th class="px-6 py-3 text-right">Berat</th>
                                         <th class="px-6 py-3 text-right">Subtotal</th>
                                     </tr>
                                 </thead>
@@ -1022,8 +1020,6 @@ const deleteDoc = (id) => {
                                         <tr v-for="trx in props.recentTransactions" :key="trx.id"
                                             class="text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                                             <td class="px-6 py-4">{{ trx.tanggal }}</td>
-                                            <td class="px-6 py-4 font-bold">{{ trx.kategori }}</td>
-                                            <td class="px-6 py-4 text-right">{{ trx.berat }} kg</td>
                                             <td class="px-6 py-4 text-right text-emerald-600 font-bold">
                                                 Rp {{ trx.total?.toLocaleString('id-ID') }}
                                             </td>

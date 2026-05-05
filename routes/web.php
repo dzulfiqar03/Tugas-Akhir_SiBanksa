@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\PreferenceController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SWPushNotifController;
 use App\Http\Controllers\System\InternetConnController;
 use App\Http\Controllers\WelcomePageController;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +34,8 @@ Route::get('/', function () {
 Route::get('/welcome', [WelcomePageController::class, 'index'])->name('welcome');
 Route::middleware(['auth', 'session'])->group(function () {
 
+    Route::post('/push-subscription-store', [SWPushNotifController::class, 'store'])->name('push.subscription.store');
+
     Route::post('/notifications/{id}/read', [NotificationController::class, 'readNotif'])->name('notifications.read');
     Route::post('/notifications/readAll', [NotificationController::class, 'readAllNotif'])->name('notifications.readAll');
 
@@ -54,6 +57,7 @@ Route::middleware(['auth', 'session'])->group(function () {
         require __DIR__ . '/KetuaRW/ketuarw.php';
         require __DIR__ . '/BankSampah/banksampah.php';
         require __DIR__ . '/Warga/warga.php';
+        require __DIR__ . '/Developer/developer.php';
     });
 });
 

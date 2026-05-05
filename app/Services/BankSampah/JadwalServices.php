@@ -2,6 +2,7 @@
 
 namespace App\Services\BankSampah;
 
+use App\Helpers\SendWhatsAppHelper;
 use App\Models\BankSampah\JadwalPelaksanaan;
 use App\Models\User;
 use App\Services\ChatServices;
@@ -23,7 +24,7 @@ class JadwalServices
     public function getAllJadwal()
     {
 
-        $jadwal = $this->jadwal::where('id_userdetail', operator: Auth::user()->user_detail->id)->with(['user_detail'])->orderBy('created_at', 'DESC')->limit(10)->get();
+        $jadwal = $this->jadwal::where('id_userdetail', operator: Auth::user()->user_detail->id)->with(['user_detail'])->orderBy('tanggal_setoran', 'DESC')->limit(10)->get();
 
         return $jadwal;
     }
@@ -33,7 +34,6 @@ class JadwalServices
 
 
         $findJadwal = $this->jadwal::findOrFail($id);
-
 
         return $findJadwal;
     }
@@ -64,7 +64,13 @@ class JadwalServices
                 $phone = $adminUser->user_detail->telephone_number;
 
 
-                // $sendWA = "https://wa.me/" . $phone . "?text=" . urlencode($message);
+                if (env('FONNTE_TOKEN') === 'invalid_token' || env('FONNTE_TOKEN') === null) {
+                    $result = SendWhatsAppHelper::send($phone, $message);
+                } else {
+                    Log::warning("FONNTE_TOKEN tidak ditemukan. Notifikasi WhatsApp tidak dikirim.");
+                }
+
+
                 $recipientDetailId = $adminUser->user_detail->id;
                 $this->chatServices->createChat([
                     'id_userdetail' => $recipientDetailId,

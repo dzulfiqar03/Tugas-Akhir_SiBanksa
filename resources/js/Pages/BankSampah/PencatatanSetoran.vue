@@ -294,7 +294,7 @@ const dynamicColumns = computed(() => {
                 let total = 0;
 
                 row.pencatatan?.forEach(nota => {
-                    const tgl = new Date(nota.created_at);
+                    const tgl = new Date(nota.jadwal.tanggal_setoran);
 
                     if (
                         tgl.getFullYear() === selectedYear.value &&
@@ -328,7 +328,7 @@ const dynamicColumns = computed(() => {
             let total = 0;
 
             row.pencatatan?.forEach(nota => {
-                const tgl = new Date(nota.created_at);
+                const tgl = new Date(nota.jadwal.tanggal_setoran);
 
                 if (
                     tgl.getFullYear() === selectedYear.value &&

@@ -20,6 +20,16 @@ class UserSeeder extends Seeder
             // =====================
             // 1. USER KETUA RW
             // =====================
+
+             [
+                'id' => 0,
+                'email' => 'muhammaddzulfiqar03@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('julll2003'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
             [
                 'id' => Str::uuid(),
                 'email' => 'ketuarw@gmail.com',
@@ -42,7 +52,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'email' => 'banksampah02@gmail.com',
+                'email' => 'banksampahmekarjaya@gmail.com',
                 'email_verified_at' => now(),
                 'password' => Hash::make('banksampah123'),
                 'created_at' => now(),
@@ -50,7 +60,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'email' => 'banksampah03@gmail.com',
+                'email' => 'banksampahmelatiputih@gmail.com',
                 'email_verified_at' => now(),
                 'password' => Hash::make('banksampah123'),
                 'created_at' => now(),
@@ -82,7 +92,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'id' => Str::uuid(),
-                'email' => 'banksampah07@gmail.com',
+                'email' => 'banksampahbasmi@gmail.com',
                 'email_verified_at' => now(),
                 'password' => Hash::make('banksampah123'),
                 'created_at' => now(),

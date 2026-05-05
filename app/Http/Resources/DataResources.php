@@ -90,6 +90,81 @@ class DataResources extends JsonResource
                 ],
             ];
         }
+
+        if ($role === 'Developer') {
+            return [
+                'Data' => 'Developer',
+                'sub-data' => [
+                    [
+                        'nama'  => 'Dashboard',
+                        'route' => route('developer.dashboard'),
+                        'uri' => 'developer.dashboard',
+                        'icon'  => 'fas fa-tachometer-alt',
+                    ],
+
+                    [
+                        'nama' => 'Database',
+                        'icon' => 'fa fa-database',
+                        'data' => [
+                            [
+                                'nama'  => 'User Management',
+                                'icon'  => 'fa fa-file-text',
+                                'route' => route('developer.user'),
+                                'uri' => 'developer.user',
+                            ],
+                            [
+                                'nama'  => 'Master Data Sampah',
+                                'icon'  => 'fa fa-file-text',
+                                'route' => route('developer.sampah'),
+                                'uri' => 'developer.sampah',
+                            ],
+                            [
+                                'nama'  => 'Master Data Kepengurusan',
+                                'icon'  => 'fa fa-file-text',
+                                'route' => route('developer.kepengurusan'),
+                                'uri' => 'developer.kepengurusan',
+                            ],
+
+                             [
+                                'nama'  => 'Master Data Jadwal',
+                                'icon'  => 'fa fa-file-text',
+                                'route' => route('developer.jadwal'),
+                                'uri' => 'developer.jadwal',
+                            ],
+
+
+                        ],
+                    ],
+                    [
+                        'nama'  => 'Chat',
+                        'icon'  => 'fa fa-comment',
+                        'route' => route(name: 'developer.chat'),
+                        'uri' => 'developer.chat',
+                    ],
+
+                    [
+                        'nama'  => 'Pengaturan',
+                        'route' => route('preference'),
+                        'uri' => 'preference',
+                        'icon'  => 'fas fa-cog',
+                    ],
+                    [
+                        'nama'  => 'Profile',
+                        'icon'  => 'fa fa-user',
+                        'route' => route('profile.edit'),
+                        'uri' => 'profile.edit',
+                    ],
+                    [
+                        'nama'  => 'LogOut',
+                        'route' => '#',
+                        'uri' => '#',
+                        'icon'  => 'fas fa-sign-out-alt text-danger',
+                    ],
+
+
+                ],
+            ];
+        }
         // Jika role Bank Sampah
         elseif ($role === 'Bank Sampah') {
             return [

@@ -297,11 +297,11 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from 'vue'
-import { Head, usePage, router } from '@inertiajs/vue3'
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import Swal from 'sweetalert2'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { onClickOutside } from '@vueuse/core';
+import Swal from 'sweetalert2';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 const props = defineProps({
     sidebardata: Object,
     allNasabah: Array,
@@ -369,7 +369,7 @@ const pilihChat = chat => (
     detectChat.value = chat.fullName,
     isMobileChatOpen.value = true,
     router.put(
-        route('rw.read-chat', activeChat.value.id),
+        route('bs.read-chat', activeChat.value.id),
         { message: newMessage.value },
         {
             preserveScroll: true,
@@ -394,7 +394,7 @@ const sendMessage = () => {
 
     isEdit.value === false ?
 
-        router.post(route('rw.add-chat', activeChat.value.id),
+        router.post(route('bs.add-chat', activeChat.value.id),
             { message: newMessage.value, name: activeChat.value.fullName },
             {
                 preserveScroll: true,
@@ -406,11 +406,10 @@ const sendMessage = () => {
                         activeChat.value = updatedChat;
                     }
                     scrollToBottom();
-                      location.reload()
                 }
             }
         ) : router.put(
-            route('rw.update-chat', activeChat.value.id),
+            route('bs.update-chat', activeChat.value.id),
             { message: newMessage.value, id: chatID.value },
             {
                 preserveScroll: true,
@@ -420,7 +419,6 @@ const sendMessage = () => {
                     chatID.value = ''
 
                     scrollToBottom()
-                      location.reload()
                 },
                 onError: (errors) => {
                     console.error("Gagal mengirim pesan:", errors)
@@ -447,7 +445,7 @@ const deleteMessage = (id) => {
     console.log(chatID.value)
     isDelete.value === false ?
         router.delete(
-            route('rw.delete-chat', id),
+            route('bs.delete-chat', id),
             {
                 preserveScroll: true,
                 onSuccess: () => {
@@ -460,7 +458,7 @@ const deleteMessage = (id) => {
                 }
             }
         ) : router.delete(
-            route('rw.delete-roomChat', chatID.value),
+            route('bs.delete-roomChat', chatID.value),
             {
                 preserveScroll: true,
                 onSuccess: () => {

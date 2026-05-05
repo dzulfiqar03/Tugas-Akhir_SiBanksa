@@ -11,6 +11,7 @@ import {
     Title,
     Tooltip
 } from 'chart.js';
+import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
 import { Calendar } from 'v-calendar';
 import 'v-calendar/style.css';
@@ -22,6 +23,7 @@ import UpdateProfileInformationForm from '../Profile/Partials/UpdateProfileInfor
 
 import FormWrapper from '@/Components/FormWrapper.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import * as XLSX from 'xlsx';
 
 ChartJS.register(
     Title,
@@ -244,10 +246,67 @@ const processedData = computed(() => {
     return sortedData.slice(0, filterLimit.value);
 });
 
+const dtInstance = ref(null);
+
+
+// State Filter Baru
+const filterMonth = ref(new Date().getMonth() + 1); // Default bulan sekarang (1-12)
+const filterYear = ref(new Date().getFullYear());
+const selectedJadwalId = ref('all'); // 'all' atau ID jadwal spesifik
+
+const rankedNasabah = computed(() => {
+    let data = [...props.allBankSampah];
+
+    const mappedData = data.map(nasabah => {
+        const filteredSetoran = props.setoran.filter(s => {
+            if (!s.setoran) return false;
+            const isUserMatch = s.setoran.id_userdetail === nasabah.user_detail.id;
+
+            if (selectedJadwalId.value !== 'all') {
+                return isUserMatch && Number(s.setoran.id_jadwal) === Number(selectedJadwalId.value);
+            } else {
+                if (!s.setoran.jadwal) return false;
+                const date = new Date(s.setoran.jadwal.tanggal_setoran);
+                return isUserMatch &&
+                       (date.getMonth() + 1) === Number(filterMonth.value) &&
+                       date.getFullYear() === Number(filterYear.value);
+            }
+        });
+
+        const totalBerat = filteredSetoran.reduce((acc, curr) => acc + Number(curr.jumlah || 0), 0);
+        const totalSaldo = filteredSetoran.reduce((acc, curr) => acc + Number(curr.subtotal || 0), 0);
+
+        return { 
+            name: nasabah.user_detail.fullName, // Pastikan ambil nama untuk label
+            weight: totalBerat,
+            filtered_balance: totalSaldo 
+        };
+    });
+
+    // URUTKAN: (b - a) untuk Besar ke Kecil
+    if (filterCategory.value === 'balance') {
+        return mappedData
+            .sort((a, b) => b.filtered_balance - a.filtered_balance)
+            .slice(0, filterLimit.value);
+    } else {
+        return mappedData
+            .sort((a, b) => b.weight - a.weight)
+            .slice(0, filterLimit.value);
+    }
+});
+
+
+const resetFilters = () => {
+    filterMonth.value = new Date().getMonth() + 1;
+    filterYear.value = new Date().getFullYear();
+    selectedJadwalId.value = 'all';
+    filterCategory.value = 'balance';
+    filterLimit.value = 5;
+};
+
 
 const leaderboardChartData = computed(() => {
-
-    if (filterCategory.value === 'weight') {
+     if (filterCategory.value === 'weight') {
         return {
             labels: props.sampahPeringkat.map(d => d.nama_sampah),
             datasets: [{
@@ -259,14 +318,19 @@ const leaderboardChartData = computed(() => {
             }]
         };
     }
-
     return {
-        labels: processedData.value.map(d => d.name),
+        labels: rankedNasabah.value.map(d => d.name),
         datasets: [{
-            label: 'Saldo Nasabah (Rp)',
-            data: processedData.value.map(d => d.balance),
-            backgroundColor: processedData.value.map(d => d.name === user.value.name ? '#064e4b' : '#10b981'),
-            borderRadius: 6,
+            label: filterCategory.value === 'weight' ? 'Berat Sampah (Kg)' : 'Saldo (Rp)',
+            data: rankedNasabah.value.map(d => 
+                filterCategory.value === 'weight' ? d.weight : d.filtered_balance
+            ),
+backgroundColor: rankedNasabah.value.map(d => {
+    // Gunakan optional chaining agar tidak crash jika data belum ada
+ 
+    // Bandingkan nama nasabah di chart dengan nama user yang login
+    return d.name ? '#064e4b' : '#10b981';
+}),            borderRadius: 6,
         }]
     };
 });
@@ -623,6 +687,82 @@ const formatShortDate = (dateString) => {
     const year = date.getFullYear();
     return `${month}/${year}`;
 };
+
+const exportData = () => {
+
+    const dataToExport = rankedNasabah.value.map((nasabah, index) => ({
+        'Peringkat': index + 1,
+        'Nama Nasabah': nasabah.name,
+        'Total Berat (Kg)': nasabah.weight,
+        'Total Saldo (Rp)': filterCategory.value === 'balance' ? nasabah.filtered_balance : '-',
+    }));
+
+    // 2. SweetAlert Loading
+    Swal.fire({
+        title: 'Mengekspor Peringkat...',
+        text: 'Sedang menyiapkan file Excel',
+        timer: 1000,
+        didOpen: () => {
+            Swal.showLoading();
+            
+            // 3. Proses konversi ke Excel
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Peringkat");
+
+            // Penamaan file dinamis berdasarkan filter
+            const fileName = `Peringkat_SiBanksa_${filterMonth.value}_${filterYear.value}.xlsx`;
+            
+            XLSX.writeFile(workbook, fileName);
+        },
+        willClose: () => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Data peringkat berhasil diunduh.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+    });
+};
+
+
+const exportAsImage = async () => {
+    // Ambil elemen yang membungkus daftar transaksi (kartu-kartu)
+    const element = document.querySelector('.peringkat-nasabah'); // Pastikan class ini ada di elemen yang ingin di-screenshot
+
+    if (!element) return;
+
+    Swal.fire({
+        title: 'Menyiapkan Gambar',
+        text: 'Sedang mengambil screenshot riwayat...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+        const canvas = await html2canvas(element, {
+            backgroundColor: '#ffffff', // Transparan jika dark mode/light mode
+            scale: 2, // Kualitas tinggi (Retina)
+            logging: false,
+            useCORS: true,
+            borderRadius: 40
+        });
+
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.download = `Riwayat_SiBanksa_${new Date().getTime()}.png`;
+        link.href = image;
+        link.click();
+
+        Swal.fire('Berhasil!', 'Gambar telah diunduh.', 'success');
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Gagal', 'Tidak dapat mengambil gambar.', 'error');
+    }
+};
+
 </script>
 
 <template>
@@ -1104,12 +1244,65 @@ const formatShortDate = (dateString) => {
                                     <option :value="5">Top 5</option>
                                     <option :value="10">Top 10</option>
                                 </select>
+
                             </div>
                         </div>
 
-                        <div class="h-[400px] w-full">
-                            <Bar :data="leaderboardChartData" :options="chartOptions" />
-                        </div>
+                     <div>
+
+                                                        <div v-if="filterCategory === 'balance'" class="flex justify-between flex-wrap gap-4 mb-4 items-center">
+
+                                                            <div class="flex justify-between flex-wrap gap-4  items-center">
+
+                                                                 <!-- Filter Jadwal -->
+    <select v-model="selectedJadwalId" class="rounded-xl border-gray-300 text-sm">
+        <option value="all">Semua Jadwal (Bulanan)</option>
+        <option v-for="j in props.jadwal" :key="j.id" :value="j.id">
+            Jadwal: {{ new Date(j.tanggal_setoran).toLocaleDateString('id-ID') }}
+        </option>
+    </select>
+
+    <!-- Filter Bulan (Hanya muncul jika jadwal 'all') -->
+    <div v-if="selectedJadwalId === 'all'" class="flex gap-2">
+        <select v-model="filterMonth" class="rounded-xl border-gray-300 text-sm">
+            <option v-for="m in 12" :key="m" :value="m">
+                {{ new Date(2024, m-1).toLocaleString('id-ID', {month: 'long'}) }}
+            </option>
+        </select>
+        <select v-model="filterYear" class="rounded-xl border-gray-300 text-sm">
+            <option :value="2025">2025</option>
+            <option :value="2026">2026</option>
+        </select>
+    </div>   
+                                                            </div>
+
+
+    <div class="flex gap-2">
+        <button @click="resetFilters" class="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-xl font-medium transition-all text-xs flex items-center gap-2">
+            <i class="fas fa-filter text-xs"></i> Reset Filter
+        </button>
+
+
+
+                                    <button @click="exportAsImage()"
+                                        class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-500 transition-all">
+                                        <i class="fas fa-file-pdf text-xs"></i>
+                                    </button>
+                                    <button @click="exportData(0)"
+                                        class="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white hover:bg-gray-500 transition-all">
+                                        <i class="fas fa-print text-xs"></i>
+                                    </button>
+                                </div>
+
+</div>
+
+                           <div class="h-[400px] w-full peringkat-nasabah">
+                            
+                            <Bar  :data="leaderboardChartData" :options="chartOptions" />
+                        </div>  
+                     </div>
+
+                   
 
                         <div class="mt-4 flex gap-4 justify-center">
                             <div class="flex items-center gap-2">
@@ -1180,7 +1373,7 @@ const formatShortDate = (dateString) => {
                                 <div class="flex space-x-3 w-full">
                                     <div class="border-gray-100 w-max dark:border-gray-800">
                                         <div v-if="user"
-                                            class="profile-circle w-8 h-8 py-1 px-2  rounded-full border border-gray-600 text-gray-800 dark:text-white">
+                                            class="profile-circle w-8 h-8 py-1 rounded-full border border-gray-600 text-gray-800 dark:text-white">
                                             {{ initials(user.user_detail?.fullName) }}
                                         </div>
 

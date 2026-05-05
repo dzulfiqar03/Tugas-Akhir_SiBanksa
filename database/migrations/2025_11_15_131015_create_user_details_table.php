@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('fullName');
             $table->foreignId('id_rt')->constrained('rt_perumahan')->onDelete('cascade');
             $table->string('address')->nullable();
-            $table->string('telephone_number')->nullable();
+            $table->string('telephone_number');
             $table->foreignId('id_gender')->constrained('genders')->onDelete('cascade');
             $table->foreignId('id_roles')->constrained('roles')->onDelete('cascade');
             $table->enum('status', ['Pending', 'Pengajuan Verifikasi', 'Ditolak', 'Disetujui']);

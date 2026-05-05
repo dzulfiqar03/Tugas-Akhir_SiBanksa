@@ -82,7 +82,7 @@ test('Seluruh data register valid', function () {
 
     $rt = \App\Models\RTPerumahan::first();
     $gender = \App\Models\Gender::where('gender', 'Laki-Laki')->first();
-    // STRUKTUR HARUS SEPERTI INI (Sesuai RegisterRequest Anda)
+
     $formData = [
         'id_roles' => 2, // Role Nasabah
         'id_gender' => 3,
@@ -104,8 +104,6 @@ test('Seluruh data register valid', function () {
 
     $response = $this->post('/register', $formData);
 
-    // Debugging: Jika masih error, buka baris di bawah ini
-    // dd(session()->get('errors')->getMessages());
 
     $response->assertSessionHasNoErrors();
 });
@@ -137,13 +135,13 @@ test('Data Field Register Duplikat', function () {
         ]
     ];
 
-    // Kirim pertama (Berhasil)
+
     $this->post('/register', $formData);
 
-    // Kirim kedua (Duplikat)
+
     $response = $this->post('/register', $formData);
 
-    // Perhatikan key-nya: bankSampah.email
+
     $response->assertSessionHasErrors(['bankSampah.email']);
 });
 
@@ -174,8 +172,7 @@ test('Format Field Register Salah', function () {
     ];
 
     $response = $this->post('/register', $formData);
-    // Debugging: Jika masih error, buka baris di bawah ini
-    // dd(session()->get('errors')->getMessages());
+
     $response->assertSessionHasErrors(['bankSampah.email', 'bankSampah.password', 'bankSampah.phoneNumber']);
 });
 
@@ -206,8 +203,7 @@ test('Seluruh field register kosong', function () {
 
     $response = $this->post('/register', $formData);
 
-    // Debugging: Jika masih error, buka baris di bawah ini
-    // dd(session()->get('errors')->getMessages());
+
 
     $response->assertSessionHasErrors();
 });
@@ -245,7 +241,7 @@ test('Dapat Logout dan seluruh session terhapus', function () {
 
     $response->assertSessionHasNoErrors();
     $this->assertAuthenticatedAs($user);
-    // 4. Bertindak sebagai user ini
+
     $response = $this->actingAs($user)->post('/logout');
 
     $this->assertGuest();

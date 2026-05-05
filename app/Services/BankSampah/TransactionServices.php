@@ -62,7 +62,7 @@ class TransactionServices
 
             $user = $this->user::findOrFail($data['id']);
 
-            $user->notify(new BankSampahReminder($user->id, 'Transaksi Anda Telah Dicairkan silahkan cek M-Banking anda dan bukti pembayaran.', '/Profile'));
+            $user->notify(new BankSampahReminder($user->id, 'Transaksi Anda Telah Dicairkan silahkan cek M-Banking anda dan bukti pembayaran.', '/Warga/transaksi'));
 
             return $uploadedDocs;
         });
