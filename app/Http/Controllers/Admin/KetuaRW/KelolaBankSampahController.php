@@ -280,7 +280,7 @@ class KelolaBankSampahController extends Controller
     public function update(Request $request,  $id)
     {
         try {
-            $this->kelolaBankSampahServices->updateVerification($request,$id);
+            $this->kelolaBankSampahServices->updateBankSampah($id, $request->all());
             return redirect()->back()->with('message', 'Transaksi Bank Sampah berhasil dibuka');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal mendaftar: ' . $e->getMessage());

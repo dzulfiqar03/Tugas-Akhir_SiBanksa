@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Str;
 
 class KelolaBankSampahServices
 {
@@ -61,7 +62,7 @@ class KelolaBankSampahServices
     }
 
 
-     public function getAllNasabahByRT()
+    public function getAllNasabahByRT()
     {
         $nasabah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.pencatatan'])
             ->whereHas('user_detail', function ($query) {
@@ -166,16 +167,17 @@ class KelolaBankSampahServices
 
     public function createBankSampah(array $data)
     {
+
         return DB::transaction(function () use ($data) {
 
             // 1. Ambil nama depan (huruf kecil, tanpa spasi)
-            $firstName = strtolower(explode(' ', $data['fullName'])[0]);
+            $firstName =  strtolower(str_replace(' ', '', $data['fullName']));
 
             $autoUsername = $firstName . '_rt0' . str_pad($data['id_rt'], 1,);
 
             $autoEmail = $autoUsername . "@gmail.com";
 
-            $defaultPassword = $firstName . "123";
+            $defaultPassword = "12345678";
 
             $userData = [
                 'email'             => $autoEmail,
@@ -194,6 +196,10 @@ class KelolaBankSampahServices
                 'id_rt'       => $data['id_rt'],
                 'id_gender'   => $data['id_gender'],
                 'status'      => $data['status'],
+                'telephone_number' => $data['phoneNumber'],
+                'status_transaction' => 'Pengajuan Verifikasi',
+                'pencairan_via' => 'Non-Tunai'
+
             ];
 
             $this->userDetail::create($userDetailData);
@@ -207,9 +213,6 @@ class KelolaBankSampahServices
         $user = DB::transaction(function () use ($id, $data) {
 
             $updateNasabah = $this->getBankSampah($id);
-
-            $updateNasabah->update($data);
-
 
 
             $updateNasabah->user_detail->update($data);

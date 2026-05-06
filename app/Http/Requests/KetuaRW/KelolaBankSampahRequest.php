@@ -29,7 +29,8 @@ class KelolaBankSampahRequest extends FormRequest
             'id_rt'              => 'required',
             'id_roles'       => 'required',
             'id_gender'       => 'required',
-            'status'       => 'required'
+            'status'       => 'required',
+            'phoneNumber' => 'required',
         ];
     }
 
@@ -40,9 +41,8 @@ class KelolaBankSampahRequest extends FormRequest
             'id_rt.required'          => 'RT wajib diisi',
             'id_roles.required'   => 'Roles wajib dipilih',
             'id_gender.required'   => 'Gender wajib dipilih',
-            'status.required'   => 'Status wajib dipilih'
+            'status.required'   => 'Status wajib dipilih',
+            'phoneNumber.required'   => 'Nomor Telepon wajib dipilih'
         ];
     }
-
-   
 }

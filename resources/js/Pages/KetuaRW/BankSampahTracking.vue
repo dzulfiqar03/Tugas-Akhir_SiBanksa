@@ -43,6 +43,7 @@ const form = useForm({
     id_gender: 3,
     id_rt: '',
     id_roles: 2,
+    phoneNumber: '',
 });
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -469,6 +470,7 @@ const handleSubmit = () => {
             Swal.fire('Berhasil!', 'Data bank sampah telah diproses.', 'success');
             showForm.value = false;
             form.reset();
+            location.reload();
         },
         onError: function (xhr) {
             if (xhr.status === 422) {
@@ -524,7 +526,7 @@ const viewDetail = (id) => {
                     ]">
 
                     <i class="fas" :class="showForm ? 'fa-times' : 'fa-plus'"></i>
-                    {{ showForm ? 'Tutup Form' : 'Tambah Nasabah' }}
+                    {{ showForm ? 'Tutup Form' : 'Tambah Bank Sampah' }}
                 </button>
             </div>
 
@@ -544,10 +546,10 @@ const viewDetail = (id) => {
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <template v-for="field in formdata.nasabah" :key="field.name">
-                                <div v-if="!['address', 'phoneNumber', 'userName', 'status', 'rt'].includes(field.name) && !['file', 'select', 'radio'].includes(field.type)"
+                                <div v-if="!['address', 'userName', 'status', 'rt'].includes(field.name) && !['file', 'select', 'radio'].includes(field.type)"
                                     class="col-span-1">
                                     <InputLabel :for="field.name" :value="field.title" />
-                                    <input disabled :type="field.type" v-model="form[field.name]"
+                                    <input  :type="field.type" v-model="form[field.name]"
                                         :placeholder="field.placeholder"
                                         class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-black pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200"
                                         :class="{

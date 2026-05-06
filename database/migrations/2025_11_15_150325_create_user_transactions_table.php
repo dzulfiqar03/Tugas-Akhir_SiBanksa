@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_userdetail')->constrained('user_details')->onDelete('cascade');
             $table->foreignId('id_bank')->constrained('banks')->onDelete('cascade');
-            $table->string('nomor_rekening')->unique();
             $table->foreignId('pencatatan_setoran_id')->constrained('pencatatan_setoran')->onDelete('cascade');
             $table->string('bukti_pembayaran')->nullable();
             $table->timestamps();

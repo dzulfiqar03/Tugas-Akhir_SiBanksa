@@ -5,10 +5,13 @@ namespace App\Models\Transaction;
 use App\Models\BankSampah\PencatatanSetoran;
 use App\Models\UserBank;
 use App\Models\UserDetail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class UserTransaction extends Model
 {
+        /** @use HasFactory<\Database\Factories\Transaction\UserTransactionFactory> */
+    use HasFactory;
      protected $fillable = ['id_userdetail', 'pencatatan_setoran_id', 'bukti_pembayaran'];
 
 

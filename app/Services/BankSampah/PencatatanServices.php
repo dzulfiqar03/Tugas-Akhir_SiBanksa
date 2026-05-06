@@ -61,6 +61,7 @@ class PencatatanServices
                 }
 
                 $setoran->update(['total_setoran' => $grandTotal]);
+                return $setoran;
             });
 
             return $newSetoran;
