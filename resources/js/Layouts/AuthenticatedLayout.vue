@@ -182,40 +182,41 @@ const isChatPage = computed(() => {
 })
 
 /* =========================
-   PRELOADER
+   PRELOADER & AUDIO UNLOCK
 ========================= */
 const show = ref(true)
 
-const notificationAudio = ref(null);
+// 1. Inisialisasi Audio global dengan file target Anda sejak awal
+const sharedAudio = new Audio('/sounds/notification.mp3');
+window.notifAudio = sharedAudio;
 
 const unlockAudio = () => {
-    const audio = new Audio('/sounds/notification.mp3');
-    audio.muted = true;
+    // LANGSUNG hapus listener di awal klik agar tidak terpicu berkali-kali jika user klik cepat
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('keydown', unlockAudio);
 
-    audio.play().then(() => {
-
-        audio.pause();
-        audio.currentTime = 0;
-        audio.muted = false;
-
-        window.notifAudio = audio;
-
-        console.log('🔊 Audio Unlocked');
-
-        document.removeEventListener('click', unlockAudio);
-    }).catch(err => {
-        console.log('Waiting for user interaction to unlock audio...');
-    });
+    // 2. Lakukan pemicuan (interaksi user) menggunakan audio yang sudah di-mute
+    sharedAudio.muted = true;
+    sharedAudio.play()
+        .then(() => {
+            sharedAudio.pause();
+            sharedAudio.currentTime = 0;
+            sharedAudio.muted = false; // Kembalikan ke tidak mute, siap digunakan nanti
+            console.log('🔊 Audio Successfully Unlocked without bleeding sound');
+        })
+        .catch(err => {
+            console.error('Gagal unlock audio, pasang kembali listener:', err);
+            // Jika gagal (jarang terjadi), pasang kembali listener-nya
+            document.addEventListener('click', unlockAudio);
+        });
 };
-
 
 const playNotification = () => {
     const isEnabled = localStorage.getItem('notif_sound_enabled') === '1';
 
     if (isEnabled && window.notifAudio) {
-        // Reset ke awal agar jika ada notifikasi beruntun tetap bunyi
         window.notifAudio.currentTime = 0;
-        window.notifAudio.play().catch(err => console.error("Gagal putar:", err));
+        window.notifAudio.play().catch(err => console.error("Gagal putar notifikasi:", err));
     }
 };
 
@@ -227,6 +228,7 @@ onMounted(() => {
     updateTheme()
 
     document.addEventListener('click', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
 
     setTimeout(() => {
         show.value = false

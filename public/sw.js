@@ -20,8 +20,8 @@ self.addEventListener('push', function (event) {
     const title = data.title || "Notifikasi SiBanksa";
     const options = {
         body: data.body || "Ada pembaruan informasi.",
-        icon: '/assets/home.svg', // Pastikan path ini benar/bisa diakses
-        badge: '/assets/home.svg', // Icon kecil di tray (optional)
+        icon: '/assets/main-logo.svg', // Pastikan path ini benar/bisa diakses
+        badge: '/assets/main-logo.svg', // Icon kecil di tray (optional)
         data: {
             url: data.url || '/'
         },

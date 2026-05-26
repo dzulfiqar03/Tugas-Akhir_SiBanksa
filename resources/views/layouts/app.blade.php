@@ -8,7 +8,7 @@
     <meta name="user-id" content="{{ auth()->id() }}">
 
     <meta name="vapid-public-key" content="{{ env('VAPID_PUBLIC_KEY') }}">
-    <link rel="icon" type="image/svg+xml" href="{{ asset('home.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('main-logo.svg') }}">
     @routes
     @vite(['resources/js/app.js', 'resources/css/app.css'])
     @inertiaHead

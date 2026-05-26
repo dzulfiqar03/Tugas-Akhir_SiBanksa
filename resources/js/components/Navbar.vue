@@ -140,17 +140,48 @@ onMounted(() => {
                 window.notificationAudio.play().catch(e => console.log("Audio blocked:", e));
             }
 
-            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-                navigator.serviceWorker.ready.then(registration => {
-                    registration.showNotification(n.title || 'SiBanksa', {
+            // 1. Cek izin notifikasi terlebih dahulu
+            if (Notification.permission === 'granted') {
+
+                // 2. Pastikan browser mendukung Service Worker
+                if ('serviceWorker' in navigator) {
+
+                    // 3. Tunggu sampai SW benar-benar siap (Resolve Promise)
+                    navigator.serviceWorker.ready
+                        .then(registration => {
+                            // Pastikan objek registration benar-benar ada dan aktif
+                            if (registration && registration.active) {
+                                registration.showNotification(n.title || 'SiBanksa', {
+                                    body: n.body || n.message,
+                                    icon: '/main-logo.svg', // Pastikan file /main-logo.svg ada di folder public/ root
+                                    badge: '/main-logo.svg',
+                                    data: { url: n.url || '/dashboard' }
+                                });
+                            } else {
+                                // Fallback jika SW terdaftar tapi belum sepenuhnya aktif di halaman ini
+                                console.warn('Service Worker ready tapi belum active. Mencoba fallback ke browser notification.');
+                                new Notification(n.title || 'SiBanksa', {
+                                    body: n.body || n.message,
+                                    icon: '/main-logo.svg',
+                                    badge: '/main-logo.svg',
+                                    data: { url: n.url || '/dashboard' }
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Gagal memuat Service Worker ready:', err);
+                        });
+
+                } else {
+                    // Fallback non-Service Worker jika dibuka di browser jadul / mode incognito tertentu
+                    new Notification(n.title || 'SiBanksa', {
                         body: n.body || n.message,
-                        icon: '/home.svg',
+                        icon: '/main-logo.svg',
+                        badge: '/main-logo.svg',
                         data: { url: n.url || '/dashboard' }
                     });
-                });
+                }
             }
-
-
             // 2. TAMPILKAN SWAL
             Swal.fire({
                 title: 'Notifikasi Baru!',
@@ -201,16 +232,16 @@ const notifAktif = computed(() => {
 
 const readNotifhandle = (id, url) => {
     if (role.value === 'Warga') {
-    router.post(route('notifications.read', id), {}, {
-        onSuccess: () => {
+        router.post(route('notifications.read', id), {}, {
+            onSuccess: () => {
                 // Ini akan merefresh halaman secara total
                 window.location.reload();
             }
-    })
+        })
     } else {
-            router.post(route('notifications.read', id), {}, {
-        onFinish: () => router.get(url)
-    })
+        router.post(route('notifications.read', id), {}, {
+            onFinish: () => router.get(url)
+        })
     }
 
 
@@ -339,16 +370,16 @@ const sendLogout = () => {
                             </div>
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
-                                <Link :href="route('profile.edit')"
-                                    :class="[active ? 'bg-gray-100 dark:bg-gray-600' : '', 'block px-4 py-2 text-sm text-gray-700 dark:text-gray-200']">
-                                    Settings
-                                </Link>
+                                    <Link :href="route('profile.edit')"
+                                        :class="[active ? 'bg-gray-100 dark:bg-gray-600' : '', 'block px-4 py-2 text-sm text-gray-700 dark:text-gray-200']">
+                                        Settings
+                                    </Link>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                <button @click="router.post(route('logout'))"
-                                    :class="[active ? 'bg-red-50' : '', 'w-full text-left px-4 py-2 text-sm text-red-600']">
-                                    Log Out
-                                </button>
+                                    <button @click="router.post(route('logout'))"
+                                        :class="[active ? 'bg-red-50' : '', 'w-full text-left px-4 py-2 text-sm text-red-600']">
+                                        Log Out
+                                    </button>
                                 </MenuItem>
                             </div>
                         </MenuItems>
@@ -575,7 +606,7 @@ const sendLogout = () => {
                             <span class="font-bold text-xs uppercase text-gray-400">Riwayat Notifikasi</span>
                             <span v-if="count > 0" class="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full">{{
                                 count
-                                }} Baru</span>
+                            }} Baru</span>
                         </div>
 
                         <div class="max-h-96 overflow-y-auto">
@@ -630,16 +661,16 @@ const sendLogout = () => {
                             </div>
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
-                                <Link :href="route('profile.edit')"
-                                    :class="[active ? 'bg-gray-100 dark:bg-gray-600' : '', 'block px-4 py-2 text-sm text-gray-700 dark:text-gray-200']">
-                                    Settings
-                                </Link>
+                                    <Link :href="route('profile.edit')"
+                                        :class="[active ? 'bg-gray-100 dark:bg-gray-600' : '', 'block px-4 py-2 text-sm text-gray-700 dark:text-gray-200']">
+                                        Settings
+                                    </Link>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                <button @click="router.post(route('logout'))"
-                                    :class="[active ? 'bg-red-50' : '', 'w-full text-left px-4 py-2 text-sm text-red-600']">
-                                    Log Out
-                                </button>
+                                    <button @click="router.post(route('logout'))"
+                                        :class="[active ? 'bg-red-50' : '', 'w-full text-left px-4 py-2 text-sm text-red-600']">
+                                        Log Out
+                                    </button>
                                 </MenuItem>
                             </div>
                         </MenuItems>

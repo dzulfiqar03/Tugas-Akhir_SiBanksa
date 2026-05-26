@@ -723,7 +723,7 @@ const handleCategoryFilter = (e) => {
     const regex = val ? `^${val}$` : '';
 
     dtInstance.value.dt
-        .column(2)
+        .column(5)
         .search(regex, true, false) // parameter kedua 'true' mengaktifkan regex
         .draw();
 };
@@ -1057,8 +1057,8 @@ const maskPhone = (phone) => {
                                         <select @change="handleCategoryFilter"
                                             class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
                                             <option value="">Semua</option>
-                                            <option value="Selesai">Selesai</option>
-                                            <option value="Belum Dibayar">Belum Dibayar</option>
+                                            <option value="Tunai">Tunai</option>
+                                            <option value="Non-Tunai">Non Tunai</option>
                                         </select>
                                     </div>
 
