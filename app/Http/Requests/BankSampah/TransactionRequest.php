@@ -20,8 +20,8 @@ class TransactionRequest extends FormRequest
     {
         return [
             'id' => 'required|string',
-            'fileDoc'   => 'required|array',
-            'fileDoc.*' => 'file|mimes:pdf,docx|max:2048',
+            'fileDoc'   => 'required|array|max:1',
+            'fileDoc.*' => 'image|mimes:jpg,jpeg,png|max:2048',
             'id_userdetail' => 'required|integer',
             'pencatatan_setoran_id' => 'required|integer',
             'id_jadwal' => 'required|integer',
@@ -35,7 +35,9 @@ class TransactionRequest extends FormRequest
             'id.required' => 'ID Wajib diisi',
             'fileDoc.required'    => 'Dokumen wajib diisi',
             'fileDoc.file'    => 'Dokumen wajib berupa files',
-            'fileDoc.mimes'    => 'Dokumen wajib berupa extensi pdf dan docx',
+            'fileDoc.*.image'    => 'Dokumen wajib berupa gambar',
+            'fileDoc.*.mimes'    => 'Dokumen wajib berupa file dengan ekstensi jpg, jpeg, atau png',
+            'fileDoc.*.max'    => 'Ukuran dokumen maksimal 2MB',
             'id_userdetail.required'          => 'Id User wajib diisi',
             'id_jadwal.required'          => 'Id Jadwal wajib diisi',
             'fullName.required'          => 'Nama lengkap wajib diisi',

@@ -1,6 +1,6 @@
 import '../css/app.css';
 import './bootstrap';
-
+import 'v-calendar/dist/style.css';
 import FormWrapper from '@/Components/FormWrapper.vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { createApp, h } from 'vue';
@@ -37,17 +37,12 @@ createInertiaApp({
         return page;
     },
     setup({ el, App, props, plugin }) {
-        return createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .use(ZiggyVue, Ziggy)
-            .mount(el);
-    },
-    setup({ el, App, props, plugin }) {
-        return createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .component('FormWrapper', FormWrapper) // Registrasi global
-            .mount(el);
-    },
+    return createApp({ render: () => h(App, props) })
+        .use(plugin)
+        .use(ZiggyVue, Ziggy) // Ziggy masuk sini
+        .component('FormWrapper', FormWrapper) // Komponen global masuk sini
+        .mount(el);
+},
 
     progress: {
         color: '#4B5563',

@@ -31,10 +31,11 @@ class KelolaBankSampahServices
                 $query->where('id_roles', 2);
                 $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%')
                     ->orWhere('fullName', 'LIKE', '%Bank Sampah%');
+                    $query->where('status','NOT LIKE', 'Ditolak');
             })->orderBy(
                 $this->userDetail::select('status')
                     ->whereColumn('user_details.id_user', 'users.id')
-                    ->orderByRaw("FIELD(status, 'Pengajuan Verifikasi', 'Pending', 'Tidak Disetujui', 'Disetujui') DESC")
+                    ->orderByRaw("FIELD(status, 'Pengajuan Verifikasi','Pending','Disetujui') DESC")
                     ->limit(1)
             )->orderBy(
                 $this->userDetail::select('id_rt')
@@ -215,7 +216,11 @@ class KelolaBankSampahServices
             $updateNasabah = $this->getBankSampah($id);
 
 
-            $updateNasabah->user_detail->update($data);
+            $updateNasabah->user_detail->update([
+                'fullName' => $data['fullName'],
+                'status' => $data['status'],
+                'telephone_number' => $data['phoneNumber']
+            ]);
             return $updateNasabah;
         });
 

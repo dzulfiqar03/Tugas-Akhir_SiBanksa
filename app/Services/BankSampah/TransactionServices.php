@@ -33,7 +33,7 @@ class TransactionServices
                 $extension = $files->getClientOriginalExtension();
                 $jadwal = $this->jadwalPelaksanaan::find($data['id_jadwal']);
                 $tanggalSetoran = $jadwal ? $jadwal->tanggal_setoran : 'TanpaTanggal';
-                $dynamicName = "Bukti_Pembayaran_{$cleanName}_Tanggal {$tanggalSetoran}_BankSampahRT0{$idRT}_{$index}." . $extension;
+                $dynamicName = "Bukti_Pembayaran_{$cleanName}_Tanggal {$tanggalSetoran}_BankSampahRT0{$idRT}_" . date('H_i_s') . "." . $extension;
 
                 $original_filesname = $dynamicName;
                 $encrypted_filesname = $files->hashName();

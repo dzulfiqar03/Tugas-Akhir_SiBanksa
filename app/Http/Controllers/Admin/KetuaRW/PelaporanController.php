@@ -199,7 +199,7 @@ class PelaporanController extends Controller
 
             $user->notify(new BankSampahReminder($user->id, $request->message, '/KetuaRW/pelaporan'));
 
-            return back()->with('success', 'Pengingat verifikasi berhasil dikirim ke nasabah!');
+            return back()->with('success', 'Pengingat verifikasi berhasil dikirim ke Bank Sampah!');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal mengirim pengingat: ' . $e->getMessage());
         }

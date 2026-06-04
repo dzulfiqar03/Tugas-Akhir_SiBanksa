@@ -1133,8 +1133,8 @@ const deleteDoc = (id) => {
                             <i class="fas fa-truck-loading text-emerald-500"></i> Jadwal Penjemputan RT
                         </h3>
                         <Calendar :attributes="calendarAttributes" is-expanded
-                            class="border-none shadow-none w-full text-black dark:text-white dark:bg-gray-800"
-                            :is-dark="page.props.auth.user.theme === 'dark'" />
+                            class="w-full !max-w-none !min-w-full !border-none !bg-transparent"
+                            :is-dark="page.props.auth.user.theme === 'dark'" :style="{ width: '100% !important' }"/>
 
                         <div class="mt-4 space-y-2">
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>

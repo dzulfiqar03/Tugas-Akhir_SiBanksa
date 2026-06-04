@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 
 class RTPerumahan extends Model
 {
+    /** @use HasFactory<\Database\Factories\RTPerumahanFactory> */
+    use HasFactory;
     protected $fillable = ['rt'];
 
     protected $table = 'rt_perumahan';

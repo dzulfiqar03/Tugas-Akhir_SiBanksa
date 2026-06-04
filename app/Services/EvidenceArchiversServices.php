@@ -41,7 +41,7 @@ class EvidenceArchiversServices
                         $idRT = Auth::user()->user_detail->id_rt;
                         $cleanName = str_replace(' ', '_', $data['name']);
                         $extension = $photo->getClientOriginalExtension();
-                        $dynamicName = "Evidence_{$cleanName}_BankSampahRT0{$idRT}_{$index}." . $extension;
+                        $dynamicName = "Evidence_{$cleanName}_BankSampahRT0{$idRT}_" . date('H_i') . "." . $extension;
 
                         $original_photoname = $dynamicName;
                         $encrypted_photoname = $photo->hashName();
@@ -55,7 +55,7 @@ class EvidenceArchiversServices
                         };
 
                         $photo->storeAs($folderPath, $original_photoname);
-     
+
 
                     // ELOQUENT
                     $evidence = new EvidenceArchiver();
@@ -70,7 +70,7 @@ class EvidenceArchiversServices
                     $evidence->save();
 
                     $uploadedDocs[] = $evidence;
-                   
+
                 }
  return $uploadedDocs;
         });

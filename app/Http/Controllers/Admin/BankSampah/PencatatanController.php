@@ -85,10 +85,9 @@ class PencatatanController extends Controller
 
         try {
             $this->pencatatanServices->createPencatatanSetoran($request->validated(), $request->ip(), $request->userAgent());
-
             return redirect()->back()->with('message', 'Pencatatan berhasil ditambahkan');
         } catch (\Throwable $th) {
-            //throw $th;
+            return back()->with('error', 'Gagal menambahkan pencatatan: ' . $th->getMessage());
         }
     }
 

@@ -512,15 +512,14 @@ const breadcrumbItems = [
                             {{ selectedUnitId === 'all' ? 'Jadwal Seluruh Unit' : 'Jadwal Operasional Unit' }}
                         </h3>
                         <Calendar :attributes="calendarAttributes" is-expanded @day-click="handleDayClick"
-                            class="border-none text-black dark:text-white shadow-none w-full dark:bg-gray-800"
-                            :is-dark="page.props.auth.user.theme === 'dark'" />
+                           class="w-full !max-w-none !min-w-full !border-none !bg-transparent"
+                            :is-dark="page.props.auth.user.theme === 'dark'" :style="{ width: '100% !important' }"/>
 
-                        <div class="mt-4 space-y-2">
+                         <div class="mt-4 space-y-2">
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
-                            <div class="flex items-center gap-3">
-                                <span
-                                    class="w-3 h-3 rounded-full bg-gray-400 ring-4 ring-gray-300/20"></span>
-                                <span class="text-[10px] font-bold dark:text-gray-300 uppercase">Jadwal Kegiatan</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Tanggal Hari Ini</span>
                             </div>
                         </div>
                     </div>

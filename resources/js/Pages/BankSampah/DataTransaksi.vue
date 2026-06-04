@@ -73,16 +73,14 @@ const viewDetail = (id) => {
 };
 
 const renamedFileList = computed(() => {
-    form.fileDoc.map((file, index) => {
+    return form.fileDoc.map((file, index) => {
         const extension = file.name.split('.').pop();
         return {
             original: file.name,
-            dynamic: `Dokumen${form.name || 'Dokumen'}_BankSampahRT0${props.IDRT}_${index + 1}.${extension}`,
+            dynamic: `Bukti_Pembayaran_${form.fullName.replace(' ', '_')}_BankSampahRT0${props.IDRT}.${extension}`,
             size: file.size,
-
         };
-    })
-
+    });
 });
 
 
@@ -975,7 +973,7 @@ const maskPhone = (phone) => {
                                         <div v-if="field.type === 'file' && field.name === 'fileDoc'"
                                             class="flex flex-col">
                                             <InputLabel :for="field.name" :value="field.title" />
-                                            <input :type="field.type" :id="field.name" multiple @input="(e) => {
+                                            <input :type="field.type" :id="field.name" @input="(e) => {
                                                 const newFiles = Array.from(e.target.files);
                                                 form.fileDoc = [...form.fileDoc, ...newFiles];
                                             }" :placeholder="field.placeholder"

@@ -268,18 +268,18 @@ const rankedNasabah = computed(() => {
                 if (!s.setoran.jadwal) return false;
                 const date = new Date(s.setoran.jadwal.tanggal_setoran);
                 return isUserMatch &&
-                       (date.getMonth() + 1) === Number(filterMonth.value) &&
-                       date.getFullYear() === Number(filterYear.value);
+                    (date.getMonth() + 1) === Number(filterMonth.value) &&
+                    date.getFullYear() === Number(filterYear.value);
             }
         });
 
         const totalBerat = filteredSetoran.reduce((acc, curr) => acc + Number(curr.jumlah || 0), 0);
         const totalSaldo = filteredSetoran.reduce((acc, curr) => acc + Number(curr.subtotal || 0), 0);
 
-        return { 
+        return {
             name: nasabah.user_detail.fullName, // Pastikan ambil nama untuk label
             weight: totalBerat,
-            filtered_balance: totalSaldo 
+            filtered_balance: totalSaldo
         };
     });
 
@@ -306,7 +306,7 @@ const resetFilters = () => {
 
 
 const leaderboardChartData = computed(() => {
-     if (filterCategory.value === 'weight') {
+    if (filterCategory.value === 'weight') {
         return {
             labels: props.sampahPeringkat.map(d => d.nama_sampah),
             datasets: [{
@@ -322,15 +322,15 @@ const leaderboardChartData = computed(() => {
         labels: rankedNasabah.value.map(d => d.name),
         datasets: [{
             label: filterCategory.value === 'weight' ? 'Berat Sampah (Kg)' : 'Saldo (Rp)',
-            data: rankedNasabah.value.map(d => 
+            data: rankedNasabah.value.map(d =>
                 filterCategory.value === 'weight' ? d.weight : d.filtered_balance
             ),
-backgroundColor: rankedNasabah.value.map(d => {
-    // Gunakan optional chaining agar tidak crash jika data belum ada
- 
-    // Bandingkan nama nasabah di chart dengan nama user yang login
-    return d.name ? '#064e4b' : '#10b981';
-}),            borderRadius: 6,
+            backgroundColor: rankedNasabah.value.map(d => {
+                // Gunakan optional chaining agar tidak crash jika data belum ada
+
+                // Bandingkan nama nasabah di chart dengan nama user yang login
+                return d.name ? '#064e4b' : '#10b981';
+            }), borderRadius: 6,
         }]
     };
 });
@@ -704,7 +704,7 @@ const exportData = () => {
         timer: 1000,
         didOpen: () => {
             Swal.showLoading();
-            
+
             // 3. Proses konversi ke Excel
             const worksheet = XLSX.utils.json_to_sheet(dataToExport);
             const workbook = XLSX.utils.book_new();
@@ -712,7 +712,7 @@ const exportData = () => {
 
             // Penamaan file dinamis berdasarkan filter
             const fileName = `Peringkat_SiBanksa_${filterMonth.value}_${filterYear.value}.xlsx`;
-            
+
             XLSX.writeFile(workbook, fileName);
         },
         willClose: () => {
@@ -1035,7 +1035,8 @@ const exportAsImage = async () => {
 
                                             </select>
                                         </div>
-                                        <div v-if="form2.pencairan_method === 'Non-Tunai'" v-for="field in formdata?.userBank" :key="field.name">
+                                        <div v-if="form2.pencairan_method === 'Non-Tunai'"
+                                            v-for="field in formdata?.userBank" :key="field.name">
 
 
                                             <input type="hidden" name="id_userdetail"
@@ -1248,39 +1249,41 @@ const exportAsImage = async () => {
                             </div>
                         </div>
 
-                     <div>
+                        <div>
 
-                                                        <div v-if="filterCategory === 'balance'" class="flex justify-between flex-wrap gap-4 mb-4 items-center">
+                            <div v-if="filterCategory === 'balance'"
+                                class="flex justify-between flex-wrap gap-4 mb-4 items-center">
 
-                                                            <div class="flex justify-between flex-wrap gap-4  items-center">
+                                <div class="flex justify-between flex-wrap gap-4  items-center">
 
-                                                                 <!-- Filter Jadwal -->
-    <select v-model="selectedJadwalId" class="rounded-xl border-gray-300 text-sm">
-        <option value="all">Semua Jadwal (Bulanan)</option>
-        <option v-for="j in props.jadwal" :key="j.id" :value="j.id">
-            Jadwal: {{ new Date(j.tanggal_setoran).toLocaleDateString('id-ID') }}
-        </option>
-    </select>
+                                    <!-- Filter Jadwal -->
+                                    <select v-model="selectedJadwalId" class="rounded-xl border-gray-300 text-sm">
+                                        <option value="all">Semua Jadwal (Bulanan)</option>
+                                        <option v-for="j in props.jadwal" :key="j.id" :value="j.id">
+                                            Jadwal: {{ new Date(j.tanggal_setoran).toLocaleDateString('id-ID') }}
+                                        </option>
+                                    </select>
 
-    <!-- Filter Bulan (Hanya muncul jika jadwal 'all') -->
-    <div v-if="selectedJadwalId === 'all'" class="flex gap-2">
-        <select v-model="filterMonth" class="rounded-xl border-gray-300 text-sm">
-            <option v-for="m in 12" :key="m" :value="m">
-                {{ new Date(2024, m-1).toLocaleString('id-ID', {month: 'long'}) }}
-            </option>
-        </select>
-        <select v-model="filterYear" class="rounded-xl border-gray-300 text-sm">
-            <option :value="2025">2025</option>
-            <option :value="2026">2026</option>
-        </select>
-    </div>   
-                                                            </div>
+                                    <!-- Filter Bulan (Hanya muncul jika jadwal 'all') -->
+                                    <div v-if="selectedJadwalId === 'all'" class="flex gap-2">
+                                        <select v-model="filterMonth" class="rounded-xl border-gray-300 text-sm">
+                                            <option v-for="m in 12" :key="m" :value="m">
+                                                {{ new Date(2024, m - 1).toLocaleString('id-ID', { month: 'long' }) }}
+                                            </option>
+                                        </select>
+                                        <select v-model="filterYear" class="rounded-xl border-gray-300 text-sm">
+                                            <option :value="2025">2025</option>
+                                            <option :value="2026">2026</option>
+                                        </select>
+                                    </div>
+                                </div>
 
 
-    <div class="flex gap-2">
-        <button @click="resetFilters" class="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-xl font-medium transition-all text-xs flex items-center gap-2">
-            <i class="fas fa-filter text-xs"></i> Reset Filter
-        </button>
+                                <div class="flex gap-2">
+                                    <button @click="resetFilters"
+                                        class="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-xl font-medium transition-all text-xs flex items-center gap-2">
+                                        <i class="fas fa-filter text-xs"></i> Reset Filter
+                                    </button>
 
 
 
@@ -1294,15 +1297,15 @@ const exportAsImage = async () => {
                                     </button>
                                 </div>
 
-</div>
+                            </div>
 
-                           <div class="h-[400px] w-full peringkat-nasabah">
-                            
-                            <Bar  :data="leaderboardChartData" :options="chartOptions" />
-                        </div>  
-                     </div>
+                            <div class="h-[400px] w-full peringkat-nasabah">
 
-                   
+                                <Bar :data="leaderboardChartData" :options="chartOptions" />
+                            </div>
+                        </div>
+
+
 
                         <div class="mt-4 flex gap-4 justify-center">
                             <div class="flex items-center gap-2">
@@ -1347,8 +1350,8 @@ const exportAsImage = async () => {
 
                         <Calendar :attributes="calendarAttributes" is-expanded @dayclick="handleDayClick"
                             title-position="left" trim-weeks
-                            class="border-none text-black dark:text-white shadow-none w-full dark:bg-gray-800"
-                            :is-dark="page.props.auth.user.theme === 'dark'" />
+                            class="w-full !max-w-none !min-w-full !border-none !bg-transparent"
+                            :is-dark="page.props.auth.user.theme === 'dark'" :style="{ width: '100% !important' }" />
 
                         <div class="mt-4 space-y-2">
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
@@ -1431,6 +1434,32 @@ const exportAsImage = async () => {
 <style>
 .dark td {
     color: white;
+}
+
+.calendar-wrapper .vc-container {
+    width: 100% !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+:deep(.vc-container) {
+    --vc-bg: transparent;
+    --vc-border: transparent;
+    background-color: transparent !important;
+    border: none !important;
+}
+
+/* Memaksa warna teks di seluruh bagian kalender */
+:deep(.vc-header),
+:deep(.vc-weeks),
+:deep(.vc-weekday),
+:deep(.vc-day-content) {
+    color: inherit !important;
+}
+
+/* Memaksa warna hover agar tidak terlihat kontras/aneh */
+:deep(.vc-day-content:hover) {
+    background-color: rgba(107, 114, 128, 0.2) !important;
 }
 
 .accordion-enter-active,

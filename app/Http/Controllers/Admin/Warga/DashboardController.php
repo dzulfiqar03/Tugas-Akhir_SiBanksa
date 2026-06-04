@@ -179,7 +179,7 @@ class DashboardController extends Controller
             'priceList' => $priceList,
             'lastActivity' => $detail->user_log()->latest()->limit(4)->get()->map(function ($log) {
                 return [
-                    'description' => $log->action === 'LOGIN' ? 'Masuk ke sistem' : $log->action,
+                    'description' => $log->action === 'LOGIN' ? 'Masuk ke sistem' : 'Keluar dari sistem',
                     'created_at' => $log->created_at->diffForHumans(),
                 ];
             }),

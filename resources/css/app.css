@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.dark .vc-container {
+    background-color: rgb(31 41 55) !important; /* Tailwind gray-800 */
+    border-color: transparent !important;
+}
+
+.dark .vc-header,
+.dark .vc-weeks,
+.dark .vc-weekday {
+    color: white !important;
+}
+
+.dark .vc-day-content {
+    color: white !important;
+}
+
+.dark .vc-day-content:hover {
+    background-color: rgb(55 65 81) !important; /* Tailwind gray-700 */
+}

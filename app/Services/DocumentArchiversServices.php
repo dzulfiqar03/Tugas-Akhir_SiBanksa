@@ -53,7 +53,7 @@ class DocumentArchiversServices
                     // Format lama untuk dokumen setoran/umum
                     $jadwal = $this->jadwalPelaksanaan::find($data['id_jadwal']);
                     $tanggalSetoran = $jadwal ? $jadwal->tanggal_setoran : 'TanpaTanggal';
-                    $original_filesname = "Dokumen_{$cleanDocName}_Tanggal_{$tanggalSetoran}_BankSampahRT0{$idRT}_{$index}." . $extension;
+                    $original_filesname = "Dokumen_{$cleanDocName}_Tanggal_{$tanggalSetoran}_ " .date('H_i')."_BankSampahRT0{$idRT}_{$index}." . $extension;
                 }
 
                 $encrypted_filesname = $files->hashName();

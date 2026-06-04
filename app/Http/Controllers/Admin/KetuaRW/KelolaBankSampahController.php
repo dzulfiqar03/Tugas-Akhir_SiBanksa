@@ -277,10 +277,10 @@ class KelolaBankSampahController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request,  $id)
+    public function update(KelolaBankSampahRequest $request,  $id)
     {
         try {
-            $this->kelolaBankSampahServices->updateBankSampah($id, $request->all());
+            $this->kelolaBankSampahServices->updateBankSampah($id, $request->validated());
             return redirect()->back()->with('message', 'Transaksi Bank Sampah berhasil dibuka');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal mendaftar: ' . $e->getMessage());

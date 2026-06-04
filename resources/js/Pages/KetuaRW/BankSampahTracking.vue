@@ -449,7 +449,7 @@ const openCreateForm = () => {
 };
 
 
-const editData = (id, fullName, status, id_gender, id_rt) => {
+const editData = (id, fullName, status, id_gender, id_rt, phoneNumber) => {
     isEdit.value = true;
     form.id = id;
     form.fullName = fullName;
@@ -457,6 +457,7 @@ const editData = (id, fullName, status, id_gender, id_rt) => {
     form.id_gender = id_gender;
     form.id_rt = id_rt;
     form.id_roles = 3;
+    form.phoneNumber = phoneNumber;
     showForm.value = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
@@ -668,7 +669,7 @@ const viewDetail = (id) => {
                                 </button>
 
                                 <button
-                                    @click="editData(data.rowData.id, data.rowData.user_detail.fullName, data.rowData.user_detail.status, data.rowData.user_detail.id_gender, data.rowData.user_detail.id_rt)"
+                                    @click="editData(data.rowData.id, data.rowData.user_detail.fullName, data.rowData.user_detail.status, data.rowData.user_detail.id_gender, data.rowData.user_detail.id_rt, data.rowData.user_detail.telephone_number)"
                                     v-if="data.rowData.profile_completion.percentage > 50"
                                     class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
                                     title="Edit">
