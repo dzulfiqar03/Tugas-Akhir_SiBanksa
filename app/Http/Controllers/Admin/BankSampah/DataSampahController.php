@@ -3,64 +3,54 @@
 namespace App\Http\Controllers\Admin\BankSampah;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BankSampah\SampahRequest;
 use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
+use App\Services\BankSampah\SampahServices;
 use Illuminate\Http\Request;
-use PhpParser\Node\Scalar\MagicConst\Dir;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DataSampahController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
+    public function __construct(protected SampahServices $sampahServices) {}
     public function index()
     {
-        $items = [
-            [
-                'id' => 1,
-                'namaSampah' => 'Buku Catatan',
-                'satuan' => 'Kg',
-                'harga' => 1233,
-                'kategori' => 'plastik',
-            ],
-            [
-                'id' => 2,
-                'namaSampah' => 'Buku mirage',
-                'satuan' => 'Kg',
-                'harga' => 1233,
-                'kategori' => 'Kardus',
-            ],
-            [
-                'id' => 3,
-                'namaSampah' => 'Minyak Goreng',
-                'satuan' => 'Liter',
-                'harga' => 12500,
-                'kategori' => 'Anorganik',
-            ],
-            [
-                'id' => 4,
-                'namaSampah' => 'Buku Cat',
-                'satuan' => 'Lusin',
-                'harga' => 1233,
-                'kategori' => 'ATK',
-            ],
-            [
-                'id' => 5,
-                'namaSampah' => 'Buku Catatan',
-                'satuan' => 'Kg',
-                'harga' => 1233,
-                'kategori' => 'ATK',
-            ],
-        ];
-
 
         $menu = (new DataResources(null))->toArray(request());
         $form = (new FormResources(null))->toArray(request());
 
-        return view('pages/Bank Sampah/data-sampah', [
-            'items' => $items,
+        $formName = 'formSampah';
+
+        $sampah = $this->sampahServices->getAllSampah();
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+        $idUser = Auth::user()->user_detail->id;
+        $breadcrumbItems    = [
+            ['label' => 'Dashboard', 'url' => route('dashboard')],
+            ['label' => 'Manajemen Bank Sampah', 'url' => null],
+            ['label' => 'Data Sampah', 'url' => route('data-sampah')],
+        ];
+        return Inertia::render('BankSampah/DataSampah', [
+            'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,
             'formdata' => $form,
+            'formName' => $formName,
+            'sampah' => $sampah,
+            'idUser' => $idUser,
+            'breadcrumbItems' => $breadcrumbItems
 
         ]);
     }
@@ -76,10 +66,16 @@ class DataSampahController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(SampahRequest $request)
     {
-        //
+        try {
+            $this->sampahServices->createSampah($request->validated());
+            return redirect()->back()->with('message', 'Sampah berhasil ditambahkan');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mendaftar: ' . $e->getMessage());
+        }
     }
+
 
     /**
      * Display the specified resource.
@@ -100,16 +96,26 @@ class DataSampahController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(SampahRequest $request, $id)
     {
-        //
+        try {
+            $this->sampahServices->updateSampah($id, $request->validated());
+            return redirect()->back()->with('message', 'Sampah berhasil ditambahkan');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal update: ' . $e->getMessage());
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        try {
+            $this->sampahServices->deleteSampah($id);
+            return redirect()->back()->with('message', 'Data berhasil dihapus');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
+        }
     }
 }

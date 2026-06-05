@@ -2,8 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Models\BankSampah\JadwalPelaksanaan;
+use App\Models\Gender;
+use App\Models\RTPerumahan;
+use App\Models\Transaction\Bank;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 class FormResources extends JsonResource
 {
@@ -12,65 +17,89 @@ class FormResources extends JsonResource
      *
      * @return array<string, mixed>
      */
+
+
     public function toArray(Request $request): array
     {
+        $rt = RTPerumahan::all();
+
+        $optionRT = [];
+        foreach ($rt as $rts) {
+            $optionRT[] = $rts->RT; // kolom
+        }
+
+        $optionBank = Bank::pluck('name');
+        $gender = Gender::where('gender', '!=', 'none')->get();
+
+        $optionGender = [];
+        foreach ($gender as $gen) {
+            $optionGender[] = $gen->gender; // kolom
+        }
+
+
+
+
+        $optionDivisi = ['Ketua', 'Sekretaris', 'Bendahara', 'Penimbang', 'Pemilah'];
+
+
+        $optionJadwal = [];
+        if (Auth::check()) {
+            $jadwal = JadwalPelaksanaan::where('id_userdetail', Auth::user()->user_detail->id)->get();
+
+
+            foreach ($jadwal as $sch) {
+                $optionJadwal[] = $sch->Jadwal; // kolom
+            }
+        }
+
+        $optionJadwalJanji = [];
+        if (Auth::check()) {
+            $jadwalJanji = JadwalPelaksanaan::whereHas('user_detail', function ($query) {
+                $query->where('id_rt', auth()->user()->user_detail->id_rt);
+            })
+                ->get();
+            foreach ($jadwalJanji as $sch) {
+                $optionJadwalJanji[] = [
+                    'id' => $sch->id,
+                    'tanggal' => $sch->tanggal_setoran
+                ];
+            }
+        }
+
         return [
-            'userAuth' => [
+            'nasabah' => [
                 [
-                    'title' => 'Username',
-                    'name' => 'username',
-                    'type' => 'text',
-                    'placeholder' => 'Masukkan username',
+                    'title' => 'Jenis Kelamin',
+                    'name'  => 'id_gender',
+                    'type'  => 'radio',
+                    'options' => $optionGender,
                 ],
                 [
-                    'title' => 'Full Name',
+                    'title' => 'User Name',
+                    'name' => 'userName',
+                    'type' => 'text',
+                    'placeholder' => 'Misal : johndoe',
+                ],
+                [
+                    'title' => 'Nama Lengkap',
                     'name' => 'fullName',
                     'type' => 'text',
                     'placeholder' => 'Masukkan Nama Lengkap',
                 ],
                 [
-                    'title' => 'Address',
-                    'name' => 'address',
-                    'type' => 'text',
-                    'placeholder' => 'Masukkan Alamat anda',
-                ],
-                [
-                    'title' => 'Phone Number',
+                    'title' => 'Nomor Telepon',
                     'name' => 'phoneNumber',
-                    'type' => 'number',
+                    'type' => 'text',
                     'placeholder' => 'Masukkan Nomor Telepon',
                 ],
 
                 [
-                    'title' => 'Email Address',
-                    'name' => 'email',
-                    'type' => 'email',
-                    'placeholder' => 'Masukkan Alamat Email',
-                ],
-                [
-                    'title' => 'Password',
-                    'name' => 'password',
-                    'type' => 'password',
-                    'placeholder' => 'Masukkan Password',
-                ],
-                [
-                    'title' => 'Confirm Password',
-                    'name' => 'confirmPassword',
-                    'type' => 'password',
-                    'placeholder' => 'Re-Masukkan password',
-                ],
-
-
-
-            ],
-
-            'nasabah' => [
-                [
                     'title' => 'RT',
                     'name' => 'rt',
                     'type' => 'select',
-                    'options' => [1, 2, 3, 4, 5, 6, 7, 8],
+                    'options' => $optionRT,
                 ],
+
                 [
                     'title' => 'Status',
                     'name' => 'status',
@@ -83,6 +112,48 @@ class FormResources extends JsonResource
                     'type' => 'file',
                     'placeholder' => '',
                 ],
+
+            ],
+
+            'userAuth' => [
+
+                [
+                    'title' => 'Alamat Email',
+                    'name' => 'email',
+                    'type' => 'email',
+                    'placeholder' => 'Masukkan Alamat Email',
+                ],
+                [
+                    'title' => 'Password',
+                    'name' => 'password',
+                    'type' => 'password',
+                    'placeholder' => 'Masukkan Password',
+                ],
+                [
+                    'title' => 'Confirm Password',
+                    'name' => 'password_confirmation',
+                    'type' => 'password',
+                    'placeholder' => 'Re-Masukkan password',
+                ],
+
+
+
+            ],
+            'userBank' => [
+
+                [
+                    'title' => 'Bank',
+                    'name' => 'id_bank',
+                    'type' => 'select',
+                    'options' => $optionBank,
+                ],
+                [
+                    'title' => 'Nomor Rekening',
+                    'name' => 'nomor_rekening',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Nomor Rekening',
+                ],
+
             ],
 
             'sampah' => [
@@ -101,6 +172,12 @@ class FormResources extends JsonResource
                         'placeholder' => 'Masukkan satuan',
                     ],
                     [
+                        'title' => 'Harga Pengepul',
+                        'name' => 'harga_pengepul',
+                        'type' => 'number',
+                        'placeholder' => 'Masukkan Harga Pengepul',
+                    ],
+                    [
                         'title' => 'Harga',
                         'name' => 'harga',
                         'type' => 'number',
@@ -113,119 +190,113 @@ class FormResources extends JsonResource
                         'options' => ['Daur Ulang', 'Non Daur Ulang'],
                     ],
                 ],
+            ],
 
-                'formJenisSampah' => [
-                    [
-                        'id' =>0,
-                        'namaSampah' => 'Jelantah',
-                        'satuan' => 'liter',
-                        'harga' => '5000',
-                        'berat' =>1,
-                        'kategori' => 'Non Daur Ulang'
+            'bankSampah' => [
+                [
+                    'title' => 'Tanggal Setoran',
+                    'name' => 'tanggal_setoran',
+                    'type' => 'date',
+                    'placeholder' => 'Masukkan Tanggal Pelaksanaan',
+                ],
 
-                    ],
-                    ['id' =>1,
-                        'namaSampah' => 'Kertas',
-                        'satuan' => 'kg',
-                        'harga' => '7000',
-                        'berat' =>2,
-                        'kategori' => 'Non Daur Ulang'
-                    ],
+                [
+                    'title' => 'Jadwal',
+                    'name' => 'id_jadwal',
+                    'type' => 'select',
+                    'options' => $optionJadwal,
+                ],
+                [
+                    'title' => 'Divisi',
+                    'name' => 'divisi',
+                    'type' => 'select',
+                    'options' => $optionDivisi,
+                ],
 
-                    ['id' =>2,
-                        'namaSampah' => 'Duplek',
-                        'satuan' => 'kg',
-                        'harga' => '4000',
-                        'berat' =>1.5,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-
-                    ['id' =>3,
-                        'namaSampah' => 'Kardus',
-                        'satuan' => 'kg',
-                        'harga' => '6000',
-                        'berat' =>2.3,
-                        'kategori' => 'Daur Ulang'
-                    ],
-                    ['id' =>4,
-                        'namaSampah' => 'Kresek',
-                        'satuan' => 'kg',
-                        'harga' => '2000',
-                        'berat' =>1,
-                        'kategori' => 'Daur Ulang'
-
-                    ],
-
-                    ['id' =>5,
-                        'namaSampah' => 'Botol Plastik',
-                        'satuan' => 'kg',
-                        'harga' => '2500',
-                        'berat' =>3,
-                        'kategori' => 'Daur Ulang'
-
-                    ],
-                    ['id' =>6,
-                        'namaSampah' => 'Botol Plastik (Non Botol)',
-                        'satuan' => 'kg',
-                        'harga' => '2800',
-                        'berat' =>4,
-                        'kategori' => 'Daur Ulang'
-
-                    ],
-
-                    ['id' =>7,
-                        'namaSampah' => 'Kaca',
-                        'satuan' => 'kg',
-                        'harga' => '8500',
-                        'berat' =>2,
-                        'kategori' => 'Daur Ulang'
-
-                    ],
-
-                    ['id' =>8,
-                        'namaSampah' => 'Kaleng',
-                        'satuan' => 'kg',
-                        'harga' => '4500',
-                        'berat' =>4,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-
-                    ['id' =>9,
-                        'namaSampah' => 'Besi',
-                        'satuan' => 'kg',
-                        'harga' => '9500',
-                        'berat' =>1,
-                        'kategori' => 'Non Daur Ulang'
-                    ],
-                    ['id' =>10,
-                        'namaSampah' => 'Kompor',
-                        'satuan' => 'kg',
-                        'harga' => '10500',
-                        'berat' =>2.2,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-                    ['id' =>11,
-                        'namaSampah' => 'Kresek Bening',
-                        'satuan' => 'kg',
-                        'harga' => '1500',
-                        'berat' =>1.2,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-                    ['id' =>12,
-                        'namaSampah' => 'Aluminium',
-                        'satuan' => 'kg',
-                        'harga' => '9500',
-                        'berat' =>3.4,
-                        'kategori' => 'Non Daur Ulang'
-
-                    ],
-                ]
+            ],
 
 
+            'Dokumen' => [
+                [
+                    'title' => 'Dokumen',
+                    'name' => 'fileDoc',
+                    'type' => 'file',
+                    'placeholder' => 'Masukkan Dokumen Anda Disini',
+                ],
+
+                [
+                    'title' => 'Evidence',
+                    'name' => 'imgEvidence',
+                    'type' => 'file',
+                    'placeholder' => 'Masukkan Evidence Anda Disini',
+                ],
+
+                [
+                    'title' => 'Nama Dokumen',
+                    'name' => 'name',
+                    'type' => 'select',
+                    'options' => ['Hasil Setoran'],
+                ],
+            ],
+
+            'location' => [
+                [
+                    'title' => 'Nama Jalan',
+                    'name' => 'amenity',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Nama Jalan (misal: Bangka)',
+                ],
+
+                [
+                    'title' => 'Nomor / Blok Alamat',
+                    'name' => 'house_number',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Nomor Alamat (misal: 7B atau B27)',
+                ],
+
+                [
+                    'title' => 'Kota',
+                    'name' => 'city',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Kota',
+                ],
+
+                [
+                    'title' => 'Provinsi',
+                    'name' => 'state',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Provinsi',
+                ],
+
+                [
+                    'title' => 'Negara',
+                    'name' => 'country',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Negara',
+                ],
+                [
+                    'title' => 'Kode Pos',
+                    'name' => 'postal_code',
+                    'type' => 'text',
+                    'placeholder' => 'Masukkan Kode Pos',
+                ],
+
+            ],
+
+            'janji_setor' => [
+                [
+                    'title' => 'Janji Penyetoran',
+                    'name' => 'waktu_janji',
+                    'type' => 'time',
+                    'placeholder' => 'Masukkan Waktu Penyetoran',
+                ],
+
+                [
+                    'title' => 'Jadwal',
+                    'name' => 'id_jadwal',
+                    'type' => 'select',
+                    'options' => $optionJadwalJanji,
+                ],
             ]
         ];
     }

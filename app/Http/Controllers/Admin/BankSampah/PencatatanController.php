@@ -3,91 +3,69 @@
 namespace App\Http\Controllers\Admin\BankSampah;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BankSampah\PencatatanRequest;
 use App\Http\Resources\DataResources;
 use App\Http\Resources\FormResources;
+use App\Models\BankSampah\PencatatanSetoran;
+use App\Models\BankSampah\PencatatanSetoranItems;
+use App\Models\BankSampah\Sampah;
+use App\Models\UserDetail;
+use App\Services\BankSampah\PencatatanServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class PencatatanController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
+    public function __construct(
+        protected PencatatanServices $pencatatanServices,
+        protected UserDetail $userDetail,
+        protected Sampah $sampah,
+        protected PencatatanSetoranItems $pencatatanSetoranItems,
+    ) {}
     public function index()
     {
-                $items = [
-            [
-                'id' => 1,
-                'fullName' => 'Andi Pratama',
-                'address' => 'Jl. Merdeka No. 10, Bandung',
-                'rt' => 4,
-                'status' => 'Pending',
-                'urlProfil' => 'https://randomuser.me/api/portraits/men/11.jpg',
-            ],
-            [
-                'id' => 2,
-                'fullName' => 'Budi Santoso',
-                'address' => 'Jl. Melati No. 5, Surabaya',
-                'rt' => 7,
-                'status' => 'Pengajuan Verifikasi',
-                'urlProfil' => 'https://randomuser.me/api/portraits/men/12.jpg',
-            ],
-            [
-                'id' => 3,
-                'fullName' => 'Citra Lestari',
-                'address' => 'Jl. Mawar No. 8, Jakarta Selatan',
-                'rt' => 2,
-                'status' => 'Disetujui',
-                'urlProfil' => 'https://randomuser.me/api/portraits/women/21.jpg',
-            ],
-            [
-                'id' => 4,
-                'fullName' => 'Dewi Anggraini',
-                'address' => 'Jl. Kenanga No. 2, Yogyakarta',
-                'rt' => 8,
-                'status' => 'Pending',
-                'urlProfil' => 'https://randomuser.me/api/portraits/women/22.jpg',
-            ],
-            [
-                'id' => 5,
-                'fullName' => 'Eko Wijaya',
-                'address' => 'Jl. Pahlawan No. 15, Medan',
-                'rt' => 3,
-                'status' => 'Disetujui',
-                'urlProfil' => 'https://randomuser.me/api/portraits/men/13.jpg',
-            ],
-            [
-                'id' => 6,
-                'fullName' => 'Farah Nabila',
-                'address' => 'Jl. Ahmad Yani No. 22, Makassar',
-                'rt' => 5,
-                'status' => 'Pengajuan Verifikasi',
-                'urlProfil' => 'https://randomuser.me/api/portraits/women/23.jpg',
-            ],
-            [
-                'id' => 7,
-                'fullName' => 'Gilang Saputra',
-                'address' => 'Jl. Cendana No. 4, Semarang',
-                'rt' => 6,
-                'status' => 'Pending',
-                'urlProfil' => 'https://randomuser.me/api/portraits/men/14.jpg',
-            ],
-            [
-                'id' => 8,
-                'fullName' => 'Hana Putri',
-                'address' => 'Jl. Anggrek No. 9, Palembang',
-                'rt' => 1,
-                'status' => 'Disetujui',
-                'urlProfil' => 'https://randomuser.me/api/portraits/women/24.jpg',
-            ],
-        ];
-
 
         $menu = (new DataResources(null))->toArray(request());
         $form = (new FormResources(null))->toArray(request());
-        return view('pages/Bank Sampah/pencatatan-setoran', [
-            'items' => $items,
+
+        $jadwalPelaksanaan = $this->userDetail::find(Auth::user()->user_detail->id)->jadwal()->latest()->limit(10)->get();
+        $nasabahList = $this->userDetail::where('id_rt', Auth::user()->user_detail->rt->id)->where('status', 'Disetujui')->where('id_roles', 3)->with(['sampah', 'pencatatan.pencatatan_items', 'pencatatan.jadwal'])->get();
+        $formName = 'formPencatatan';
+        $jenisSampah = $this->sampah::where('id_userdetail', Auth::user()->user_detail->id)->get();
+
+        $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+            ->whereHas('setoran', function ($query) {
+                $query->where('id_userdetail', Auth::user()->user_detail->id);
+            })
+            ->get();
+
+        $pencatatanSetoran = PencatatanSetoran::with(['user_detail', 'jadwal'])->get();
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+
+        return Inertia::render('BankSampah/PencatatanSetoran', [
+            'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
             'sidebardata' => $menu,
             'formdata' => $form,
+            'formName' => $formName,
+            'jadwalPelaksanaan' => $jadwalPelaksanaan,
+            'nasabahList' => $nasabahList,
+            'jenisSampah' => $jenisSampah,
+            'pencatatanSetoranItems' => $pencatatanSetoranItems,
+            'pencatatanSetoran' => $pencatatanSetoran
         ]);
     }
 
@@ -102,17 +80,106 @@ class PencatatanController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(PencatatanRequest $request)
     {
-        //
+
+        try {
+            $this->pencatatanServices->createPencatatanSetoran($request->validated(), $request->ip(), $request->userAgent());
+            return redirect()->back()->with('message', 'Pencatatan berhasil ditambahkan');
+        } catch (\Throwable $th) {
+            return back()->with('error', 'Gagal menambahkan pencatatan: ' . $th->getMessage());
+        }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $menu = (new DataResources(null))->toArray(request());
+        $form = (new FormResources(null))->toArray(request());
+
+        $jadwalPelaksanaan = $this->userDetail::find(Auth::user()->user_detail->id)->jadwal()->get();
+        $nasabahList = UserDetail::with('user')->findOrFail($id);;
+        $formName = 'formPencatatan';
+
+        $jenisSampah = $this->sampah::where('id_userdetail', $id)->get();
+
+        $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'setoran.jadwal', 'sampah'])
+            ->whereHas('setoran', function ($query) use ($id) {
+                $query->where('id_userdetail', $id);
+            })
+            ->get();
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+
+        return Inertia::render('BankSampah/DetailPencatatan', [
+            'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
+            'sidebardata' => $menu,
+            'formdata' => $form,
+            'formName' => $formName,
+            'jadwalPelaksanaan' => $jadwalPelaksanaan,
+            'nasabah' => $nasabahList,
+            'jenisSampah' => $jenisSampah,
+            'pencatatanSetoranItems' => $pencatatanSetoranItems
+        ]);
+    }
+
+    public function showByJadwal($id, $idJadwal)
+    {
+        $menu = (new DataResources(null))->toArray(request());
+        $form = (new FormResources(null))->toArray(request());
+        $nasabah = UserDetail::with('user')->findOrFail($id);
+
+        // 2. Jadwal Pelaksanaan KHUSUS untuk nasabah ini
+        // Pastikan relasi 'jadwal' ada di model UserDetail
+        $jadwalPelaksanaan = $nasabah->jadwal()->get();
+        $nasabahList = UserDetail::with('user')->findOrFail($id);;
+        $formName = 'formPencatatan';
+
+        $jenisSampah = $this->sampah::where('id_userdetail', $id)->get();
+
+
+
+        $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'setoran.jadwal', 'sampah'])
+            ->whereHas('setoran', function ($query) use ($id, $idJadwal) {
+                // Filter berdasarkan Nasabah
+                $query->where('id_userdetail', $id);
+
+                $query->where('id_jadwal', $idJadwal);
+            })
+            ->get();
+
+
+        $notifications = Auth::user()->notifications()->take(10)->get()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? '',
+                'url' => $n->data['url'] ?? '#',
+                'time' => $n->created_at->diffForHumans(),
+                'is_read' => $n->read_at !== null
+            ];
+        });
+
+        return Inertia::render('BankSampah/DetailPencatatan', [
+            'initialNotifications' => $notifications,
+            'unreadCount' => Auth::user()->unreadNotifications->count(),
+            'sidebardata' => $menu,
+            'formdata' => $form,
+            'formName' => $formName,
+            'jadwalPelaksanaan' => $jadwalPelaksanaan,
+            'nasabah' => $nasabahList,
+            'jenisSampah' => $jenisSampah,
+            'pencatatanSetoranItems' => $pencatatanSetoranItems
+        ]);
     }
 
     /**
@@ -134,8 +201,13 @@ class PencatatanController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        try {
+            $this->pencatatanServices->deletePencatatan($id);
+            return redirect()->back()->with('message', 'Data berhasil dihapus');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
+        }
     }
 }

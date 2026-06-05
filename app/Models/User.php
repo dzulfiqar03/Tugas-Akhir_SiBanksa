@@ -2,25 +2,29 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Notifications\CustomResetPassword;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasUuids;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
+
     protected $fillable = [
-        'name',
         'email',
         'password',
+        'email_verified_at',
     ];
 
     /**
@@ -42,7 +46,30 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
         ];
     }
+
+    public function user_detail()
+    {
+        return $this->hasOne(UserDetail::class, 'id_user', 'id');
+    }
+
+     public function sender()
+    {
+        return $this->hasMany(UserDetail::class, 'sender_id', 'id');
+    }
+
+    public function pushSubscriptions()
+{
+    // HasMany karena 1 user bisa punya banyak device (Laptop, HP, dll)
+    return $this->hasMany(PushSubscription::class, 'user_id', 'id');
+}
+
+    public function sendPasswordResetNotification($token)
+{
+    // gunakan nama user untuk dynamic FROM NAME
+    $dynamicName = $this->name ?? 'Admin';
+
+    $this->notify(new CustomResetPassword($token, $dynamicName));
+}
 }
