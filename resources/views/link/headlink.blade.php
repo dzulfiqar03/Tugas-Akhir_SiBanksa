@@ -5,3 +5,4 @@
 
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/2.1.3/css/dataTables.tailwindcss.min.css">
+       <script src="https://cdn.tailwindcss.com"></script> <!-- CDN Tailwind -->
