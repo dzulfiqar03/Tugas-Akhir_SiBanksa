@@ -1,3 +1,30 @@
+// import { precacheAndRoute } from 'workbox-precaching';
+// import { registerRoute } from 'workbox-routing';
+// import { NetworkFirst, CacheFirst } from 'workbox-strategies';
+
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
+
+const { precacheAndRoute } = workbox.precaching;
+const { registerRoute } = workbox.routing;
+const { NetworkFirst, CacheFirst } = workbox.strategies;
+const { ExpirationPlugin } = workbox.expiration;
+
+// Mengambil list file dari manifest hasil build Vite
+precacheAndRoute([]);
+
+// 1. Strategi untuk Gambar/Assets (Cache First)
+registerRoute(
+  ({request}) => request.destination === 'image',
+  new CacheFirst({ cacheName: 'images' })
+);
+
+// 2. Strategi untuk Halaman (Network First)
+// Ini membuat halaman tetap bisa diakses saat offline jika pernah dikunjungi sebelumnya
+registerRoute(
+  ({request}) => request.mode === 'navigate',
+  new NetworkFirst({ cacheName: 'pages' })
+);
+
 self.addEventListener('install', event => {
     self.skipWaiting();
 });

@@ -53,7 +53,7 @@ class DocumentArchiversServices
                     // Format lama untuk dokumen setoran/umum
                     $jadwal = $this->jadwalPelaksanaan::find($data['id_jadwal']);
                     $tanggalSetoran = $jadwal ? $jadwal->tanggal_setoran : 'TanpaTanggal';
-                    $original_filesname = "Dokumen_{$cleanDocName}_Tanggal_{$tanggalSetoran}_ " .date('H_i')."_BankSampahRT0{$idRT}_{$index}." . $extension;
+                    $original_filesname = "Dokumen_{$cleanDocName}_Tanggal_{$tanggalSetoran}_ " . date('H_i') . "_BankSampahRT0{$idRT}_{$index}." . $extension;
                 }
 
                 $encrypted_filesname = $files->hashName();
@@ -61,13 +61,13 @@ class DocumentArchiversServices
                 // Store File
                 $role = Auth::user()->user_detail->id_roles;
                 $folderPath = match ($role) {
-                    1 => 'public/files/documentUser/KetuaRW/' . $data['id_userdetail'],
-                    2 => 'public/files/documentUser/BankSampah/RT0' . $idRT,
-                    default => 'public/files/documentOther/Nasabah/' . $data['id_userdetail'],
+                    1 => 'files/documentUser/KetuaRW/' . $data['id_userdetail'],
+                    2 => 'files/documentUser/BankSampah/RT0' . $idRT,
+                    default => 'files/documentOther/Nasabah/' . $data['id_userdetail'],
                 };
 
                 // Simpan file dengan nama yang sudah dikustomisasi
-                $files->storeAs($folderPath, $original_filesname);
+                $files->storeAs($folderPath, $original_filesname, 'public');
 
                 // ELOQUENT
                 $document = new DocumentArchiver();
@@ -99,16 +99,16 @@ class DocumentArchiversServices
 
                 $role = Auth::user()->user_detail->id_roles;
                 $folderPath = match ($role) {
-                    1       => 'public/files/documentUser/KetuaRW/' . $data['id_userdetail'],
-                    2       => 'public/files/documentUser/BankSampah/RT0' . $idRT,
-                    default => 'public/files/documentOther/Nasabah/' . $data['id_userdetail'],
+                    1       => 'files/documentUser/KetuaRW/' . $data['id_userdetail'],
+                    2       => 'files/documentUser/BankSampah/RT0' . $idRT,
+                    default => 'files/documentOther/Nasabah/' . $data['id_userdetail'],
                 };
 
 
-                Storage::delete($folderPath . '/' . $document->original_filesname);
+                Storage::disk('public')->delete($folderPath . '/' . $document->original_filesname);
 
                 // 3. Simpan File Baru
-                $files->storeAs($folderPath, $original_filesname);
+                $files->storeAs($folderPath, $original_filesname, 'public');
 
                 // Set data file ke objek
                 $document->original_filesname = $original_filesname;
@@ -132,16 +132,17 @@ class DocumentArchiversServices
 
             $role = Auth::user()->user_detail->id_roles;
             $folder = match ($role) {
-                1       => 'public/files/documentUser/KetuaRW/',
-                2       => 'public/files/documentUser/BankSampah/RT0' . $idRT,
-                default => 'public/files/documentOther/Nasabah/',
+                1       => 'files/documentUser/KetuaRW/',
+                2       => 'files/documentUser/BankSampah/RT0' . $idRT,
+                default => 'files/documentOther/Nasabah/',
             };
 
             $filePath = $folder . '/' . $document->original_filesname;
 
-            if (Storage::exists($filePath)) {
-                Storage::delete($filePath);
+            if (Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
             }
+
 
             return $document->delete();
         });

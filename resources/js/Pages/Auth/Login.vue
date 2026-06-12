@@ -111,7 +111,20 @@ const showLogoutNotice = ref(!!props.messageLogout);
 
 const showMessageNotice = ref(!!props.message);
 
+const isDark = ref(false)
+const showIOSInstall = ref(false)
+
+
 onMounted(() => {
+    const saved = localStorage.getItem('darkMode')
+
+    if (saved !== null) {
+        isDark.value = saved === 'true'
+    } else {
+        isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+    }
+    console.log(isDark.value)
+
     slideInterval = setInterval(nextSlide, 5000);
 
     // Daftarkan event resize
@@ -125,7 +138,7 @@ onMounted(() => {
 
     if (shouldExpand === 'true') {
         // 2. Buka menu secara otomatis
-        isExpanded.value = true;
+        isExpanded.value = false;
 
         showPreloader.value = false;
         localStorage.removeItem('is_true');
@@ -152,6 +165,17 @@ onMounted(() => {
             showMessageNotice.value = false;
         }, 5000);
     }
+
+
+    const ua = navigator.userAgent
+    const isMobile = /android|iphone|ipod|blackberry|iemobile|opera mini/i.test(ua)
+    const isTablet = /ipad|android(?!.*mobile)/i.test(ua)
+
+    if (isMobile || isTablet) {
+        showPreloader.value = false;
+    }
+
+
 });
 
 
@@ -174,8 +198,8 @@ const toggleVisibility = (field) => {
 
         <Head title="Login - SI BANKSA" />
 
-        <div class="flex flex-col lg:flex-row transition-all  w-full min-h-[650px] relative overflow-hidden bg-white dark:bg-gray-900 rounded-3xl"
-            :class="(!isExpanded && Object.keys(form.errors).length > 0) ? 'max-h-none' : 'max-h-[650px]'">
+        <div class="flex flex-col lg:flex-row transition-all  w-full sm:min-h-[750px] lg:min-h-[650px] relative overflow-hidden bg-white dark:bg-gray-900 rounded-3xl"
+            :class="(!isExpanded && Object.keys(form.errors).length > 0) ? 'max-h-none' : 'sm:max-h-[750px] lg:max-h-[650px]'">
 
             <div class="relative hidden lg:block transition-all duration-700 ease-in-out bg-emerald-900 z-20"
                 :class="isExpanded ? 'w-full' : 'w-[40%]'">
@@ -227,17 +251,38 @@ const toggleVisibility = (field) => {
                 </div>
             </div>
 
-            <div class="transition-all duration-700 ease-in-out flex flex-col justify-center overflow-y-auto custom-scrollbar"
+            <div class="transition-all duration-700 ease-in-out flex flex-col justify-center overflow-y-auto"
                 :class="isExpanded ? 'w-0 opacity-0 invisible' : 'w-full lg:w-[60%] p-8 sm:p-12 opacity-100 visible'">
                 <div class="mb-8">
                     <div class="flex items-center justify-between mb-4">
                         <h1 class="text-2xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">
                             <span class="text-emerald-600">SI</span> BANKSA
                         </h1>
-                        <Link href="/register"
-                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg">
-                            Daftar Akun
-                        </Link>
+                        <div class="flex space-x-2 items-center">
+                            <Link href="/welcome">
+                                <div
+                                    class="md:hidden block p-2 rounded-full dark:bg-slate-800 bg-slate-100 shadow-slate-100 shadow-lg dark:shadow-slate-800">
+                                    <svg width="16" height="16" viewBox="0 0 100 105"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <polygon points="50,0 100,45 0,45" :fill="isDark ? '#ffffff' : '#10b981'" />
+                                        <rect x="8" y="45" width="84" height="60" rx="3"
+                                            :fill="isDark ? '#ffffff' : '#10b981'" />
+                                        <rect x="18" y="55" width="22" height="22" rx="2"
+                                            :fill="isDark ? '#6b7280' : '#ffffff'" />
+                                        <rect x="60" y="55" width="22" height="22" rx="2"
+                                            :fill="isDark ? '#6b7280' : '#ffffff'" />
+                                        <rect x="33" y="72" width="34" height="33" rx="2"
+                                            :fill="isDark ? '#6b7280' : '#ffffff'" />
+                                        <circle cx="61" cy="90" r="2.5" :fill="isDark ? '#ffffff' : '#10b981'" />
+                                    </svg>
+                                </div>
+                            </Link>
+                            <Link href="/register"
+                                class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg">
+                                Daftar Akun
+                            </Link>
+                        </div>
+
                     </div>
                     <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">Selamat Datang!</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -245,7 +290,7 @@ const toggleVisibility = (field) => {
                     </p>
                 </div>
 
-                <transition name="fade">
+                <Transition name="fade">
                     <div v-if="showLogoutNotice"
                         class="mb-6 flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl animate-in">
                         <div class="flex items-center gap-3">
@@ -267,9 +312,9 @@ const toggleVisibility = (field) => {
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                </transition>
+                </Transition>
 
-                <transition name="fade">
+                <Transition name="fade">
                     <div v-if="showMessageNotice"
                         class="mb-6 flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl animate-in">
                         <div class="flex items-center gap-3">
@@ -291,7 +336,7 @@ const toggleVisibility = (field) => {
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                </transition>
+                </Transition>
 
                 <FormWrapper formName="formLogin" :errors="form.errors" :processing="form.processing" @submit="submit">
 
@@ -300,33 +345,34 @@ const toggleVisibility = (field) => {
                             <InputLabel for="nama_bank" value="Nama Lengkap" />
                             <input type="text" v-model="form.nama_bank" placeholder="Masukan Nama Lengkap..."
                                 :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['nama_bank'] }"
-                                class="w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold" />
+                                class="w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 dark:border-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold" />
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid lg:grid-cols-2 grid-cols-1 gap-4">
                             <div>
                                 <InputLabel for="id_rt" value="Unit RT" />
                                 <input type="number" v-model="form.id_rt" placeholder="Contoh: 1"
                                     :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_rt'] }"
-                                    class="w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold" />
+                                    class="w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 dark:border-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold" />
                             </div>
                             <div>
                                 <InputLabel for="phone" value="No. Telepon" />
                                 <input type="tel" v-model="form.phone" placeholder="0812..."
                                     :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['phone'] }"
-                                    class="w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold" />
+                                    class="w-full h-12 mt-2 rounded-xl text-black bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 dark:border-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold" />
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between mt-2">
+                        <div class="grid grid-cols-2 items-center justify-between mt-2">
                             <label class="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                 <input type="checkbox" v-model="form.remember"
-                                    class="rounded text-emerald-600 focus:ring-emerald-500 mr-2" />
-                                Remember me
+                                    class="rounded text-emerald-600  focus:ring-emerald-500 mr-2" />
+                                <p class="w-full md:text-base text-xs">Remember me</p>
                             </label>
 
-                            <Link class="dark:text-white text-sm text-gray-600" href="/forgot-password">
-                                Forgot your password?
+                            <Link class="dark:text-white md:text-base text-xs text-end text-gray-600"
+                                href="/forgot-password">
+                                Forgot password?
                             </Link>
                         </div>
                     </div>
@@ -399,7 +445,7 @@ const toggleVisibility = (field) => {
 
                 <p
                     class="mt-8 text-center text-[9px] text-gray-400 uppercase tracking-[0.4em] font-medium border-t border-gray-50 dark:border-gray-800 pt-6">
-                    Security Protocol v2.4 • Gresik 2026
+                    Security Protocol v1.0 • Gresik 2026
                 </p>
             </div>
 
@@ -410,13 +456,6 @@ const toggleVisibility = (field) => {
 
 <style scoped>
 /* Pastikan scrollbar halus jika konten form panjang */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-emerald-500/20 rounded-full;
-}
 
 
 .modern-input {

@@ -188,7 +188,7 @@
                     class="p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-300 dark:border-gray-800">
                     <div class="flex gap-2 items-center bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-1">
                         <input v-model="newMessage" @keyup.enter="sendMessage" placeholder="Ketik pesan..."
-                            class="flex-1 bg-transparent text-black  border-none focus:ring-0 text-sm py-2 dark:text-gray-100 dark:placeholder-gray-500" />
+                            class="flex-1 bg-transparent text-black  border-none text-sm py-2 dark:text-gray-100 dark:placeholder-gray-500" />
                         <button @click="sendMessage" :disabled="!newMessage.trim()"
                             class="w-10 h-10 flex items-center justify-center text-emerald-600 disabled:text-gray-300 dark:disabled:text-gray-600 transition-colors">
                             <i class="fas fa-paper-plane text-lg"></i>

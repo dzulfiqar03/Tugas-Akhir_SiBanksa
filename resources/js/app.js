@@ -19,13 +19,12 @@ axios.interceptors.response.use(
     }
 )
 
-
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => {
+    resolve: async (name) => {
         // Ambil semua file .vue dari kedua folder
-        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
-        const errors = import.meta.glob('./Errors/**/*.vue', { eager: true });
+        const pages = import.meta.glob('./Pages/**/*.vue');
+        const errors = import.meta.glob('./Errors/**/*.vue');
 
         // Cari di folder Pages dulu, kalau tidak ada cari di folder Errors
         const page = pages[`./Pages/${name}.vue`] || errors[`./${name}.vue`];
@@ -34,7 +33,7 @@ createInertiaApp({
             console.error(`Gagal menemukan komponen: ${name}`);
         }
 
-        return page;
+        return (await page()).default
     },
     setup({ el, App, props, plugin }) {
     return createApp({ render: () => h(App, props) })

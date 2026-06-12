@@ -61,9 +61,11 @@ const isPreviewOpen = ref(false);
 const selectedImageUrl = ref('');
 
 const openPreview = (fileName) => {
-    selectedImageUrl.value = typeForm.value === 'Document' ?
-        `/storage/files/documentUser/BankSampah/RT0${props.IDRT}/${fileName}` :
-        `/storage/photo/evidenceUser/BankSampah/RT0${props.IDRT}/${fileName}`;
+    const safeFileName = encodeURIComponent(fileName.trim());
+
+selectedImageUrl.value = typeForm.value === 'Document' ?
+    `/storage/files/documentUser/BankSampah/RT0${props.IDRT}/${safeFileName}` :
+    `/storage/photo/evidenceUser/BankSampah/RT0${props.IDRT}/${safeFileName}`;
     isPreviewOpen.value = true;
 };
 

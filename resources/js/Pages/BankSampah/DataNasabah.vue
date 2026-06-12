@@ -8,8 +8,7 @@ import { computed, ref } from 'vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import 'datatables.net-dt/css/dataTables.dataTables.css';
 import jszip from 'jszip';
-import * as pdfMake from 'pdfmake/build/pdfmake';
-import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+
 
 // ================= DATATABLES =================
 import DataTablesCore from 'datatables.net';
@@ -30,9 +29,11 @@ DataTable.use(ButtonsHtml5)
 DataTable.use(ButtonsPrint)
 DataTable.use(Responsive)
 window.JSZip = jszip;
-const vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
-pdfMake.vfs = vfs;
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+
+pdfMake.vfs = pdfFonts.vfs;
 const props = defineProps({
     nasabah: Array,
     formdata: Object,
@@ -162,43 +163,47 @@ const dtOptions = {
                 });
 
                 config.customize = function (doc) {
-                    Swal.close();
+                       Swal.close();
 
-                    const tableNode = doc.content.find(c => c.table);
-                    if (tableNode) {
-                        tableNode.table.widths = [25, '*', 100];
+    const tableNode = doc.content.find(c => c.table);
+    if (tableNode) {
+        tableNode.table.widths = [25, '*', 100];
 
-                        tableNode.table.body.forEach((row, rowIndex) => {
-                            row.forEach((cell, i) => {
-                                if (row[i] === undefined || row[i] === null) {
-                                    row[i] = { text: '' };
-                                }
+        tableNode.table.body.forEach((row, rowIndex) => {
+            // Pastikan jumlah kolom konsisten (3 kolom: No, Nama, Status)
+            while (row.length < 3) {
+                row.push({ text: '' });
+            }
+            // Potong kalau lebih dari 3
+            row.splice(3);
 
-                                // 2. Terapkan Capitalize (Kecuali baris header indeks 0)
-                                if (rowIndex > 0) {
-                                    let originalText = "";
+            row.forEach((cell, i) => {
+                // Normalisasi cell yang null/undefined
+                if (row[i] === undefined || row[i] === null) {
+                    row[i] = { text: '' };
+                    return; // skip proses capitalize untuk cell kosong
+                }
 
-                                    if (typeof row[i] === 'object') {
-                                        originalText = row[i].text || "";
-                                    } else {
-                                        originalText = row[i].toString();
-                                    }
+                // Capitalize hanya untuk baris data (bukan header)
+                if (rowIndex > 0) {
+                    let originalText = '';
 
-                                    const capitalizedText = originalText.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
-
-                                    if (typeof row[i] === 'object') {
-                                        row[i].text = capitalizedText;
-                                    } else {
-                                        row[i] = capitalizedText;
-                                    }
-                                }
-                            });
-                        });
-
-                        // Layout 'lightHorizontalLines' tidak mendukung class CSS seperti 'capitalize'
-                        tableNode.layout = 'lightHorizontalLines';
+                    if (typeof row[i] === 'object' && row[i] !== null) {
+                        originalText = row[i].text || '';
+                    } else {
+                        originalText = String(row[i]);
+                        row[i] = { text: '' }; // convert ke object dulu
                     }
 
+                    row[i].text = originalText
+                        .toLowerCase()
+                        .replace(/\b\w/g, s => s.toUpperCase());
+                }
+            });
+        });
+
+        tableNode.layout = 'lightHorizontalLines';
+    }
                     // 3. Header & Footer (Sama seperti sebelumnya)
                     const userDetail = page.props.auth.user?.user_detail;
                     doc.content.splice(0, 1, {
