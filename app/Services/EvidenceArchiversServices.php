@@ -48,14 +48,13 @@ class EvidenceArchiversServices
 
                         // Store File
                         $role = Auth::user()->user_detail->id_roles;
-                        $folderPath =   match ($role) {
-                            1    => 'public/photo/evidenceUser/KetuaRW/' . $data['id_userdetail'],
-                            2 => 'public/photo/evidenceUser/BankSampah/RT0' . $idRT,
-                            default => 'public/photo/evidenceOther/Nasabah/' . $data['id_userdetail'],
+                      $folderPath =   match ($role) {
+                            1    => 'photo/evidenceUser/KetuaRW/' . $data['id_userdetail'],
+                            2 => 'photo/evidenceUser/BankSampah/RT0' . $idRT,
+                            default => 'photo/evidenceOther/Nasabah/' . $data['id_userdetail'],
                         };
 
-                        $photo->storeAs($folderPath, $original_photoname);
-
+                        $photo->storeAs($folderPath, $original_photoname, 'public');
 
                     // ELOQUENT
                     $evidence = new EvidenceArchiver();
@@ -89,16 +88,16 @@ class EvidenceArchiversServices
 
 
                 $role = Auth::user()->user_detail->id_roles;
-                $folderPath = match ($role) {
-                    1       => 'public/photo/evidenceUser/KetuaRW/' . $data['id_userdetail'],
-                    2       => 'public/photo/evidenceUser/BankSampah/' . $data['id_userdetail'],
-                    default => 'public/photo/evidenceUser/Nasabah/' . $data['id_userdetail'],
+                        $folderPath = match ($role) {
+                    1       => 'photo/evidenceUser/KetuaRW/' . $data['id_userdetail'],
+                    2       => 'photo/evidenceUser/BankSampah/' . $data['id_userdetail'],
+                    default => 'photo/evidenceUser/Nasabah/' . $data['id_userdetail'],
                 };
 
 
-                Storage::delete($folderPath . '/' . $evidence->original_photoname);
+                Storage::disk('public')->delete($folderPath . '/' . $evidence->original_photoname);
 
-                $photo->storeAs($folderPath, $original_photoname);
+                $photo->storeAs($folderPath, $original_photoname, 'public');
 
                 $evidence->original_photoname = $original_photoname;
                 $evidence->encrypted_photoname = $encrypted_photoname;
@@ -120,13 +119,15 @@ class EvidenceArchiversServices
             $evidence = EvidenceArchiver::findOrFail($id);
 
             $role = Auth::user()->user_detail->id_roles;
-            $folder = match ($role) {
-                1       => 'public/photo/evidenceUser/KetuaRW/',
-                2       => 'public/photo/evidenceUser/BankSampah/',
-                default => 'public/photo/evidenceOther/Nasabah/',
+
+            $idRT = Auth::user()->user_detail->id_rt;
+           $folder = match ($role) {
+                1       => 'photo/evidenceUser/KetuaRW/',
+                2       => 'photo/evidenceUser/BankSampah/RT0' . $idRT,
+                default => 'photo/evidenceOther/Nasabah/',
             };
 
-            $filePath = $folder . $evidence->id_userdetail . '/' . $evidence->original_photoname;
+            $filePath = $folder . '/' . $evidence->original_photoname;
 
             // 3. Hapus file fisik dari storage
             if (Storage::exists($filePath)) {

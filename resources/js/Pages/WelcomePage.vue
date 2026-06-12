@@ -99,7 +99,7 @@
                                     {{ slide.title }}
                                 </h2>
                                 <p class="text-emerald-100/70 text-sm md:text-lg font-light max-w-xl">{{ slide.desc
-                                    }}</p>
+                                }}</p>
                             </div>
                         </div>
                     </div>
@@ -221,7 +221,8 @@
                             </h2>
                             <p
                                 class="text-slate-600 dark:text-slate-400 text-base md:text-lg leading-relaxed font-light italic">
-                                Sistem informasi SiBanksa memungkinkan monitoring real-time terhadap Bank Sampah. Kami membangun kemandirian ekonomi melalui digitalisasi sampah anorganik.
+                                Sistem informasi SiBanksa memungkinkan monitoring real-time terhadap Bank Sampah. Kami
+                                membangun kemandirian ekonomi melalui digitalisasi sampah anorganik.
                             </p>
                         </div>
 
@@ -376,7 +377,7 @@
 
                                                 <h1 class="text-white items-center">{{ unit.is_online ? 'Online' :
                                                     'Offline'
-                                                    }}</h1>
+                                                }}</h1>
 
                                             </div>
 
@@ -461,7 +462,7 @@
                                         :class="growthSampah.isUp ? 'text-emerald-500' : 'text-red-500'">
 
                                         <span class="text-md font-bold text-black dark:text-white/50">
-                                            {{ growthSampah.value > 100 ? 'Lonjakan Pesat' : 'Pertumbuhan' }}
+                                            {{ growthSampah.value > 100 ? 'Lonjakan Pesat ' : 'Pertumbuhan ' }}
                                         </span>
                                     <h2 v-if="growthSampah.value <= 100" :data-target="growthSampah.value"
                                         class="counter {{ growthSampah.value > 0 ? 'text-green-500' : 'text-red-500' }}">
@@ -494,7 +495,9 @@
             </section>
 
 
-            <section id="waste-list" class="py-24 bg-white dark:bg-gray-900">
+            <section id="waste-list" :class="[
+                sampah.length === 0 ? 'pt-24 pb-2' : 'py-24'
+            ]" class=" bg-white dark:bg-gray-900">
                 <div class="max-w-7xl mx-auto px-6">
 
                     <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
@@ -506,6 +509,8 @@
                                 Katalog <span class="text-transparent stroke-text opacity-30">Sampah.</span>
                             </h2>
                         </div>
+
+
 
                         <div
                             class="flex p-1.5 bg-gray-100 dark:bg-white/5 rounded-full border border-slate-200 dark:border-white/10 w-fit">
@@ -522,42 +527,115 @@
                         </div>
                     </div>
 
-                    <div class="relative">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            <div v-for="value in displayData" :key="value.id"
-                                class="group reveal p-10 bg-gray-50 dark:bg-white/5 rounded-[3rem] border border-transparent hover:border-emerald-500/30 transition-all duration-500 animate-in fade-in zoom-in">
+                    <template v-if="sampah.length === 0">
+                        <div class="flex flex-col items-center justify-center py-16 text-center px-4">
 
-                                <div class="flex justify-between items-start mb-8">
-                                    <div :class="activeTab === 'Daur Ulang' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'"
-                                        class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
-                                        <i :class="value.icon || 'fas fa-box'"></i>
+                            <div class="w-full max-w-sm mx-auto aspect-[16/9] mb-8">
+                                <svg class="w-full h-full" viewBox="0 0 680 380" version="1.1"
+                                    xmlns="http://www.w3.org/2000/svg">
+
+                                    <g class="svg-float-tech">
+                                        <path class="st0"
+                                            d="M120.3,315.6c-45.7-22.1-85.1-65.7-93.5-115.6C-1.6,150.1,28,95.5,75.3,64.2C122.7,33,186,25.8,245.3,42 c59.3,16.1,111.4,56.9,139.5,108.9c28.1,52.1,30.3,115.1,6.5,168.4C367.6,372.6,277,401.3,195.4,383 C156.4,374.3,124.6,350.2,120.3,315.6z" />
+
+                                        <g transform="translate(420, 150) scale(1.1)">
+                                            <rect x="0" y="0" class="st1" width="120" height="140" rx="6" />
+                                            <rect x="10" y="10" class="st3" width="100" height="20" rx="3" />
+                                            <rect x="10" y="40" class="st3" width="100" height="20" rx="3" />
+                                            <circle class="st3" cx="20" cy="110" r="8" />
+                                            <rect x="35" y="105" class="st3" width="75" height="10" rx="3" />
+                                        </g>
+
+                                        <g transform="translate(180, 20)">
+                                            <rect x="0" y="0" class="st2" width="220" height="340" rx="20" />
+                                            <rect x="10" y="10" class="st3" width="200" height="320" rx="15" />
+                                            <rect x="75" y="15" class="st2" width="70" height="10" rx="5" />
+
+                                            <g transform="translate(25, 60)">
+                                                <rect x="0" y="0" class="st0" width="170" height="20" rx="4" />
+                                                <rect x="0" y="30" class="st1" width="120" height="20" rx="4" />
+                                                <path class="st2"
+                                                    d="M85,80c-24.9,0-45,20.1-45,45s20.1,45,45,45s45-20.1,45-45S109.9,80,85,80z M85,150c-13.8,0-25-11.2-25-25 s11.2-25,25-25s25,11.2,25,25S98.8,150,85,150z" />
+                                                <circle class="st1" cx="85" cy="125" r="10" />
+                                                <rect x="0" y="190" class="st0" width="170" height="60" rx="6" />
+                                                <circle class="st2" cx="30" cy="220" r="15" />
+                                                <rect x="60" y="210" class="st2" width="90" height="10" rx="3" />
+                                                0
+                                            </g>
+                                        </g>
+
+                                        <g transform="translate(30, 200) scale(1.1)">
+                                            <path class="st1"
+                                                d="M10,40h100v40c0,5.5-4.5,10-10,10H20c-5.5,0-10-4.5-10-10V40z" />
+                                            <path class="st2"
+                                                d="M100,40v15c0,5.5,4.5,10,10,10h10c5.5,0,10-4.5,10-10V40H100z" />
+                                            <circle class="st2" cx="30" cy="90" r="15" />
+                                            <circle class="st3" cx="30" cy="90" r="7" />
+                                            <circle class="st2" cx="90" cy="90" r="15" />
+                                            <circle class="st3" cx="90" cy="90" r="7" />
+                                            <rect x="20" y="50" class="st3" width="60" height="15" rx="3" />
+                                        </g>
+
+                                        <g transform="translate(580, 80) scale(0.6)" class="svg-float-tech"
+                                            style="animation-delay: 2s">
+                                            <rect x="0" y="0" class="st0" width="80" height="100" rx="6" />
+                                            <circle class="st1" cx="20" cy="20" r="8" />
+                                            <rect x="35" y="15" class="st1" width="35" height="10" rx="3" />
+                                        </g>
+                                    </g>
+                                </svg>
+                            </div>
+
+                            <h3 class="mt-4 text-lg font-semibold text-gray-800 dark:text-white max-w-md mx-auto">
+                                Belum ada bank sampah yang mendata sampah
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                                Pantau terus ya! Data logistik dan database akan diperbarui secara *real-time* saat unit
+                                mulai mencatat.
+                            </p>
+
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="relative">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                <div v-for="value in displayData" :key="value.id"
+                                    class="group reveal p-10 bg-gray-50 dark:bg-white/5 rounded-[3rem] border border-transparent hover:border-emerald-500/30 transition-all duration-500 animate-in fade-in zoom-in">
+
+                                    <div class="flex justify-between items-start mb-8">
+                                        <div :class="activeTab === 'Daur Ulang' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'"
+                                            class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                                            <i :class="value.icon || 'fas fa-box'"></i>
+                                        </div>
+                                        <span
+                                            class="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">ID-{{
+                                                value.id }}</span>
                                     </div>
-                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">ID-{{
-                                        value.id }}</span>
-                                </div>
 
-                                <h4
-                                    class="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-400 transition-colors mb-2 italic">
-                                    {{ value.nama_sampah }}
-                                </h4>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400 italic leading-relaxed">
-                                    Kategori: {{ value.kategori }}
-                                </p>
+                                    <h4
+                                        class="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-400 transition-colors mb-2 italic">
+                                        {{ value.nama_sampah }}
+                                    </h4>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 italic leading-relaxed">
+                                        Kategori: {{ value.kategori }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div v-if="filteredSampah.length > itemsPerPage" class="mt-16 flex justify-center">
+                                <button @click="nextSlide"
+                                    class="group flex items-center gap-4 px-10 py-4 bg-[#1a3a2a] dark:bg-white/5 rounded-full border border-white/10 hover:bg-emerald-600 transition-all duration-500 shadow-xl">
+                                    <span class="text-[10px] font-black text-white uppercase tracking-[0.3em]">Muat
+                                        Lainnya</span>
+                                    <div
+                                        class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center group-hover:translate-x-2 transition-transform">
+                                        <i class="fas fa-chevron-right text-[10px] text-white"></i>
+                                    </div>
+                                </button>
                             </div>
                         </div>
+                    </template>
 
-                        <div v-if="filteredSampah.length > itemsPerPage" class="mt-16 flex justify-center">
-                            <button @click="nextSlide"
-                                class="group flex items-center gap-4 px-10 py-4 bg-[#1a3a2a] dark:bg-white/5 rounded-full border border-white/10 hover:bg-emerald-600 transition-all duration-500 shadow-xl">
-                                <span class="text-[10px] font-black text-white uppercase tracking-[0.3em]">Muat
-                                    Lainnya</span>
-                                <div
-                                    class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center group-hover:translate-x-2 transition-transform">
-                                    <i class="fas fa-chevron-right text-[10px] text-white"></i>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
 
                 </div>
             </section>
@@ -1027,6 +1105,62 @@ const goToLogin = () => {
 </script>
 
 <style scoped>
+@keyframes float-tech {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-8px) rotate(1deg);
+    }
+
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
+
+@keyframes pulse-fast {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.svg-float-tech {
+    animation: float-tech 5s ease-in-out infinite;
+}
+
+.svg-pulse-fast {
+    animation: pulse-fast 1s ease-in-out infinite;
+}
+
+.st0 {
+    fill: #f1f5f9;
+}
+
+/* Background Shape */
+.st1 {
+    fill: #0a1a12;
+}
+
+/* Accent Green */
+.st2 {
+    fill: #10b981;
+}
+
+/* Main Green */
+.st3 {
+    fill: #FFFFFF;
+}
+
+/* White Details */
 .stroke-text {
     -webkit-text-stroke: 1px currentColor;
 }

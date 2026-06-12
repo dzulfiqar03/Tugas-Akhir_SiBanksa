@@ -62,3 +62,4 @@ Route::middleware(['auth', 'session'])->group(function () {
 });
 
 Route::fallback([PageController::class, 'pageNotFound'])->name('fallback');
+Route::get('/splash', fn() => inertia('Splash'))->name('splash');

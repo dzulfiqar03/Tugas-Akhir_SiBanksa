@@ -1,5 +1,14 @@
 <template>
 
+    <div v-if="showIOSInstall"
+         class="fixed bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg p-4 z-50 flex items-center gap-3">
+        <img src="/main-logo.svg" class="w-10 h-10" />
+        <div class="flex-1 text-sm">
+            <p class="font-semibold">Install SiBanksa</p>
+            <p class="text-gray-500">Tap <span class="text-blue-500">⎋</span> lalu "Add to Home Screen"</p>
+        </div>
+        <button @click="showIOSInstall = false" class="text-gray-400 text-lg">✕</button>
+    </div>
 
     <div :class="{ 'dark': isDark }">
 
@@ -134,6 +143,7 @@ import Navbar from '@/Components/Navbar.vue'
 import Preloader from '@/Components/Preloader.vue'
 import OfflinePage from '@/Errors/404.vue'
 import SessionExpired from '@/Errors/SessionExpired.vue'
+import Splash from '@/Pages/Splash.vue'
 
 const props = defineProps({
     sidebardata: Object,
@@ -223,6 +233,7 @@ const playNotification = () => {
 window.playNotif = playNotification;
 
 const isSessionExpired = ref(false)
+const showIOSInstall = ref(false)
 
 onMounted(() => {
     updateTheme()
@@ -255,6 +266,14 @@ onMounted(() => {
     router.on('error', (event) => {
         console.log('Router error:', event)
     })
+
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+    const isStandalone = window.navigator.standalone === true
+
+    // Tampilkan hanya di iOS Safari dan belum diinstall
+    if (isIOS && !isStandalone) {
+        showIOSInstall.value = true
+    }
 })
 
 const isOnline = ref(navigator.onLine);

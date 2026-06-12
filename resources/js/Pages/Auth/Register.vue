@@ -142,8 +142,12 @@ const handlePasswordSync = (fieldName) => {
                     </div>
 
 
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">Selamat Datang!</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Gabung dengan kami menjadi partisipan penyelamat lingkungan.
+                    </p>
 
-                    <div class="flex p-1 mt-5 bg-gray-100 dark:bg-gray-800 rounded-xl mb-6">
+                    <div class="flex p-1 mt-5 bg-gray-100 dark:bg-gray-800 rounded-xl mb-3">
                         <button @click="changeTab('BankSampah')"
                             :class="showForm === 'BankSampah' ? 'bg-white dark:bg-gray-700 shadow-sm text-emerald-600' : 'text-gray-500'"
                             class="flex-1 py-2.5 rounded-lg transition-all font-bold text-xs uppercase tracking-widest">
@@ -162,14 +166,14 @@ const handlePasswordSync = (fieldName) => {
 
                     <FormWrapper formName="formRegister" :errors="form.errors" :processing="form.processing"
                         @submit="submit">
-                        <div class="flex flex-wrap  items-center gap-4 mb-8">
+                        <div class="flex flex-wrap  items-center gap-4 mb-6">
                             <div class="flex items-center gap-2 cursor-pointer" @click="step = 1">
                                 <span :class="step >= 1 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
                                     class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">1</span>
                                 <span :class="step >= 1 ? 'text-emerald-700' : 'text-gray-400'"
                                     class="text-[10px] font-bold uppercase tracking-widest">Data Diri</span>
                             </div>
-                            <div class="h-px bg-gray-200 flex-1"></div>
+                            <div :class="step >= 2 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px flex-1"></div>
                             <div class="flex items-center gap-2 cursor-pointer" @click="step = 2">
                                 <span :class="step >= 2 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
                                     class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all">2</span>
@@ -191,7 +195,7 @@ const handlePasswordSync = (fieldName) => {
                         <div v-if="step === 1" :class="showForm === 'BankSampah' ? 'space-y-5' : 'space-y-2'">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in">
                                 <div v-for="field in filteredFields" :key="field.name"
-                                    :class="field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
+                                    :class="field.type === 'radio' ? 'lg:col-span-2 col-span-1' : 'col-span-1'">
 
 
                                     <div v-if="field.name === 'rt'" class="col-span-full">
@@ -228,7 +232,7 @@ const handlePasswordSync = (fieldName) => {
                                                 <input type="radio" v-model="form.nasabah[field.name]" :value="idx + 1"
                                                     class="peer sr-only">
                                                 <div
-                                                    class="py-2 px-4 text-gray-600  dark:text-white rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
+                                                    class="py-2 px-4 text-gray-600  dark:text-white border-gray-200 dark:border-gray-700 rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
                                                     {{ opt }}
                                                 </div>
                                             </label>
@@ -236,7 +240,7 @@ const handlePasswordSync = (fieldName) => {
 
                                     </div>
                                     <div v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'"
-                                        class="col-span-1">
+                                        class="col-span-full">
                                         <InputLabel :for="field.name" :value="field.title" />
 
 
@@ -245,7 +249,7 @@ const handlePasswordSync = (fieldName) => {
                                             v-model="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'][field.name]"
                                             :name="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'][field.name]"
                                             :placeholder="field.placeholder"
-                                            class="w-full text-black  h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold"
+                                            class="w-full text-black  h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm border-gray-200 dark:border-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold"
                                             :class="{
                                                 'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`]
                                             }">
@@ -272,7 +276,7 @@ const handlePasswordSync = (fieldName) => {
                                                 v-model="form[showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'][field.name]"
                                                 :placeholder="field.placeholder"
                                                 @input="field.type === 'email' ? handleEmailAutocomplete(field.name) : handlePasswordSync(field.name)"
-                                                class="w-full h-11 text-sm rounded-xl text-black  bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold"
+                                                class="w-full h-11 text-sm rounded-xl text-black  bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-200 dark:border-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold"
                                                 :class="{
                                                     'border-red-500 ring-1 ring-red-500': form.errors[`${showForm === 'BankSampah' ? 'bankSampah' : 'nasabah'}.${field.name}`]
                                                 }" />

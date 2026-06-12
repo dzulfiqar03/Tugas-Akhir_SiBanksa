@@ -102,10 +102,8 @@ class UserChatController extends Controller
             if ($fullName === 'AI Banksa') {
                 $text = ['Rekening', 'Total', 'Setoran', 'Bulan', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW'];
 
-                $wordsInMessage = preg_split('/\s+/', $message, -1, PREG_SPLIT_NO_EMPTY);
-
-                $keywordsFromDb = array_map('Str::lower', $text);
-
+                $wordsInMessage = array_map('strtolower', preg_split('/\s+/', $message, -1, PREG_SPLIT_NO_EMPTY));
+                $keywordsFromDb = array_map('strtolower', $text);
                 $matches = array_intersect($wordsInMessage, $keywordsFromDb);
 
                 if ($matches) {
@@ -117,22 +115,22 @@ class UserChatController extends Controller
                         $botResponse = "Rekening Anda:" . number_format($hasil, 0, ',', '.');
                     } elseif (in_array('setoran', $matches)) {
 
-                        if (auth()->user()->user_detail->id_roles===2) {
-                       $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
-                            ->whereHas('setoran', function ($query) {
-                                $query->where('id_userdetail', Auth::user()->user_detail->id);
-                            })
-                            ->latest() // Mengurutkan dari yang terbaru
-                            ->get();
-                        } else{
+                        if (auth()->user()->user_detail->id_roles === 2) {
                             $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
-                            ->whereHas('setoran', function ($query) {
-                                $query->whereHas('user_detail', function ($q) {
-                                    $q->where('id', Auth::user()->user_detail->id);
-                                });
-                            })
-                            ->latest() // Mengurutkan dari yang terbaru
-                            ->get();
+                                ->whereHas('setoran', function ($query) {
+                                    $query->where('id_userdetail', Auth::user()->user_detail->id);
+                                })
+                                ->latest() // Mengurutkan dari yang terbaru
+                                ->get();
+                        } else {
+                            $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+                                ->whereHas('setoran', function ($query) {
+                                    $query->whereHas('user_detail', function ($q) {
+                                        $q->where('id', Auth::user()->user_detail->id);
+                                    });
+                                })
+                                ->latest() // Mengurutkan dari yang terbaru
+                                ->get();
                         }
 
 
@@ -146,7 +144,6 @@ class UserChatController extends Controller
                         in_array('bulan', $matches) &&
                         in_array('sekarang', $matches)
                     ) {
-
                     } elseif (in_array('jumlah', $matches)) {
                         if (in_array(needle: 'rw', haystack: $matches)) {
                             dd('rw');
@@ -300,3 +297,267 @@ class UserChatController extends Controller
         }
     }
 }
+
+
+// <?php
+
+// namespace App\Http\Controllers\Admin\BankSampah;
+
+// use App\Http\Controllers\Controller;
+// use App\Http\Controllers\GrocController;
+// use App\Http\Resources\DataResources;
+// use App\Models\BankSampah\PencatatanSetoran;
+// use App\Models\BankSampah\PencatatanSetoranItems;
+// use App\Models\BankSampah\Sampah;
+// use App\Models\User;
+// use App\Models\UserBot;
+// use App\Models\UserChat;
+// use App\Models\UserDetail;
+// use App\Notifications\Admin\ChatSendNotif;
+// use App\Services\ChatServices;
+// use App\Services\GroqServices;
+// use App\Services\KetuaRW\KelolaBankSampahServices;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\Auth;
+// use Illuminate\Support\Str;
+// use Inertia\Inertia;
+
+// class UserChatController extends Controller
+// {
+//     /**
+//      * Display a listing of the resource.
+//      */
+
+//     public function __construct(protected GroqServices $groqServices, protected KelolaBankSampahServices $kelolaBankSampahServices, protected ChatServices $chatServices) {}
+//     public function index()
+//     {
+//         $menu = (new DataResources(null))->toArray(request());
+
+//         $formattedChats = $this->chatServices->groupedMessage()->values();
+
+//         $botMessages = $this->chatServices->getBotMessage();
+
+//         $aiRoom = [
+//             'id' => 'AI_BOT', // ID Unik sebagai penanda
+//             'fullName' => 'AI Banksa',
+//             'email' => 'ai.assistant@banksampah.com',
+//             'rt' => '00',
+//             'online' => 'Online', // AI selalu online
+//             'countUnreadMessage' => 0,
+//             'imageCount' => 0,
+//             'documentCount' => 0,
+//             'user_chat' => $botMessages->map(fn($m) => [
+//                 'id' => $m->id,
+//                 'is_ai' => true, // Penanda untuk UI
+//                 'sender_id' => 'AI_BOT',
+//                 'message' => $m->bot_response, // Jawaban AI
+//                 'user_msg' => $m->chat,         // Pertanyaan User
+//                 'time' => $m->created_at->format('H:i'),
+//             ])->values()
+//         ];
+
+//         $finalChatList = $formattedChats->values()->toArray();
+//         array_unshift($finalChatList, $aiRoom);
+
+//         // Di Controller Index
+//         return Inertia::render('BankSampah/Chat', [
+//             'sidebardata' => $menu,
+//             'allNasabah'  => $finalChatList,
+//             'nasabahList' => UserDetail::with(['user_log'])->orderByRaw('fullName')->get()->map(function ($u) {
+//                 $lastLog = $u->user_log->sortByDesc('id')->first();
+
+//                 $isOnline = ($lastLog && $lastLog->action === 'LOGIN');
+
+//                 return [
+//                     'id' => $u->id_user,
+//                     'fullName' => $u->fullName,
+//                     'online' => $isOnline ? 'Online' : 'Offline'
+//                 ];
+//             }),
+
+
+//         ]);
+//     }
+
+//     /**
+//      * Show the form for creating a new resource.
+//      */
+//     public function create()
+//     {
+//         //
+//     }
+
+//     /**
+//      * Store a newly created resource in storage.
+//      */
+//     public function store(Request $request, $id)
+//     {
+//         try {
+//             $message  = $request->message;
+//             $fullName = $request->name;
+
+//             if ($fullName !== 'AI Banksa') {
+//                 return;
+//             }
+
+//             $text         = ['Rekening', 'Total', 'Setoran', 'Bulan', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW'];
+//             $wordsInMessage = array_map('strtolower', preg_split('/\s+/', $message, -1, PREG_SPLIT_NO_EMPTY));
+//             $keywordsFromDb = array_map('strtolower', $text);
+//             $matches        = array_intersect($wordsInMessage, $keywordsFromDb);
+
+//             $contextData  = '';
+//             $userDetail   = Auth::user()->user_detail;
+
+//             // --- Ambil data DB sesuai keyword ---
+//             if (in_array('setoran', $matches)) {
+
+//                 if ($userDetail->id_roles === 2) {
+//                     $items = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+//                         ->whereHas('setoran', fn($q) => $q->where('id_userdetail', $userDetail->id))
+//                         ->latest()->get();
+//                 } else {
+//                     $items = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+//                         ->whereHas('setoran', fn($q) => $q->whereHas('user_detail', fn($q2) => $q2->where('id', $userDetail->id)))
+//                         ->latest()->get();
+//                 }
+
+//                 $total       = $items->sum('total_setoran');
+//                 $bulanIni    = $items->filter(fn($i) => $i->created_at->isCurrentMonth())->sum('total_setoran');
+
+//                 $contextData .= "Total setoran keseluruhan nasabah ini: Rp " . number_format($total, 0, ',', '.') . ". ";
+//                 $contextData .= "Total setoran bulan ini: Rp " . number_format($bulanIni, 0, ',', '.') . ". ";
+//             }
+
+//             if (in_array('sampah', $matches) || in_array('jumlah', $matches)) {
+//                 $jumlahSampah = Sampah::where('id_userdetail', $userDetail->id)->count();
+//                 $contextData .= "Jumlah jenis sampah di RT nasabah ini: " . $jumlahSampah . " jenis. ";
+//             }
+
+//             if (in_array('rekening', $matches)) {
+//                 $angkaSaja   = filter_var($message, FILTER_SANITIZE_NUMBER_INT);
+//                 $hasil        = str_replace(['.', ','], '', $angkaSaja);
+//                 $contextData .= "Nomor rekening yang disebutkan: " . $hasil . ". ";
+//             }
+
+//             if (in_array('rw', $matches)) {
+//                 // tambah query RW sesuai kebutuhan
+//                 $contextData .= "Pengguna menanyakan info RW. ";
+//             }
+
+
+
+
+//             // --- Kirim ke Groq ---
+
+//             $botResponse = $this->groqServices->ask($message, $contextData ?: 'Tidak ada data spesifik ditemukan.');
+//             $this->chatServices->createChatBot([
+//                 'id_userdetail' => $userDetail->id,
+//                 'chat'          => $message,
+//                 'bot_response'  => $botResponse,
+//             ]);
+//         } catch (\Exception $e) {
+//             return back()->with('error', $e->getMessage());
+//         }
+//     }
+
+//     /**
+//      * Display the specified resource.
+//      */
+//     public function show(UserChat $userChat)
+//     {
+//         //
+//     }
+
+//     /**
+//      * Show the form for editing the specified resource.
+//      */
+//     public function edit(UserChat $userChat)
+//     {
+//         //
+//     }
+
+//     /**
+//      * Update the specified resource in storage.
+//      */
+//     public function update(Request $request, $id)
+//     {
+//         try {
+//             $user = Auth::user();
+//             $myDetail = $user->user_detail;
+
+//             $targetUser = User::with('user_detail')->find($id);
+
+//             if (!$targetUser || !$targetUser->user_detail) {
+//                 throw new \Exception("Penerima tidak ditemukan.");
+//             }
+
+//             $recipientDetailId = $targetUser->user_detail->id;
+
+//             $this->chatServices->updateChat($request->id, [
+//                 'id_userdetail' => $recipientDetailId,
+//                 'sender_id'     => $user->id,
+//                 'message'       => $request->message,
+//                 'time'          => now()->format('H:i'),
+//                 'read_at'          => now()->format('H:i'),
+//                 'is_read' => true
+//             ]);
+
+//             return redirect()->back();
+//         } catch (\Exception $e) {
+//             return back()->with('error', $e->getMessage());
+//         }
+//     }
+
+//     /**
+//      * Remove the specified resource from storage.
+//      */
+//     public function destroy($id)
+//     {
+//         try {
+//             $this->chatServices->deleteChat($id);
+//             return redirect()->back()->with('message', 'Data berhasil dihapus');
+//         } catch (\Exception $e) {
+//             return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
+//         }
+//     }
+
+//     public function deleteRoomChat($id)
+//     {
+//         try {
+//             $this->chatServices->deleteRoomChat($id);
+//             return redirect()->back()->with('message', 'Data berhasil dihapus');
+//         } catch (\Exception $e) {
+//             return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
+//         }
+//     }
+
+//     public function readChat(Request $request, $id)
+//     {
+//         try {
+//             $user = Auth::user();
+//             $myDetail = $user->user_detail;
+
+//             $targetUser = User::with('user_detail')->find($id);
+
+//             if (!$targetUser || !$targetUser->user_detail) {
+//                 throw new \Exception("Penerima tidak ditemukan.");
+//             }
+
+//             $recipientDetailId = $targetUser->user_detail->id;
+
+//             $this->chatServices->readChat($id, [
+//                 'id_userdetail' => $recipientDetailId,
+//                 'sender_id'     => $user->id,
+//                 'message'       => $request->message,
+//                 'time'          => now()->format('H:i'),
+//                 'read_at'          => now()->format('H:i'),
+//                 'is_read' => true
+//             ]);
+
+//             return redirect()->back();
+//         } catch (\Exception $e) {
+//             return back()->with('error', $e->getMessage());
+//         }
+//     }
+// }
+
