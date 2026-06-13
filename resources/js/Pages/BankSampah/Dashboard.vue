@@ -1168,12 +1168,12 @@ const exportAsImage = async () => {
                         </h3>
                         <div class="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-xl text-xs">
                             <button @click="filterTime = 'Monthly'"
-                                :class="filterTime === 'Monthly' ? 'bg-white dark:bg-gray-600 shadow-sm' : 'text-gray-500'"
+                                :class="filterTime === 'Monthly' ? 'bg-white dark:bg-gray-600 shadow-sm dark:text-white' : 'text-gray-500'"
                                 class="px-4 py-1.5 rounded-lg font-semibold transition-all">
                                 Monthly
                             </button>
                             <button @click="filterTime = 'Daily'"
-                                :class="filterTime === 'Daily' ? 'bg-white dark:bg-gray-600 shadow-sm' : 'text-gray-500'"
+                                :class="filterTime === 'Daily' ? 'bg-white dark:bg-gray-600 shadow-sm dark:text-white' : 'text-gray-500'"
                                 class="px-4 py-1.5 rounded-lg font-semibold transition-all">
                                 Daily
                             </button>
@@ -1229,19 +1229,19 @@ const exportAsImage = async () => {
                             <div class="flex flex-wrap gap-2">
                                 <div class="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-xl">
                                     <button @click="filterCategory = 'balance'"
-                                        :class="filterCategory === 'balance' ? 'bg-white dark:bg-gray-600 shadow-sm' : 'text-gray-500'"
+                                        :class="filterCategory === 'balance' ? 'bg-white dark:bg-gray-600 shadow-sm dark:text-white' : 'text-gray-500'"
                                         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
                                         Saldo
                                     </button>
                                     <button @click="filterCategory = 'weight'"
-                                        :class="filterCategory === 'weight' ? 'bg-white dark:bg-gray-600 shadow-sm' : 'text-gray-500'"
+                                        :class="filterCategory === 'weight' ? 'bg-white dark:bg-gray-600 shadow-sm dark:text-white' : 'text-gray-500'"
                                         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
                                         Sampah
                                     </button>
                                 </div>
 
                                 <select v-model="filterLimit"
-                                    class="bg-gray-100 dark:bg-gray-700 border-none rounded-xl text-xs font-bold focus:ring-emerald-500">
+                                    class="bg-gray-100 dark:bg-gray-700 border-none rounded-xl text-xs dark:text-white font-bold focus:ring-emerald-500">
                                     <option :value="5">Top 5</option>
                                     <option :value="10">Top 10</option>
                                 </select>
@@ -1350,7 +1350,7 @@ const exportAsImage = async () => {
 
                         <Calendar :attributes="calendarAttributes" is-expanded @dayclick="handleDayClick"
                             title-position="left" trim-weeks
-                            class="w-full !max-w-none !min-w-full !border-none !bg-transparent"
+                            class="w-full !max-w-none !min-w-full !border-none !bg-transparent "
                             :is-dark="page.props.auth.user.theme === 'dark'" :style="{ width: '100% !important' }" />
 
                         <div class="mt-4 space-y-2">
@@ -1440,6 +1440,7 @@ const exportAsImage = async () => {
     width: 100% !important;
     border: none !important;
     background: transparent !important;
+    ;
 }
 
 :deep(.vc-container) {
@@ -1461,6 +1462,18 @@ const exportAsImage = async () => {
 :deep(.vc-day-content:hover) {
     background-color: rgba(107, 114, 128, 0.2) !important;
 }
+
+html.dark .vc-title-wrapper .vc-title span {
+    color: white;
+    /* gray-900 */
+}
+
+.vc-title-wrapper .vc-title span {
+    color: black;
+    /* gray-900 */
+}
+
+
 
 .accordion-enter-active,
 .accordion-leave-active {
