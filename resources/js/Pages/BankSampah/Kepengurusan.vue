@@ -605,14 +605,14 @@ const maskPhone = (telp) => {
 
                         <input type="hidden" name="id_userdetail" :value="idUser">
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-0 gap-y-4 lg:gap-x-4 ">
                             <div v-for="field in props.formdata.nasabah" :key="field.name"
-                                :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'grid-cols-1 md:grid-cols-2'">
+                                :class="field.name === 'rt' || field.name === 'phoneNumber' || field.type === 'radio' ? 'col-span-full' : 'lg:col-span-1 col-span-full'">
 
 
 
 
-                                <div v-if="field.type === 'radio'" class="col-span-full">
+                                <div v-if="field.type === 'radio'" class="col-span-1">
 
                                     <InputLabel :for="field.name" :value="field.title" />
 
@@ -652,7 +652,7 @@ const maskPhone = (telp) => {
 
                         </div>
 
-                        <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3 pt-2">
+                        <div class="md:col-span-2 lg:col-span-3 flex justify-end items-center gap-3">
                             <button type="submit"
                                 class="bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50"
                                 :disabled="form.processing">

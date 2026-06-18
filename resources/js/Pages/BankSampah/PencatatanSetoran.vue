@@ -1192,7 +1192,7 @@ const breadcrumbItems = [
                                 <p class="text-sm">Tidak ada jenis sampah tersedia.</p>
                             </div>
 
-                            <div v-else>
+                            <div class="space-y-4" v-else>
 
                                 <div class="flex flex-col items-center gap-3">
                                     <span class="text-xs text-gray-500">Step {{ step }} dari {{ totalSteps }}</span>
