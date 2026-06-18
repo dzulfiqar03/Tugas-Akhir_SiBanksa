@@ -607,7 +607,7 @@ const maskPhone = (telp) => {
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div v-for="field in props.formdata.nasabah" :key="field.name"
-                                :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
+                                :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'grid-cols-1 md:grid-cols-2'">
 
 
 
