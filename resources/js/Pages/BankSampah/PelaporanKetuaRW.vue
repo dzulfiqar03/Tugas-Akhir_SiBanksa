@@ -163,6 +163,15 @@ const onRowClick = (event) => {
     }
 };
 
+const removeFile = (index) => {
+    // Menghapus 1 item pada posisi index yang dipilih
+    form.fileDoc.splice(index, 1);
+};
+
+const removeImage = (index) => {
+    // Menghapus 1 item pada posisi index yang dipilih
+    form.imgEvidence.splice(index, 1);
+};
 
 const dtOptions = computed(() => ({
     pageLength: 5,
@@ -175,8 +184,8 @@ const dtOptions = computed(() => ({
             orderable: false,
             className: 'no-print details-control text-center'
         },
-        { data: 'name', className: 'text-black dark:text-white', render: (data) => `<strong>Dokumen: ${data}</strong>` },
-        { data: 'tanggal_setoran', className: 'text-black dark:text-white', render: (data) => `<strong>Jadwal: ${data}</strong>` },
+        { data: 'name', render: (data) => `<strong>Dokumen: ${data}</strong>` },
+        { data: 'tanggal_setoran', render: (data) => `<strong>Jadwal: ${data}</strong>` },
         {
             data: 'document',
             render: (data) => `<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-bold">${data.length} Dokumen</span>`
@@ -188,7 +197,7 @@ const dtOptions = computed(() => ({
             orderable: false,
             className: 'no-print text-black dark:text-white details-control text-center text-black dark:text-white'
         },
-        { data: 'name', className: 'text-black dark:text-white', render: (data) => `<strong>Jadwal: ${data}</strong>` },
+        { data: 'name', render: (data) => `<strong>Jadwal: ${data}</strong>` },
         {
             data: 'photos',
             render: (data) => `<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-bold">${data.length} Foto</span>`
@@ -524,7 +533,107 @@ const dtOptions = computed(() => ({
             previous: "← Sebelumnya",
             next: "Berikutnya →"
         },
-        emptyTable: "Tidak ada data tersedia"
+        emptyTable: typeForm.value === 'Document'? `<div class="flex flex-col items-center  justify-center rounded-2xl shadow-inner">
+  <div class="relative animate-pulse">
+    <svg
+  class="w-28 h-28 text-gray-400 dark:text-gray-500"
+  viewBox="0 0 100 100"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Bingkai tabel -->
+  <rect x="12" y="20" width="62" height="50" rx="6" stroke="currentColor" stroke-width="2" />
+
+  <!-- Garis pemisah header -->
+  <line x1="12" y1="34" x2="74" y2="34" stroke="currentColor" stroke-width="2" />
+
+  <!-- Garis pemisah kolom -->
+  <line x1="34" y1="20" x2="34" y2="70" stroke="currentColor" stroke-width="1.5" />
+  <line x1="56" y1="20" x2="56" y2="70" stroke="currentColor" stroke-width="1.5" />
+
+  <!-- Label header (judul kolom) -->
+  <line x1="17" y1="27" x2="29" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  <line x1="39" y1="27" x2="51" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  <line x1="61" y1="27" x2="69" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Baris kosong (putus-putus, makin redup ke bawah) -->
+  <line x1="17" y1="46" x2="29" y2="46" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.45" />
+  <line x1="39" y1="46" x2="51" y2="46" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.45" />
+  <line x1="61" y1="46" x2="69" y2="46" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.45" />
+
+  <line x1="17" y1="58" x2="29" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.3" />
+  <line x1="39" y1="58" x2="51" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.3" />
+  <line x1="61" y1="58" x2="69" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.3" />
+
+  <!-- Kaca pembesar di pojok kanan bawah: menandakan "dicari, tidak ditemukan" -->
+  <circle cx="78" cy="72" r="13" stroke="currentColor" stroke-width="2.5" />
+  <line x1="87" y1="81" x2="95" y2="89" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" />
+  <line x1="73" y1="72" x2="83" y2="72" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Aksen dekoratif kecil, senada dengan ikon utama -->
+  <circle cx="8" cy="10" r="2" stroke="currentColor" stroke-width="1.3" />
+  <circle cx="91" cy="13" r="1.6" fill="currentColor" />
+  <path d="M5 80 L9 80" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+</svg>
+  </div>
+
+  <h1 class="text-xl capitalize font-extrabold text-gray-800 dark:text-gray-100 tracking-tight mb-2">
+    Maaf! Belum ada dokumen yang diupload.
+  </h1>
+   <p class="text-sm text-gray-600 dark:text-gray-300 max-w-lg mx-auto">
+    Silahkan klik tombol <span class="text-emerald-500">Tambah Dokumen</span> untuk melaporkan dokumen hasil setoran.
+  </p>
+</div>`:   `<div class="flex flex-col items-center  justify-center rounded-2xl shadow-inner">
+  <div class="relative animate-pulse">
+    <svg
+  class="w-28 h-28 text-gray-400 dark:text-gray-500"
+  viewBox="0 0 100 100"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Bingkai tabel -->
+  <rect x="12" y="20" width="62" height="50" rx="6" stroke="currentColor" stroke-width="2" />
+
+  <!-- Garis pemisah header -->
+  <line x1="12" y1="34" x2="74" y2="34" stroke="currentColor" stroke-width="2" />
+
+  <!-- Garis pemisah kolom -->
+  <line x1="34" y1="20" x2="34" y2="70" stroke="currentColor" stroke-width="1.5" />
+  <line x1="56" y1="20" x2="56" y2="70" stroke="currentColor" stroke-width="1.5" />
+
+  <!-- Label header (judul kolom) -->
+  <line x1="17" y1="27" x2="29" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  <line x1="39" y1="27" x2="51" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  <line x1="61" y1="27" x2="69" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Baris kosong (putus-putus, makin redup ke bawah) -->
+  <line x1="17" y1="46" x2="29" y2="46" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.45" />
+  <line x1="39" y1="46" x2="51" y2="46" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.45" />
+  <line x1="61" y1="46" x2="69" y2="46" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.45" />
+
+  <line x1="17" y1="58" x2="29" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.3" />
+  <line x1="39" y1="58" x2="51" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.3" />
+  <line x1="61" y1="58" x2="69" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.3" />
+
+  <!-- Kaca pembesar di pojok kanan bawah: menandakan "dicari, tidak ditemukan" -->
+  <circle cx="78" cy="72" r="13" stroke="currentColor" stroke-width="2.5" />
+  <line x1="87" y1="81" x2="95" y2="89" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" />
+  <line x1="73" y1="72" x2="83" y2="72" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Aksen dekoratif kecil, senada dengan ikon utama -->
+  <circle cx="8" cy="10" r="2" stroke="currentColor" stroke-width="1.3" />
+  <circle cx="91" cy="13" r="1.6" fill="currentColor" />
+  <path d="M5 80 L9 80" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+</svg>
+  </div>
+
+  <h1 class="text-xl capitalize font-extrabold text-gray-800 dark:text-gray-100 tracking-tight mb-2">
+    Maaf! Belum ada evidence yang diupload.
+  </h1>
+   <p class="text-sm text-gray-600 dark:text-gray-300 max-w-lg mx-auto">
+    Silahkan klik tombol <span class="text-emerald-500">Tambah Evidence</span> untuk melaporkan evidence pelaksanaan.
+  </p>
+</div>`
     }
 }));
 
@@ -818,7 +927,7 @@ const breadcrumbItems = [
                                     <div v-if="field.name === 'name'" class="flex flex-col">
                                         <InputLabel :for="field.name" :value="field.title" />
                                         <select v-model="form.name"
-                                            class="w-full h-11 rounded-xl dark:text-white text-black bg-gray-50 dark:bg-gray-800 border-gray-200 focus:ring-emerald-500 transition-all shadow-sm text-sm pl-5"
+                                            class="w-full h-11 rounded-xl dark:text-white text-black bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-emerald-500 transition-all shadow-sm text-sm pl-5"
                                             :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }">
                                             <option value="">Pilih Jenis Upload</option>
                                             <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}
@@ -848,17 +957,25 @@ const breadcrumbItems = [
                                             {{ form[field.name].length }} file terpilih
                                         </p>
 
-                                        <ul v-if="form.fileDoc.length > 0" class="mt-2 space-y-1">
-                                            <li v-for="(file, index) in renamedFileList" :key="index"
-                                                class="text-xs text-gray-500 flex items-center">
-                                                <svg class="w-3 h-3 mr-1 text-emerald-500" fill="currentColor"
-                                                    viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-                                                </svg>
-                                                {{ file.dynamic }} ({{ (file.size / 1024).toFixed(1) }} KB)
-                                            </li>
-                                        </ul>
+
+                                           <ul v-if="form.fileDoc.length > 0" class="mt-2 space-y-1">
+    <li v-for="(file, index) in renamedFileList" :key="index"
+        class="text-xs text-gray-500 flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">
+        <div class="flex items-center">
+            <svg class="w-3 h-3 mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+            </svg>
+            {{ file.dynamic }} ({{ (file.size / 1024).toFixed(1) }} KB)
+        </div>
+
+        <button type="button" @click="removeFile(index)" class="text-red-500 hover:text-red-700 p-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        </button>
+    </li>
+</ul>
+
 
                                     </div>
 
@@ -913,17 +1030,25 @@ const breadcrumbItems = [
                                             {{ form[field.name].length }} file terpilih
                                         </p>
 
-                                        <ul v-if="form.imgEvidence.length > 0" class="mt-2 space-y-1">
-                                            <li v-for="(file, index) in renamedFileList" :key="index"
-                                                class="text-xs text-gray-500 flex items-center">
-                                                <svg class="w-3 h-3 mr-1 text-emerald-500" fill="currentColor"
-                                                    viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-                                                </svg>
-                                                {{ file.dynamic }} ({{ (file.size / 1024).toFixed(1) }} KB)
-                                            </li>
-                                        </ul>
+
+
+                                                     <ul v-if="form.imgEvidence.length > 0" class="mt-2 space-y-1">
+    <li v-for="(file, index) in renamedFileList" :key="index"
+        class="text-xs text-gray-500 flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">
+        <div class="flex items-center">
+            <svg class="w-3 h-3 mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+            </svg>
+            {{ file.dynamic }} ({{ (file.size / 1024).toFixed(1) }} KB)
+        </div>
+
+        <button type="button" @click="removeImage(index)" class="text-red-500 hover:text-red-700 p-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        </button>
+    </li>
+</ul>
 
                                     </div>
                                 </template>
@@ -1053,9 +1178,9 @@ const breadcrumbItems = [
                         <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
                             <tr>
                                 <th></th>
-                                <th>Nama Dokumen</th>
-                                <th>Tanggal Pelaksanaan</th>
-                                <th>Dokumen</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Nama Dokumen</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Tanggal Pelaksanaan</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Dokumen</th>
                             </tr>
                         </thead>
 
@@ -1080,8 +1205,8 @@ const breadcrumbItems = [
                         <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
                             <tr>
                                 <th></th>
-                                <th>Nama Evidence</th>
-                                <th>Evidence</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Nama Evidence</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Evidence</th>
                             </tr>
                         </thead>
                         <template #column-0="data">

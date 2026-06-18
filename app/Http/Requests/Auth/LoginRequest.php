@@ -104,25 +104,36 @@ class LoginRequest extends FormRequest
     {
         if ($this->filled('password')) {
             return [
-                'password' => 'required|string',
+                'password' => 'required|string|min:8',
             ];
         }
 
 
         return [
-            'nama_bank' => 'required|string',
-            'id_rt'     => 'required|integer',
-            'phone'     => 'required|string',
+            'nama_bank' => 'required|string|max:255',
+            'id_rt'     => 'required|integer|min:1',
+            'phone'     => 'required|string|min:10|max:13|regex:/^08[0-9]{8,11}$/',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'password.required'         => 'Password wajib diisi',
-            'nama_bank.required'         => 'Nama Lengkap wajib diisi',
-            'id_rt.required'         => 'RT wajib diisi',
-            'phone.required'         => 'Nomor Telepon wajib diisi'
+            'password.required' => 'Password wajib diisi.',
+            'password.min'      => 'Password minimal harus 8 karakter.',
+
+            'nama_bank.required' => 'Nama Lengkap wajib diisi.',
+            'nama_bank.max'      => 'Nama Lengkap maksimal 255 karakter.',
+
+            'id_rt.required' => 'RT wajib diisi.',
+            'id_rt.integer'  => 'RT harus berupa angka.',
+            'id_rt.min'      => 'RT tidak boleh kurang dari 1.',
+
+            'phone.required' => 'Nomor Telepon wajib diisi.',
+            'phone.min'      => 'Nomor Telepon minimal 10 digit.',
+            'phone.max'      => 'Nomor Telepon maksimal 13 digit.',
+            'phone.regex'    => 'Nomor telepon hanya boleh berisi angka.',
+
         ];
     }
 

@@ -350,7 +350,58 @@ const dtOptions = {
             previous: "← Sebelumnya",
             next: "Berikutnya →"
         },
-        emptyTable: "Tidak ada data tersedia"
+        emptyTable: `<div class="flex flex-col items-center  justify-center rounded-2xl shadow-inner">
+  <div class="relative animate-pulse">
+    <svg
+  class="w-28 h-28 text-gray-400 dark:text-gray-500"
+  viewBox="0 0 100 100"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Bingkai tabel -->
+  <rect x="12" y="20" width="62" height="50" rx="6" stroke="currentColor" stroke-width="2" />
+
+  <!-- Garis pemisah header -->
+  <line x1="12" y1="34" x2="74" y2="34" stroke="currentColor" stroke-width="2" />
+
+  <!-- Garis pemisah kolom -->
+  <line x1="34" y1="20" x2="34" y2="70" stroke="currentColor" stroke-width="1.5" />
+  <line x1="56" y1="20" x2="56" y2="70" stroke="currentColor" stroke-width="1.5" />
+
+  <!-- Label header (judul kolom) -->
+  <line x1="17" y1="27" x2="29" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  <line x1="39" y1="27" x2="51" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  <line x1="61" y1="27" x2="69" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Baris kosong (putus-putus, makin redup ke bawah) -->
+  <line x1="17" y1="46" x2="29" y2="46" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.45" />
+  <line x1="39" y1="46" x2="51" y2="46" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.45" />
+  <line x1="61" y1="46" x2="69" y2="46" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.45" />
+
+  <line x1="17" y1="58" x2="29" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.3" />
+  <line x1="39" y1="58" x2="51" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.3" />
+  <line x1="61" y1="58" x2="69" y2="58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" stroke-linecap="round" opacity="0.3" />
+
+  <!-- Kaca pembesar di pojok kanan bawah: menandakan "dicari, tidak ditemukan" -->
+  <circle cx="78" cy="72" r="13" stroke="currentColor" stroke-width="2.5" />
+  <line x1="87" y1="81" x2="95" y2="89" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" />
+  <line x1="73" y1="72" x2="83" y2="72" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Aksen dekoratif kecil, senada dengan ikon utama -->
+  <circle cx="8" cy="10" r="2" stroke="currentColor" stroke-width="1.3" />
+  <circle cx="91" cy="13" r="1.6" fill="currentColor" />
+  <path d="M5 80 L9 80" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+</svg>
+  </div>
+
+  <h1 class="text-xl capitalize font-extrabold text-gray-800 dark:text-gray-100 tracking-tight mb-2">
+    Maaf! Belum ada jadwal pelaksanaan.
+  </h1>
+   <p class="text-sm text-gray-600 dark:text-gray-300 max-w-lg mx-auto">
+    Silahkan klik tombol <span class="text-emerald-500">Tambah Jadwal</span> untuk menambah jadwal baru.
+  </p>
+</div>`
+
     }
 };
 
@@ -602,9 +653,9 @@ const breadcrumbItems = [
 
                         <thead>
                             <tr class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                                <th>No</th>
-                                <th>Jadwal Pelaksanaan</th>
-                                <th class="pb-4 font-semibold uppercase text-[11px] tracking-wider text-center">Aksi
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">No</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Jadwal Pelaksanaan</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Aksi
                                 </th>
                             </tr>
                         </thead>

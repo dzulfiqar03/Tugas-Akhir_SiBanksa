@@ -23,7 +23,7 @@ class EvidenceArchiversRequest extends FormRequest
     {
         return [
             'imgEvidence'   => 'required|array',
-            'imgEvidence.*' => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'imgEvidence.*' => 'image|mimes:jpg,jpeg,png|max:2048',
             'name' => 'required|string',
             'id_userdetail' => 'required|integer',
         ];
@@ -34,8 +34,8 @@ class EvidenceArchiversRequest extends FormRequest
         return [
             'name.required'    => 'Nama wajib diisi',
             'imgEvidence.required'    => 'Dokumen wajib diisi',
-            'imgEvidence.file'    => 'Dokumen wajib berupa files',
-            'imgEvidence.mimes'    => 'Dokumen wajib berupa extensi jpg',
+            'imgEvidence.image'    => 'Dokumen wajib berupa gambar',
+            'imgEvidence.mimes'    => 'Dokumen wajib berupa extensi jpg, jpeg, png',
             'id_userdetail.required'          => 'Id User wajib diisi',
         ];
     }

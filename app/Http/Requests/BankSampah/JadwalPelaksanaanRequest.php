@@ -36,7 +36,6 @@ class JadwalPelaksanaanRequest extends FormRequest
 
         if (!$idRt) return;
 
-        // Ganti 'user_detail' menjadi 'user_details' jika itu nama tabel aslinya
         $exists = \DB::table('jadwal_pelaksanaan')
             ->join('user_details', 'jadwal_pelaksanaan.id_userdetail', '=', 'user_details.id')
             ->where('user_details.id_rt', $idRt)

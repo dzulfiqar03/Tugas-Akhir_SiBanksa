@@ -111,7 +111,7 @@ test('Format Field Salah', function () {
         'items' => [
             [
                 'sampah_id' => $sampah->id,
-                'jumlah' => 'BUKAN_DESIMAL', // Memicu error decimal:0,2
+                'jumlah' => -1, // Memicu error decimal:0,2
                 'harga_satuan' => 'BUKAN_ANGKA' // Memicu error numeric
             ]
         ]
