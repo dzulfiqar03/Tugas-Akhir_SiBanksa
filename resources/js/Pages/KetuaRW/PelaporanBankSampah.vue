@@ -304,16 +304,14 @@ const dtOptions = {
         },
         {
             data: 'user_detail.fullName',
-            className: 'capitalize dark:text-white text-black',
             render: (data, type, row) => {
-                return row.user_detail?.fullName || '-';
+                return `<div class="capitalize dark:text-white text-black"> ${row.user_detail?.fullName || '-'}</div>`;
             },
             defaultContent: '-'
         },
 
         {
             data: 'user_detail.id_rt',
-            className: 'capitalize dark:text-white text-black',
             render: (data, type, row) => {
                 return row.user_detail?.id_rt || '-';
             },
@@ -321,7 +319,6 @@ const dtOptions = {
         },
         {
             data: 'stats',
-            className: 'capitalize',
             render: (data, type, row) => {
                 return `
                 <div class="grid gap-2">
@@ -678,11 +675,11 @@ const updateVerification = (item) => {
                             <tr>
 
                                 <th class="px-6 py-4"></th>
-                                <th class="px-6 py-4">Nama Lengkap</th>
-                                <th class="px-6 py-4">RT</th>
-                                <th class="px-6 py-4">Data Nasabah</th>
-                                <th class="px-6 py-4">Total</th>
-                                <th class="px-6 py-4">Aksi</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Nama Lengkap</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">RT</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Data Nasabah</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Total</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Aksi</th>
                             </tr>
                         </thead>
 

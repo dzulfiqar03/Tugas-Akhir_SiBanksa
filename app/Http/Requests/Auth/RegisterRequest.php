@@ -26,10 +26,10 @@ class RegisterRequest extends FormRequest
     {
         if ((int) $this->id_roles === 2) {
             return [
-                'bankSampah.userName'        => 'required|string',
-                'bankSampah.fullName'        => 'required|string',
+                'bankSampah.userName'        => 'required|string|max:255',
+                'bankSampah.fullName'        => 'required|string|max:255',
                 'bankSampah.email'           => 'required|email|unique:users,email',
-                'bankSampah.password'        => 'required|min:8|confirmed',
+                'bankSampah.password'        => 'required|min:8|max:10|string|confirmed',
                 'bankSampah.password_confirmation' => 'required',
                 'bankSampah.id_rt'              => 'required',
                 'id_roles'       => 'required',
@@ -37,23 +37,23 @@ class RegisterRequest extends FormRequest
                 'status'       => 'required',
                 'status_transaction' => 'required',
                 'pencairan_via' => 'required',
-                'bankSampah.phoneNumber'     => 'required|string|min:10',
+                'bankSampah.phoneNumber'     => 'required|string|min:10|max:13|regex:/^08[0-9]{8,11}$/',
                 'bankSampah.address'         => 'required|string',
             ];
         } else {
             return [
-                'nasabah.userName'        => 'required|string',
-                'nasabah.fullName'        => 'required|string',
+                'nasabah.userName'        => 'required|string|max:255',
+                'nasabah.fullName'        => 'required|string|max:255',
                 'nasabah.email'           => 'required|email|unique:users,email',
-                'nasabah.password'        => 'required|min:8|confirmed',
+                'nasabah.password'        => 'required|min:8|max:10|string|confirmed',
                 'nasabah.password_confirmation' => 'required',
                 'nasabah.id_rt'              => 'required',
                 'id_roles'       => 'required',
                 'nasabah.id_gender'       => 'required',
                 'status_transaction' => 'required',
                 'status'       => 'required',
-                    'pencairan_via' => 'required',
-                'nasabah.phoneNumber'     => 'required|string|min:10',
+                'pencairan_via' => 'required',
+                'nasabah.phoneNumber'     => 'required|string|min:10|max:13|regex:/^08[0-9]{8,11}$/',
                 'nasabah.address'         => 'required|string',
             ];
         }
@@ -70,6 +70,7 @@ class RegisterRequest extends FormRequest
                 'bankSampah.email.unique'         => 'Email sudah terdaftar',
                 'bankSampah.password.required'    => 'Password wajib diisi',
                 'bankSampah.password.min'         => 'Password minimal 8 karakter',
+                'bankSampah.password.max'      => 'Password maksimal 10 digit.',
                 'bankSampah.password.confirmed'   => 'Konfirmasi password tidak cocok',
                 'bankSampah.password_confirmation.required' => 'Konfirmasi password wajib diisi',
                 'bankSampah.id_rt.required'          => 'RT wajib diisi',
@@ -80,6 +81,8 @@ class RegisterRequest extends FormRequest
                 'pencairan_via.required'   => 'Metode pencairan wajib dipilih',
                 'bankSampah.phoneNumber.required' => 'Nomor telepon wajib diisi',
                 'bankSampah.phoneNumber.min'      => 'Nomor telepon minimal 10 digit',
+                'bankSampah.phoneNumber.max'      => 'Nomor Telepon maksimal 13 digit.',
+                'bankSampah.phoneNumber.regex'    => 'Nomor telepon harus dimulai dengan 08 dan hanya berisi angka.',
                 'bankSampah.address.required'     => 'Alamat wajib diisi',
             ];
         } else {
@@ -91,6 +94,7 @@ class RegisterRequest extends FormRequest
                 'nasabah.email.unique'         => 'Email sudah terdaftar',
                 'nasabah.password.required'    => 'Password wajib diisi',
                 'nasabah.password.min'         => 'Password minimal 8 karakter',
+                'nasabah.password.max'      => 'Password maksimal 10 digit.',
                 'nasabah.password.confirmed'   => 'Konfirmasi password tidak cocok',
                 'nasabah.password_confirmation.required' => 'Konfirmasi password wajib diisi',
                 'nasabah.id_rt.required'          => 'RT wajib diisi',
@@ -101,6 +105,8 @@ class RegisterRequest extends FormRequest
                 'pencairan_via.required'   => 'Metode pencairan wajib dipilih',
                 'nasabah.phoneNumber.required' => 'Nomor telepon wajib diisi',
                 'nasabah.phoneNumber.min'      => 'Nomor telepon minimal 10 digit',
+                'nasabah.phoneNumber.max'      => 'Nomor Telepon maksimal 13 digit.',
+                'nasabah.phoneNumber.regex'    => 'Nomor telepon harus dimulai dengan 08 dan hanya berisi angka.',
                 'nasabah.address.required'     => 'Alamat wajib diisi',
             ];
         }

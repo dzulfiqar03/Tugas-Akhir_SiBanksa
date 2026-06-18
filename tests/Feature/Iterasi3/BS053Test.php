@@ -70,7 +70,7 @@ test('Unggah Bukti Pencairan Sukses', function () {
 
     Storage::fake('public');
 
-    $file = UploadedFile::fake()->create('dokumen_nasabah.pdf', 500);
+    $file = UploadedFile::fake()->create('dokumen_nasabah.jpg', 500);
 
     $unggahResponse = $this->put("bank-sampah/transaksi/create", [
 

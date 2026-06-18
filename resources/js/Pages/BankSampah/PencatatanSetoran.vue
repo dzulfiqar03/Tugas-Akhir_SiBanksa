@@ -1,5 +1,6 @@
 <script setup>
 import FormWrapper from '@/Components/FormWrapper.vue';
+import InputLabel from '@/Components/InputLabel.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Head, router, useForm, usePage } from '@inertiajs/vue3'
 import { computed, nextTick, ref, watch, onMounted } from 'vue'
@@ -423,7 +424,7 @@ const dtOptions = computed(() => ({
         {
             title: 'TOTAL',
             data: 'totalTahunan',
-            className: 'text-right font-black text-emerald-600 bg-emerald-50/50 border-l col-total',
+            className: 'text-right font-black text-emerald-600 bg-emerald-50/50 dark:bg-gray-900 border-l col-total',
             render: (data, type) => type === 'display' ? data.toLocaleString('id-ID') : data
         },
         {
@@ -1149,9 +1150,9 @@ const breadcrumbItems = [
                             @submit="handleSubmit">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium mb-1">Nasabah</label>
+                                                                    <InputLabel :for="'Nasabah'" :value="'Nasabah'" />
                                     <select v-model="form.id_userdetail"
-                                        class="w-full border rounded capitalize px-3 py-2 text-sm"
+                                             class="w-full  dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                         :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_userdetail'] }">
                                         <option value="" disabled>Pilih Nasabah</option>
                                         <option v-for="n in nasabahList" :key="n.id" :value="n.id">
@@ -1160,9 +1161,11 @@ const breadcrumbItems = [
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium mb-1">Jadwal Pelaksanaan</label>
+                                                                    <InputLabel :for="'Jadwal Pelaksanaan'" :value="'Jadwal Pelaksanaan'" />
+
                                     <select v-model="form.id_jadwal" :key="form.id_userdetail"
-                                        class="w-full border rounded px-3 py-2 text-sm" :disabled="!form.id_userdetail"
+                                                                                     class="w-full  dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                                                                      :disabled="!form.id_userdetail"
                                         :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_jadwal'] }">
 
                                         <option value="" disabled>
@@ -1189,7 +1192,7 @@ const breadcrumbItems = [
                                 <p class="text-sm">Tidak ada jenis sampah tersedia.</p>
                             </div>
 
-                            <div v-else>
+                            <div class="space-y-4" v-else>
 
                                 <div class="flex flex-col items-center gap-3">
                                     <span class="text-xs text-gray-500">Step {{ step }} dari {{ totalSteps }}</span>
@@ -1205,18 +1208,18 @@ const breadcrumbItems = [
                                 <div v-for="(chunk, index) in chunks" :key="index">
                                     <div v-show="step === index + 1" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         <div v-for="item in chunk" :key="item.sampah_id"
-                                            class="p-3 rounded-lg border bg-white shadow-sm">
+                                            class="p-3 rounded-lg border dark:border-gray-700 border-gray-300 bg-white text-black dark:text-white dark:bg-gray-900 shadow-sm">
                                             <div class="text-sm font-medium truncate capitalize">{{ item.nama }}</div>
                                             <div class="text-xs text-gray-500 mb-2 capitalize">Satuan: {{ item.satuan }}
                                             </div>
                                             <input type="number" step="0.01" v-model="item.jumlah"
-                                                class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-emerald-500"
+                                                class="w-full border rounded px-2 py-1 bg-white dark:bg-gray-900 text-sm focus:ring-2 focus:ring-emerald-500"
                                                 placeholder="0">
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="flex justify-between pt-4 border-t">
+                                <div class="flex justify-between pt-4 mt-2 border-t border-gray-200 dark:border-gray-700">
                                     <button type="button" @click="step = Math.max(step - 1, 1)" :disabled="step === 1"
                                         class="text-gray-500 disabled:opacity-30">
                                         ← Kembali
@@ -1351,7 +1354,7 @@ const breadcrumbItems = [
 
 
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-4">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-900  overflow-hidden p-4">
 
                     <div class=" flex flex-col lg:flex-row lg:items-end justify-between mb-6">
 

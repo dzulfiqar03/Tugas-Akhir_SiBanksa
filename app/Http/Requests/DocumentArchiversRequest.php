@@ -45,7 +45,7 @@ class DocumentArchiversRequest extends FormRequest
             },
         ],
         'fileDoc'   => 'required|array',
-        'fileDoc.*' => 'file|mimes:pdf,jpg,jpeg,png|max:2048',
+        'fileDoc.*' => 'file|mimes:pdf|max:2048',
     ];
 }
     public function messages(): array
@@ -56,7 +56,7 @@ class DocumentArchiversRequest extends FormRequest
             'name.unique'    => 'Nama sudah digunakan',
             'fileDoc.required'    => 'Dokumen wajib diisi',
             'fileDoc.file'    => 'Dokumen wajib berupa files',
-            'fileDoc.mimes'    => 'Dokumen wajib berupa extensi pdf dan docx',
+            'fileDoc.mimes'    => 'Dokumen wajib berupa extensi pdf',
             'id_userdetail.required'          => 'User wajib diisi',
             'id_jadwal.required'          => 'Jadwal wajib diisi',
         ];

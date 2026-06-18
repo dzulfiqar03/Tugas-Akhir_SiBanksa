@@ -550,7 +550,7 @@ const viewDetail = (id) => {
                                 <div v-if="!['address', 'userName', 'status', 'rt'].includes(field.name) && !['file', 'select', 'radio'].includes(field.type)"
                                     class="col-span-1">
                                     <InputLabel :for="field.name" :value="field.title" />
-                                    <input  :type="field.type" v-model="form[field.name]"
+                                    <input :disabled="isEdit"  :type="field.type" v-model="form[field.name]"
                                         :placeholder="field.placeholder"
                                         class="w-full h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-black pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all border-gray-200"
                                         :class="{
@@ -628,16 +628,16 @@ const viewDetail = (id) => {
                 <div class=" hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow">
                     <DataTable ref="dtInstance" :options="dtOptions"
                         class="w-full display stripe hover cell-border dark:text-white">
-                        <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase dark:text-white">
                             <tr>
 
-                                <th class="px-6 py-4"></th>
-                                <th class="px-6 py-4">RT</th>
-                                <th class="px-6 py-4">Nama Lengkap</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4">Kelengkapan Profil</th>
-                                <th class="px-6 py-4">Status Keaktifan</th>
-                                <th class="px-6 py-4 text-center">Aksi</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center"></th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">RT</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Nama Lengkap</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Status</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Kelengkapan Profil</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Status Keaktifan</th>
+                                <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Aksi</th>
                             </tr>
                         </thead>
 
