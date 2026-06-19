@@ -734,6 +734,8 @@
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import 'swiper/css';
 import 'swiper/css/free-mode';
 import { Autoplay, FreeMode } from 'swiper/modules';
