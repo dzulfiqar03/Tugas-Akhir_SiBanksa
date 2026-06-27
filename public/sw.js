@@ -17,7 +17,6 @@ registerRoute(
   ({request}) => request.destination === 'image',
   new CacheFirst({ cacheName: 'images' })
 );
-
 // 2. Strategi untuk Halaman (Network First)
 // Ini membuat halaman tetap bisa diakses saat offline jika pernah dikunjungi sebelumnya
 registerRoute(
