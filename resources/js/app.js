@@ -8,6 +8,9 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 import axios from 'axios';
+import $ from 'jquery';
+window.$ = window.jQuery = $;
+
 axios.interceptors.response.use(
     response => response,
     error => {

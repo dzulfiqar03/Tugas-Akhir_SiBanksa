@@ -43,9 +43,9 @@ test('Data dapat dihapus', function () {
     $responseCreateDocument =  DocumentArchiver::factory()->create([
         'id_userdetail' => $user->id,
         'id_jadwal'     => $jadwal->id,
-        'name'          => 'haakaolo',
+        'name'          => 'Dokumen Hasil Setoran',
         'original_filesname'       => $file,
-        'encrypted_filesname' => 'smsmssksmsksm'
+        'encrypted_filesname' => 'as100292011sazaza'
     ]);
 
     $deleteResponse = $this->delete("/bank-sampah/document/delete/{$responseCreateDocument->id}");
