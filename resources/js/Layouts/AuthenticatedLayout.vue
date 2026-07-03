@@ -62,7 +62,8 @@
                 </main>
             </div>
 
-            <nav v-if="isWarga"
+            <template v-if="isWarga && isDisetujui">
+   <nav
                 class="fixed mx-5 mt-5 mb-3 rounded-full lg:hidden bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t shadow-lg z-50">
                 <div class="flex justify-around items-center h-16">
 
@@ -103,6 +104,35 @@
 
                 </div>
             </nav>
+            </template>
+
+                <template v-if="isWarga && !isDisetujui">
+   <nav
+                class="fixed mx-5 mt-5 mb-3 rounded-full lg:hidden bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t shadow-lg z-50">
+                <div class="flex justify-around items-center h-16">
+
+                    <button @click="$inertia.get('/Warga/dashboard')"
+                        class="flex flex-col items-center text-xs  transition" :class="page.url.startsWith('/Warga/dashboard')
+                            ? 'text-emerald-600  '
+                            : 'text-gray-500 dark:text-gray-400'">
+                        <i class="fas fa-route text-lg mb-1"></i>
+                        Dashboard
+                    </button>
+
+
+                    <!-- Profile -->
+                    <button @click="$inertia.get('/profile')" class="flex flex-col items-center text-xs p-2 transition"
+                        :class="page.url.startsWith('/profile')
+                            ? 'text-emerald-600  '
+                            : 'text-gray-500 dark:text-gray-400'">
+                        <i class="fas fa-user text-lg mb-1"></i>
+                        Profile
+                    </button>
+
+                </div>
+            </nav>
+            </template>
+
 
             <!-- DARK MODE BUTTON -->
             <div class="fixed lg:flex hidden z-50 right-6" :class="isWarga ? 'bottom-24 md:bottom-6' : 'bottom-6'">
@@ -162,6 +192,11 @@ const page = usePage()
 const isWarga = computed(() => {
     const role = page.props?.auth?.user?.user_detail?.id_roles
     return Number(role) === 3
+})
+
+const isDisetujui = computed(() => {
+    const status = page.props?.auth?.user?.user_detail?.status
+    return status === 'Disetujui'
 })
 
 const sidebarOpen = ref(false)

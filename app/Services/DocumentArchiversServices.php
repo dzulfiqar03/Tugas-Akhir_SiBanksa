@@ -48,6 +48,7 @@ class DocumentArchiversServices
                 // LOGIKA PENAMAAN KHUSUS
                 if (in_array($docType, ['KTP', 'KK'])) {
                     // Format: KTP_Muhammad_Dzulfiqar_RT01.jpg
+
                     $original_filesname = "{$cleanDocName}_{$fullName}_RT0{$idRT}." . $extension;
                 } else {
                     // Format lama untuk dokumen setoran/umum
@@ -72,7 +73,11 @@ class DocumentArchiversServices
                 // ELOQUENT
                 $document = new DocumentArchiver();
                 $document->id_userdetail = $data['id_userdetail'];
-                $document->id_jadwal = $data['id_jadwal'];
+               if (in_array($docType, ['KTP', 'KK'])) {
+    $document->id_jadwal = null;
+} elseif (isset($data['id_jadwal'])) {
+    $document->id_jadwal = $data['id_jadwal'];
+}
                 $document->name = $docType;
                 $document->original_filesname = $original_filesname;
                 $document->encrypted_filesname = $encrypted_filesname;

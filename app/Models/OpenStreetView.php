@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class OpenStreetView extends Model
 {
+
+        protected $table = 'open_street_views';
+
     protected $fillable = [
         'id_geoLoc',
         'display_name',
