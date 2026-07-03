@@ -501,13 +501,17 @@ const sendLogout = () => {
                                     <Link v-if="!menu.data && menu.nama !== 'LogOut'"
                                         :href="userDetail.status === 'Pengajuan Verifikasi' ? route('warga.dashboard') : menu.route"
                                         @click="mobileMenuOpen = false"
-                                        class="flex items-center justify-between p-2 rounded transition hover:bg-gray-100 dark:hover:bg-gray-700"
-                                        :class="isRouteActive(menu.uri) ? 'bg-gray-100 dark:bg-gray-700 font-semibold' : ''">
+                                        class="flex items-center justify-between p-2 rounded transition "
+                                        :class="isRouteActive(menu.uri)
+                                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">
                                         <div class="flex items-center gap-3">
-                                            <span class="w-5 h-5 flex items-center justify-center dark:text-white">
+                                            <span class="w-5 h-5 flex items-center justify-center"  :class="isRouteActive(menu.uri)
+                                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">
                                                 <i :class="menu.icon"></i>
                                             </span>
-                                            <span class="text-gray-800 dark:text-gray-100">{{ menu.nama }}</span>
+                                            <span class="truncate">{{ menu.nama }}</span>
                                         </div>
 
                                         <span
@@ -526,22 +530,31 @@ const sendLogout = () => {
                                     <Disclosure v-else v-slot="{ open }"
                                         :default-open="menu.data.some(sub => isRouteActive(sub.uri))">
                                         <DisclosureButton
-                                            class="flex justify-between w-full p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+
+                                            class="flex justify-between w-full p-2 rounded transition"
+                                             :class="menu.data.some(sub => isRouteActive(sub.uri))
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">
+
                                             <div class="flex items-center gap-3">
-                                                <span class="w-5 h-5 flex items-center justify-center dark:text-white">
-                                                    <i :class="menu.icon"></i>
-                                                </span>
-                                                <span class="text-gray-800 dark:text-white">{{ menu.nama }}</span>
+                                                  <span class="w-5 h-5 flex items-center justify-center"  :class="menu.data.some(sub => isRouteActive(sub.uri))
+                                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                                <i :class="menu.icon"></i>
+                                            </span>
+                                                <span class="truncate">{{ menu.nama }}</span>
                                             </div>
-                                            <i class="fas fa-chevron-right text-xs text-gray-400 transition-transform self-center"
+                                            <i class="fas fa-chevron-right text-xs  transition-transform self-center"
                                                 :class="open ? 'rotate-90 text-emerald-500' : ''"></i>
                                         </DisclosureButton>
 
                                         <DisclosurePanel class="space-y-1 mt-1">
                                             <Link v-for="sub in menu.data" :key="sub.nama" :href="sub.route"
                                                 @click="mobileMenuOpen = false"
-                                                class="flex items-center p-2 pl-10 rounded text-sm transition text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                :class="isRouteActive(sub.uri) ? 'bg-gray-50 dark:bg-gray-700 font-bold' : ''">
+                                                class="flex items-center p-2 pl-10 rounded text-sm transition"
+                                                 :class="isRouteActive(sub.uri)
+                                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">
                                                 {{ sub.nama }}
                                             </Link>
                                         </DisclosurePanel>

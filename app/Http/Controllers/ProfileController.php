@@ -216,6 +216,7 @@ class ProfileController extends Controller
                 'postal_code' => $request->postal_code,
             ]
         );
+        
 
         $geoLocation->open_street()->updateOrCreate(
             [

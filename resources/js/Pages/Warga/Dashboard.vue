@@ -450,7 +450,7 @@ const deleteDoc = (id) => {
 
 
                 <div
-                    class="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-700 dark:text-amber-400 text-sm grid items-center gap-3">
+                    class=" p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-700 dark:text-amber-400 text-sm grid items-center gap-3">
                     <div class="flex space-x-3 items-center">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span>Akun Anda sedang dalam proses verifikasi.</span>
@@ -471,7 +471,7 @@ const deleteDoc = (id) => {
 
                 <Transition name="accordion">
                     <div v-if="!isCollapsed"
-                        class=" accordion-wrapper bg-gray-100 dark:bg-gray-900 flex flex-col gap-6">
+                        class=" mt-6 accordion-wrapper bg-gray-100 dark:bg-gray-900 flex flex-col gap-6">
 
 
 
@@ -500,19 +500,16 @@ const deleteDoc = (id) => {
                                     </span>
                                 </div>
                                 <div v-if="nasabah2.profile_completion.percentage < 100"
-                                    class="mt-1 flex space-x-4 text-[10px] w-full font-bold  text-red-500">
-                                    <h1>Data Kurang: </h1>
+                                    class="mt-2 flex flex-col lg:flex-row  gap-2 w-full text-[10px] font-bold text-red-500">
+                                    <h1 class="text-[11px] shrink-0">Data Kurang:</h1>
 
-                                    <div class="flex space-x-1">
-                                        <div v-for="value in nasabah2.profile_completion.empty_fields">
-                                            <span
-                                                @click="value === 'Nomor Rekening' ? step = 4 : (value === 'Alamat' ? step = 3 : step = 2)"
-                                                class="bg-red-500 cursor-pointer hover:bg-red-800 transform transition-all duration-75  text-white p-2 rounded-full font-bold">
-                                                {{ value }}
-                                            </span>
-                                        </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span v-for="value in nasabah2.profile_completion.empty_fields" :key="value"
+                                            @click="value === 'Nomor Rekening' ? step = 4 : (value === 'Alamat' ? step = 3 : step = 2)"
+                                            class="bg-red-500 cursor-pointer hover:bg-red-800 transform transition-all duration-75 text-white px-3 py-1.5 rounded-full font-bold whitespace-nowrap">
+                                            {{ value }}
+                                        </span>
                                     </div>
-
                                 </div>
                             </div>
                             <FormWrapper formName="formRegister" :errors="form2.errors" :processing="form2.processing"
@@ -529,7 +526,8 @@ const deleteDoc = (id) => {
                                             class="text-[10px] font-bold uppercase tracking-widest">Akun</span>
                                     </div>
 
-                                    <div class="h-px bg-gray-200 flex-1"></div>
+                                    <div :class="step >= 1 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px flex-1">
+                                    </div>
 
 
                                     <div class="flex items-center gap-2 cursor-pointer" @click="step = 2">
@@ -540,7 +538,8 @@ const deleteDoc = (id) => {
                                             class="text-[10px] font-bold uppercase tracking-widest">Data Diri</span>
                                     </div>
 
-                                    <div class="h-px bg-gray-200 flex-1"></div>
+                                    <div :class="step >= 2 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px flex-1">
+                                    </div>
                                     <div class="flex items-center gap-2 cursor-pointer" @click="step = 3">
                                         <span
                                             :class="step >= 3 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
@@ -552,7 +551,8 @@ const deleteDoc = (id) => {
 
 
 
-                                    <div class="h-px bg-gray-200 flex-1"></div>
+                                    <div :class="step >= 3 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px flex-1">
+                                    </div>
                                     <div class="flex items-center gap-2 cursor-pointer" @click="step = 4">
                                         <span
                                             :class="step >= 4 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
@@ -709,71 +709,62 @@ const deleteDoc = (id) => {
                                 <div v-if="step === 2" class="space-y-5">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div v-for="field in filteredFields" :key="field.name"
-                                            :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-2' : 'col-span-1'">
-
-
-
-
-
-                                            <div v-if="field.type === 'radio'" class="col-span-full">
-
+                                            :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-1 md:col-span-2' : 'col-span-1'">
+                                            <div v-if="field.type === 'radio'">
                                                 <InputLabel :for="field.name" :value="field.title" />
 
-
-                                                <div class="flex gap-3">
+                                                <div class="flex flex-wrap gap-3">
                                                     <label v-for="(opt, idx) in field.options" :key="idx"
-                                                        class="flex-1 cursor-pointer group">
+                                                        class="flex-1 min-w-[100px] cursor-pointer group">
                                                         <input type="radio" v-model="form2.nasabah[field.name]"
-                                                            :value="idx + 1" class="peer sr-only " :class="[
+                                                            :value="idx + 1" class="peer sr-only" :class="[
                                                                 isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
                                                             ]">
                                                         <div
-                                                            class="py-2 px-4 text-gray-600  dark:text-white rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
+                                                            class="py-2 px-4 text-gray-600 dark:text-white rounded-lg border-2 text-center text-sm font-bold peer-checked:border-emerald-500 peer-checked:text-emerald-700">
                                                             {{ opt }}
                                                         </div>
                                                     </label>
                                                 </div>
-
                                             </div>
-                                            <div v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'"
-                                                class="col-span-1">
+
+                                            <div
+                                                v-else-if="field.type !== 'file' && field.name !== 'rt' && field.name !== 'status'">
                                                 <InputLabel :for="field.name" :value="field.title" />
-
-
 
                                                 <input :type="field.type" :id="field.name" v-model="form2[field.name]"
                                                     :name="form2[field.name]" :placeholder="field.placeholder"
-                                                    class="w-full text-black   h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                                    class="w-full text-black h-11 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white pl-5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                                     :class="[
                                                         isEdit === true ? 'border-white dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'
                                                     ]">
                                             </div>
-
-
                                         </div>
                                     </div>
-                                    <div class="flex  justify-between w-full ">
-                                        <button type="button" @click="step = 1"
-                                            class="text-gray-400 text-sm font-bold">Kembali</button>
 
-                                        <button type="button" @click="step = 3"
-                                            class="  px-12  py-3 bg-emerald-600 text-white rounded-xl font-bold">Lanjut
+                                    <div class="flex justify-between w-full">
+                                        <button type="button" @click="step = 1" class="text-gray-400 text-sm font-bold">
+                                            Kembali
                                         </button>
 
+                                        <button type="button" @click="step = 3"
+                                            class="px-12 py-3 bg-emerald-600 text-white rounded-xl font-bold">
+                                            Lanjut
+                                        </button>
                                     </div>
                                 </div>
 
 
 
                                 <div v-if="step === 3" class="space-y-5">
-                                    <div class="grid grid-cols-2  gap-x-6 gap-y-5">
+                                    <div class="grid grid-cols-1 md:grid-cols-2  gap-x-6 gap-y-5">
                                         <div v-for="field in formdata.location" :key="field.name">
 
                                             <input type="hidden" name="id_userdetail"
                                                 :value="page.props.user?.user_detail?.id">
 
 
-                                            <div class="col-span-1">
+                                            <div class="col-span-1 md:col-span-2">
                                                 <InputLabel :for="field.name" :value="field.title" />
 
 
@@ -1134,7 +1125,7 @@ const deleteDoc = (id) => {
                         </h3>
                         <Calendar :attributes="calendarAttributes" is-expanded
                             class="w-full !max-w-none !min-w-full !border-none !bg-transparent"
-                            :is-dark="page.props.auth.user.theme === 'dark'" :style="{ width: '100% !important' }"/>
+                            :is-dark="page.props.auth.user.theme === 'dark'" :style="{ width: '100% !important' }" />
 
                         <div class="mt-4 space-y-2">
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
