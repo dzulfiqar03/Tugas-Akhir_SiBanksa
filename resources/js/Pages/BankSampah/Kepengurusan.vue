@@ -533,7 +533,7 @@ const deleteData = (id) => {
 
 const breadcrumbItems = [
     { label: 'Dashboard', url: route('dashboard') },
-    { label: 'Manajemen Nasabah', url: null },
+    { label: 'Manajemen Bank Sampah', url: null },
     { label: 'Data Kepengurusan', url: route('data-kepengurusan') },
 ];
 
@@ -624,7 +624,7 @@ const maskPhone = (telp) => {
                                             }">
                                             <input type="radio" v-model="form[field.name]" :value="idx + 1"
                                                 class="peer sr-only">
-                                            <div class="w-full bg-white text-gray-600  rounded-xl p-2 dark:bg-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 text-center dark:peer-checked:font-black dark:peer-checked:border-emerald-500 dark:peer-checked:text-emerald-700  transition-all"
+                                            <div class="w-full bg-white text-gray-600  rounded-xl p-2 dark:bg-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 text-center peer-checked:font-black peer-checked:border-emerald-500 peer-checked:text-emerald-700 dark:peer-checked:font-black dark:peer-checked:border-emerald-500 dark:peer-checked:text-emerald-700  transition-all"
 >
                                                 {{ opt }}
                                             </div>

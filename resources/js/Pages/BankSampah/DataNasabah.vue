@@ -618,7 +618,7 @@ const maskPhone = (telp) => {
                                         class="flex-1 cursor-pointer group w-full dark:border-gray-600 bg-white text-black  rounded-xl dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
                                         <input type="radio" v-model="form[field.name]" :value="idx + 1"
                                             class="peer sr-only">
-                                        <div class="w-full bg-white text-gray-600  rounded-xl p-2 dark:bg-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 text-center dark:peer-checked:font-black dark:peer-checked:border-emerald-500 dark:peer-checked:text-emerald-700  transition-all"
+                                        <div class="w-full bg-white text-gray-600  rounded-xl p-2 dark:bg-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 text-center peer-checked:font-black peer-checked:border-emerald-500 peer-checked:text-emerald-700 dark:peer-checked:font-black dark:peer-checked:border-emerald-500 dark:peer-checked:text-emerald-700  transition-all"
                                             :class="{ 'border-red-500 ring-1 ring-red-500': form.errors[field.name] }">
                                             {{ opt }}
                                         </div>

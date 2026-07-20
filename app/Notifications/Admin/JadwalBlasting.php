@@ -19,7 +19,7 @@ class JadwalBlasting extends Notification implements ShouldQueue
     {
         $this->wargaId = $wargaId;
         $this->message = $message;
-        $this->url = url("/Warga/jadwal");
+        $this->url = url("/Warga/dashboard");
     }
 
     // Simpan ke Database & Kirim ke Broadcast (Reverb)
