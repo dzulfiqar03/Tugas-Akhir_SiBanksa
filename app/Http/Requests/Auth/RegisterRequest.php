@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 use Symfony\Component\Routing\Route;
+use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
@@ -31,7 +32,12 @@ class RegisterRequest extends FormRequest
                 'bankSampah.email'           => 'required|email|unique:users,email',
                 'bankSampah.password'        => 'required|min:8|max:10|string|confirmed',
                 'bankSampah.password_confirmation' => 'required',
-                'bankSampah.id_rt'              => 'required',
+                'bankSampah.id_rt'           => [
+            'required',
+            Rule::unique('user_details', 'id_rt')
+                ->where(fn ($query) => $query->where('id_roles', 2))
+                ->ignore($this->id), // abaikan record ini sendiri kalau ini form update
+        ],
                 'id_roles'       => 'required',
                 'id_gender'       => 'required',
                 'status'       => 'required',
@@ -74,6 +80,7 @@ class RegisterRequest extends FormRequest
                 'bankSampah.password.confirmed'   => 'Konfirmasi password tidak cocok',
                 'bankSampah.password_confirmation.required' => 'Konfirmasi password wajib diisi',
                 'bankSampah.id_rt.required'          => 'RT wajib diisi',
+                'bankSampah.id_rt.unique' => 'RT ini sudah memiliki akun Bank Sampah yang terdaftar.',
                 'id_roles.required'   => 'Roles wajib dipilih',
                 'id_gender.required'   => 'Jenis kelamin wajib dipilih',
                 'status_transaction.required'   => 'Status transaksi wajib dipilih',
