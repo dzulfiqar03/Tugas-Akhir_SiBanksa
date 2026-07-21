@@ -5,7 +5,11 @@
 </p>
 
 <p align="center">
-  <strong>Platform digital manajemen bank sampah berbasis PWA untuk Perumahan Sidorukun Indah, Gresik</strong>
+  <strong>Platform digital manajemen bank sampah berbasis Website untuk Perumahan Sidorukun Indah, Gresik</strong>
+</p>
+
+<p align="center">
+<span>Akses Website: <a href="https://magenta-coyote-929840.hostingersite.com"></a></span>
 </p>
 
 <p align="center">
@@ -21,7 +25,7 @@
 
 ## 📖 Tentang SiBanksa
 
-**SiBanksa** (Sistem Informasi Bank Sampah) adalah aplikasi web progresif (*Progressive Web App*) yang dirancang untuk mendigitalisasi pengelolaan bank sampah di lingkungan perumahan — mencakup pencatatan setoran, transaksi tabungan sampah, penjadwalan pengambilan, hingga verifikasi keanggotaan warga, yang mencakup **8 RT** di Perumahan Sidorukun Indah, Gresik.
+**SiBanksa** (Sistem Informasi Bank Sampah) adalah aplikasi web  yang dirancang untuk mendigitalisasi pengelolaan bank sampah di lingkungan perumahan — mencakup pencatatan setoran, transaksi tabungan sampah, penjadwalan pengambilan, hingga verifikasi keanggotaan warga, yang mencakup **8 RT** di Perumahan Sidorukun Indah, Gresik.
 
 Sistem ini dikembangkan sebagai **Tugas Akhir (skripsi)**, dibangun secara solo menggunakan metodologi **Personal Extreme Programming (PXP)**, dengan pengujian yang komprehensif (white-box, black-box, dan usability testing) untuk memastikan kualitas dan keandalan aplikasi.
 
@@ -67,7 +71,6 @@ Sistem ini dikembangkan sebagai **Tugas Akhir (skripsi)**, dibangun secara solo 
 - [Workbox 7.0.0](https://developer.chrome.com/docs/workbox) — Service worker & caching strategy
 - Web App Manifest — Instalasi ke home screen
 - Web Push API + VAPID — Notifikasi push
-- `vite-plugin-pwa` (strategi `injectManifest`)
 
 **Testing & Quality**
 - Pest PHP — Unit testing (white-box, cyclomatic complexity)
@@ -231,6 +234,6 @@ Proyek ini dikembangkan untuk keperluan akademik (Tugas Akhir). Silakan hubungi 
 
 ## 👤 Kontributor
 
-Dikembangkan oleh **Muhammad Dzulfiqar** — Mahasiswa Informatika/Sistem Informasi, Telkom University Surabaya.
+Dikembangkan oleh **Muhammad Dzulfiqar** — Mahasiswa Sistem Informasi 2022, Telkom University Surabaya.
 
 <p align="center">Made with ♻️ for a cleaner neighborhood</p>
