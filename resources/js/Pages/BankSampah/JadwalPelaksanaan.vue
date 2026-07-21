@@ -496,15 +496,6 @@ const handleSubmit = () => {
             } else {
                 Swal.fire('Error', xhr.responseJSON?.message || 'Maaf, Inputan Anda ada yang salah, silahkan cek kembali', 'error');
             }
-        },
-        onFinish: function () {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Data jadwal berhasil disimpan.',
-                timer: 1500,
-                showConfirmButton: false
-            });
         }
     });
 };

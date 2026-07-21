@@ -70,26 +70,33 @@ class PencatatanServices
     }
 
     public function deletePencatatan($id)
-    {
-        return DB::transaction(function () use ($id) {
+{
+    return DB::transaction(function () use ($id) {
 
-            $item = PencatatanSetoranItems::findOrFail($id);
-            $setoranId = $item->pencatatan_setoran_id;
+        $item = PencatatanSetoranItems::findOrFail($id);
+        $setoranId = $item->pencatatan_setoran_id;
 
-            // 2. Hapus item tersebut
-            $item->delete();
+        // Hapus item
+        $item->delete();
 
-            // 3. Hitung ulang total dari item yang tersisa
+        // Hitung sisa item yang masih ada di nota ini
+        $sisaItem = PencatatanSetoranItems::where('pencatatan_setoran_id', $setoranId)->count();
+
+        if ($sisaItem === 0) {
+            // Tidak ada item tersisa → hapus juga header-nya
+            // supaya id_jadwal terbebas dan bisa dipilih lagi di form
+            PencatatanSetoran::where('id', $setoranId)->delete();
+        } else {
+            // Masih ada item lain → update ulang total_setoran saja
             $totalBaru = PencatatanSetoranItems::where('pencatatan_setoran_id', $setoranId)
                 ->sum('subtotal');
 
-            // 4. Update table parent (pencatatan_setoran)
             PencatatanSetoran::where('id', $setoranId)->update([
                 'total_setoran' => $totalBaru
             ]);
+        }
 
-
-            return $item;
-        });
-    }
+        return $item;
+    });
+}
 }

@@ -1,8 +1,8 @@
 {
     "name": "SiBanksa - Sistem Informasi Bank Sampah",
     "short_name": "SiBanksa",
-    "start_url": "/welcome",
-    "display": "standalone",
+    "start_url": "/",
+    "display": "fullscreen",
     "background_color": "#ffffff",
     "theme_color": "#10b981",
     "categories": "Social",

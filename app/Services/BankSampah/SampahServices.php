@@ -81,6 +81,7 @@ class SampahServices
                 'harga'         => $data['harga'],
                 'satuan'        => $data['satuan'],
                 'saldo'         => $saldoBaru,
+                'kategori'      => $data['kategori'],
             ]);
 
             try {
