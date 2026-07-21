@@ -1,59 +1,236 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ♻️ SiBanksa — Sistem Informasi Bank Sampah
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/main-logo.svg" alt="SiBanksa Logo" width="120" />
 </p>
 
-## About Laravel
+<p align="center">
+  <strong>Platform digital manajemen bank sampah berbasis PWA untuk Perumahan Sidorukun Indah, Gresik</strong>
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-FF2D20?style=flat&logo=laravel&logoColor=white" alt="Laravel" />
+  <img src="https://img.shields.io/badge/Vue.js%203-4FC08D?style=flat&logo=vuedotjs&logoColor=white" alt="Vue 3" />
+  <img src="https://img.shields.io/badge/Inertia.js-9553E9?style=flat&logo=inertia&logoColor=white" alt="Inertia.js" />
+  <img src="https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white" alt="MySQL" />
+  <img src="https://img.shields.io/badge/PWA-Workbox-5A0FC8?style=flat&logo=pwa&logoColor=white" alt="PWA" />
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 📖 Tentang SiBanksa
 
-## Learning Laravel
+**SiBanksa** (Sistem Informasi Bank Sampah) adalah aplikasi web progresif (*Progressive Web App*) yang dirancang untuk mendigitalisasi pengelolaan bank sampah di lingkungan perumahan — mencakup pencatatan setoran, transaksi tabungan sampah, penjadwalan pengambilan, hingga verifikasi keanggotaan warga, yang mencakup **8 RT** di Perumahan Sidorukun Indah, Gresik.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Sistem ini dikembangkan sebagai **Tugas Akhir (skripsi)**, dibangun secara solo menggunakan metodologi **Personal Extreme Programming (PXP)**, dengan pengujian yang komprehensif (white-box, black-box, dan usability testing) untuk memastikan kualitas dan keandalan aplikasi.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 🎯 Masalah yang Diselesaikan
 
-## Laravel Sponsors
+- Pencatatan setoran sampah manual yang rawan human error dan sulit dilacak riwayatnya
+- Minimnya transparansi saldo tabungan sampah bagi nasabah/warga
+- Tidak adanya sistem penjadwalan terpusat untuk pengambilan sampah per RT
+- Sulitnya pengarsipan dokumen dan bukti transaksi bank sampah
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## ✨ Fitur Utama
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+| Fitur | Deskripsi |
+|---|---|
+| 🔐 **Role-Based Access Control** | Tiga peran utama: **Bank Sampah** (petugas per-RT), **Ketua RW**, dan **Warga/Nasabah**, masing-masing dengan akses dan dashboard berbeda |
+| 💰 **Pencatatan Setoran & Saldo** | Nasabah dapat menyetor sampah berdasarkan kategori (daur ulang/non-daur ulang), dengan perhitungan saldo otomatis berdasarkan harga per satuan |
+| 📅 **Penjadwalan Pelaksanaan** | Penjadwalan tanggal pengambilan/setoran sampah per RT, dengan validasi anti-bentrok jadwal |
+| 📄 **Arsip Dokumen & Bukti (Evidence)** | Upload dan pengelolaan dokumen pendukung serta bukti transaksi |
+| 📍 **Geolokasi** | Pelacakan lokasi petugas/nasabah untuk mendukung proses operasional lapangan |
+| 🔔 **Push Notifications** | Notifikasi real-time (berbasis Web Push/VAPID) untuk info jadwal dan status transaksi |
+| 🤖 **Chatbot** | Asisten virtual untuk membantu warga mendapatkan informasi seputar layanan bank sampah |
+| 📊 **Ekspor Laporan PDF** | Ekspor data transaksi dan setoran ke PDF menggunakan pdfMake, lengkap dengan tabel interaktif (DataTables) |
+| 📱 **Progressive Web App** | Dapat di-install seperti aplikasi native (Android/iOS/Desktop), mendukung mode offline untuk halaman yang pernah dikunjungi |
+| 🏦 **Manajemen Rekening Bank** | Integrasi data rekening bank (Mandiri, BCA, BNI, BRI, CIMB Niaga) untuk proses pencairan saldo |
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🛠️ Tech Stack
 
-## Code of Conduct
+**Backend**
+- [Laravel](https://laravel.com/) — REST API & business logic
+- MySQL — Basis data relasional
+- Laravel Sanctum — Autentikasi
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**Frontend**
+- [Vue 3](https://vuejs.org/) (Composition API)
+- [Inertia.js](https://inertiajs.com/) — Menjembatani Laravel & Vue tanpa membangun API terpisah
+- Tailwind CSS — Styling responsif
 
-## Security Vulnerabilities
+**PWA & Offline**
+- [Workbox 7.0.0](https://developer.chrome.com/docs/workbox) — Service worker & caching strategy
+- Web App Manifest — Instalasi ke home screen
+- Web Push API + VAPID — Notifikasi push
+- `vite-plugin-pwa` (strategi `injectManifest`)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Testing & Quality**
+- Pest PHP — Unit testing (white-box, cyclomatic complexity)
+- Equivalence Class Partitioning (ECP) — Black-box testing (kaidah Myers)
+- System Usability Scale (SUS) — Pengujian usability (skor **85.625** dari 10 responden)
 
-## License
+**Deployment**
+- Hostinger (shared hosting)
+- TWA (Trusted Web Activity) / PWABuilder — Packaging untuk distribusi Android
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 🏗️ Arsitektur Sistem
+
+```
+┌─────────────────┐      Inertia.js      ┌──────────────────┐
+│   Vue 3 (SPA)    │◄────────────────────►│  Laravel Backend  │
+│  - Dashboard     │    (JSON + Props)     │  - Controllers    │
+│  - Forms         │                       │  - Form Requests  │
+│  - Service Worker│                       │  - Eloquent Models│
+└────────┬─────────┘                       └─────────┬─────────┘
+         │                                            │
+   Workbox Cache                                 MySQL Database
+   (offline shell)                          (users, sampah, jadwal_
+         │                                    pelaksanaan, dll.)
+         ▼
+┌─────────────────┐
+│  Push Service    │
+│  (VAPID/Web Push)│
+└──────────────────┘
+```
+
+### Struktur Peran (Roles)
+
+| Role | Akses |
+|---|---|
+| **Developer** | Akses penuh sistem (superuser) |
+| **Ketua RW** | Monitoring seluruh RT, verifikasi tingkat RW |
+| **Bank Sampah** (per RT) | Kelola setoran, jadwal, dan nasabah di RT masing-masing |
+| **Nasabah/Warga** | Setor sampah, cek saldo, lihat jadwal, ajukan pencairan |
+
+---
+
+## 🚀 Instalasi & Menjalankan Proyek
+
+### Prasyarat
+- PHP >= 8.1
+- Composer
+- Node.js >= 18 & NPM
+- MySQL
+
+### Langkah Instalasi
+
+```bash
+# 1. Clone repositori
+git clone <repository-url>
+cd sibanksa
+
+# 2. Install dependensi backend
+composer install
+
+# 3. Install dependensi frontend
+npm install
+
+# 4. Salin file environment
+cp .env.example .env
+php artisan key:generate
+
+# 5. Konfigurasi database di .env
+DB_DATABASE=sibanksa
+DB_USERNAME=root
+DB_PASSWORD=
+
+# 6. Jalankan migrasi & seeder
+php artisan migrate --seed
+
+# 7. Generate VAPID keys untuk push notification (jika belum ada)
+php artisan webpush:vapid
+
+# 8. Build assets frontend (termasuk service worker)
+npm run build
+# atau untuk development:
+npm run dev
+
+# 9. Jalankan server lokal
+php artisan serve
+```
+
+Aplikasi dapat diakses melalui `http://127.0.0.1:8000`.
+
+### Menjalankan Testing
+
+```bash
+# Unit & Feature test (Pest)
+php artisan test
+```
+
+---
+
+## 📁 Struktur Direktori Utama
+
+```
+sibanksa/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   └── Requests/          # Form Request validation (Auth, Setoran, dll.)
+│   └── Models/
+├── database/
+│   ├── migrations/
+│   └── seeders/
+├── public/
+│   ├── sw.js                  # Service worker (Workbox)
+│   └── main-logo.svg
+├── resources/
+│   ├── js/
+│   │   ├── Pages/              # Halaman Inertia/Vue
+│   │   └── Components/
+│   └── css/
+├── routes/
+│   └── web.php
+└── vite.config.js              # Konfigurasi Vite + PWA plugin
+```
+
+---
+
+## 🧪 Metodologi Pengujian
+
+Sistem ini diuji melalui tiga pendekatan untuk memastikan kualitas perangkat lunak:
+
+1. **White-Box Testing** — Analisis cyclomatic complexity dan flow graph, diverifikasi dengan unit test Pest PHP
+2. **Black-Box Testing** — Equivalence Class Partitioning (ECP) mengacu pada kaidah Myers
+3. **Usability Testing** — System Usability Scale (SUS) dengan 10 responden, memperoleh skor **85.625** (kategori *Excellent*, mengacu pada Nielsen serta Hwang & Salvendy, 2010)
+
+---
+
+## 📚 Dokumentasi Akademik
+
+Proyek ini merupakan bagian dari Tugas Akhir dengan dokumentasi lengkap meliputi:
+
+- Use Case Diagram, Activity Diagram, Sequence Diagram, Class Diagram, ERD, dan PDM
+- Estimasi *story point* (skala 1–5, mengacu pada Cohn, 2005)
+- Dokumentasi ditulis sesuai kaidah PUEBI dan konvensi akademik Bahasa Indonesia
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Integrasi laporan analitik untuk Ketua RW
+- [ ] Ekspor data ke format Excel
+- [ ] Notifikasi WhatsApp Gateway
+- [ ] Dashboard statistik lingkungan (dampak pengurangan sampah)
+
+---
+
+## 📄 Lisensi
+
+Proyek ini dikembangkan untuk keperluan akademik (Tugas Akhir). Silakan hubungi penulis untuk penggunaan lebih lanjut.
+
+---
+
+## 👤 Kontributor
+
+Dikembangkan oleh **Muhammad Dzulfiqar** — Mahasiswa Informatika/Sistem Informasi, Telkom University Surabaya.
+
+<p align="center">Made with ♻️ for a cleaner neighborhood</p>
