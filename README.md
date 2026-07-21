@@ -80,12 +80,12 @@ Sistem ini dikembangkan sebagai **Tugas Akhir (skripsi)**, dibangun secara solo 
 ## 🏗️ Arsitektur Sistem
 
 ```
-┌─────────────────┐      Inertia.js      ┌──────────────────┐
-│   Vue 3 (SPA)    │◄────────────────────►│  Laravel Backend  │
+┌──────────────-───┐      Inertia.js       ┌───────────-───────┐
+│   Vue 3 (SPA)    │◄─────────────────-───►│  Laravel Backend  │
 │  - Dashboard     │    (JSON + Props)     │  - Controllers    │
 │  - Forms         │                       │  - Form Requests  │
 │  - Service Worker│                       │  - Eloquent Models│
-└────────┬─────────┘                       └─────────┬─────────┘
+└────────-─────────┘                       └─────────┬─────────┘
                                                      │
                                                MySQL Database
                                            (users, sampah, jadwal_
@@ -97,7 +97,6 @@ Sistem ini dikembangkan sebagai **Tugas Akhir (skripsi)**, dibangun secara solo 
 
 | Role | Akses |
 |---|---|
-| **Developer** | Akses penuh sistem (superuser) |
 | **Ketua RW** | Monitoring seluruh RT, verifikasi tingkat RW |
 | **Bank Sampah** (per RT) | Kelola setoran, jadwal, dan nasabah di RT masing-masing |
 | **Nasabah/Warga** | Setor sampah, cek saldo, lihat jadwal, ajukan pencairan |
