@@ -50,7 +50,6 @@ Sistem ini dikembangkan sebagai **Tugas Akhir (skripsi)**, dibangun secara solo 
 | 🔔 **Push Notifications** | Notifikasi real-time (berbasis Web Push/VAPID) untuk info jadwal dan status transaksi |
 | 🤖 **Chatbot** | Asisten virtual untuk membantu warga mendapatkan informasi seputar layanan bank sampah |
 | 📊 **Ekspor Laporan PDF** | Ekspor data transaksi dan setoran ke PDF menggunakan pdfMake, lengkap dengan tabel interaktif (DataTables) |
-| 📱 **Progressive Web App** | Dapat di-install seperti aplikasi native (Android/iOS/Desktop), mendukung mode offline untuk halaman yang pernah dikunjungi |
 | 🏦 **Manajemen Rekening Bank** | Integrasi data rekening bank (Mandiri, BCA, BNI, BRI, CIMB Niaga) untuk proses pencairan saldo |
 
 ---
@@ -87,15 +86,11 @@ Sistem ini dikembangkan sebagai **Tugas Akhir (skripsi)**, dibangun secara solo 
 │  - Forms         │                       │  - Form Requests  │
 │  - Service Worker│                       │  - Eloquent Models│
 └────────┬─────────┘                       └─────────┬─────────┘
-         │                                            │
-   Workbox Cache                                 MySQL Database
-   (offline shell)                          (users, sampah, jadwal_
-         │                                    pelaksanaan, dll.)
-         ▼
-┌─────────────────┐
-│  Push Service    │
-│  (VAPID/Web Push)│
-└──────────────────┘
+                                                     │
+                                               MySQL Database
+                                           (users, sampah, jadwal_
+                                               pelaksanaan, dll.)
+         
 ```
 
 ### Struktur Peran (Roles)
