@@ -21,7 +21,26 @@ registerRoute(
 // Ini membuat halaman tetap bisa diakses saat offline jika pernah dikunjungi sebelumnya
 registerRoute(
   ({request}) => request.mode === 'navigate',
-  new NetworkFirst({ cacheName: 'pages' })
+  new NetworkFirst({
+    cacheName: 'pages',
+    networkTimeoutSeconds: 5, // kalau network lambat >5s baru fallback ke cache
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 20,
+        maxAgeSeconds: 60 * 60 * 24, // 1 hari, biar cache lama otomatis basi
+      }),
+      {
+        // JANGAN cache kalau bukan HTML asli
+        cacheWillUpdate: async ({ response }) => {
+          const contentType = response.headers.get('content-type') || '';
+          if (response.status === 200 && contentType.includes('text/html')) {
+            return response;
+          }
+          return null; // response JSON/Inertia partial ditolak, tidak masuk cache
+        },
+      },
+    ],
+  })
 );
 
 self.addEventListener('install', event => {
