@@ -67,11 +67,6 @@ Sistem ini dikembangkan sebagai **Tugas Akhir (skripsi)**, dibangun secara solo 
 - [Inertia.js](https://inertiajs.com/) — Menjembatani Laravel & Vue tanpa membangun API terpisah
 - Tailwind CSS — Styling responsif
 
-**PWA & Offline**
-- [Workbox 7.0.0](https://developer.chrome.com/docs/workbox) — Service worker & caching strategy
-- Web App Manifest — Instalasi ke home screen
-- Web Push API + VAPID — Notifikasi push
-
 **Testing & Quality**
 - Pest PHP — Unit testing (white-box, cyclomatic complexity)
 - Equivalence Class Partitioning (ECP) — Black-box testing (kaidah Myers)
