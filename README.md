@@ -221,7 +221,6 @@ Proyek ini merupakan bagian dari Tugas Akhir dengan dokumentasi lengkap meliputi
 
 - [ ] Integrasi laporan analitik untuk Ketua RW
 - [ ] Ekspor data ke format Excel
-- [ ] Notifikasi WhatsApp Gateway
 - [ ] Dashboard statistik lingkungan (dampak pengurangan sampah)
 
 ---
