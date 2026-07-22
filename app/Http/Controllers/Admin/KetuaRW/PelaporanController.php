@@ -115,6 +115,7 @@ class PelaporanController extends Controller
         $pencatatanSetoranItems = $this->pencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
             ->whereHas('setoran', function ($query) {
                 $query->where('id_userdetail', Auth::user()->user_detail->id);
+                $query->where('status', 'Disetujui');
             })
             ->get();
         $idUserRT = Auth::user()->user_detail->id_rt;
