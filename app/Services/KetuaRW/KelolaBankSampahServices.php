@@ -26,21 +26,32 @@ class KelolaBankSampahServices
     {
 
 
-        $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.pencatatan'])
+        $bankSampah = $this->user::with([
+            'user_detail.userbank',
+            'user_detail.jadwal',
+            'user_detail.user_log',
+            'user_detail.pencatatan'
+        ])
             ->whereHas('user_detail', function ($query) {
-                $query->where('id_roles', 2);
-                $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%')
-                    ->orWhere('fullName', 'LIKE', '%Bank Sampah%');
-                    $query->where('status','NOT LIKE', 'Ditolak');
-            })->orderBy(
-                $this->userDetail::select('status')
+                $query->where('id_roles', 2)
+                    ->where(function ($q) {
+                        $q->where('fullName', 'LIKE', '%Petugas Bank Sampah%')
+                            ->orWhere('fullName', 'LIKE', '%Bank Sampah%');
+                    })
+                    ->where('status', '!=', 'Ditolak');
+            })
+            ->orderBy(
+                $this->userDetail::select(DB::raw("FIELD(status, 'Pengajuan Verifikasi', 'Pending', 'Disetujui')"))
                     ->whereColumn('user_details.id_user', 'users.id')
-                    ->orderByRaw("FIELD(status, 'Pengajuan Verifikasi','Pending','Disetujui') DESC")
-                    ->limit(1)
-            )->orderBy(
-                $this->userDetail::select('id_rt')
-                    ->whereColumn('user_details.id_user', 'users.id'),
+                    ->limit(1),
                 'ASC'
+            )
+            ->orderBy(
+                $this->userDetail::select('created_at') // ganti sesuai nama kolom tanggal pengajuan kamu
+                    ->whereColumn('user_details.id_user', 'users.id')
+                    ->orderByRaw("FIELD(status, 'Pengajuan Verifikasi', 'Pending', 'Disetujui') ASC")
+                    ->limit(1),
+                'DESC'
             )
             ->get();
 
