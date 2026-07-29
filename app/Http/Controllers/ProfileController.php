@@ -216,7 +216,7 @@ class ProfileController extends Controller
                 'postal_code' => $request->postal_code,
             ]
         );
-        
+
 
         $geoLocation->open_street()->updateOrCreate(
             [
@@ -226,7 +226,7 @@ class ProfileController extends Controller
                 'id_geoloc' => $geoLocation->id,
                 'display_name' => $request->display_name,
                 'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
+                'logitude' => $request->longitude,
                 'type' => $request->type,
             ]
         );

@@ -92,102 +92,146 @@ class KetuaRWChatController extends Controller
      */
     public function store(Request $request, $id)
     {
-        try {
+        $message = $request->message;
+
+        $fullName = $request->name;
 
 
-            $message = $request->message;
+        $botResponse = '';
 
-            $fullName = $request->name;
+        if ($fullName === 'AI Banksa') {
+            $text = ['Tambahkan', 'Ubah', 'Hapus', 'Rekening', 'Total', 'Setoran', 'Bulan', 'Jadwal', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW', 'data', 'belum'];
 
+            $wordsInMessage = array_map('strtolower', preg_split('/\s+/', $message, -1, PREG_SPLIT_NO_EMPTY));
+            $keywordsFromDb = array_map('strtolower', $text);
+            $matches = array_intersect($wordsInMessage, $keywordsFromDb);
 
-            $botResponse = '';
+            if ($matches) {
+                if (in_array('rekening', $matches)) {
+                    $angkaSaja = filter_var($request->message, FILTER_SANITIZE_NUMBER_INT);
 
-            if ($fullName === 'AI Banksa') {
-                $text = ['Tambahkan', 'Ubah', 'Hapus', 'Rekening', 'Total', 'Setoran', 'Bulan', 'Jadwal', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW', 'data', 'belum'];
+                    $hasil = str_replace(['.', ','], '', $angkaSaja);
 
-                $wordsInMessage = array_map('strtolower', preg_split('/\s+/', $message, -1, PREG_SPLIT_NO_EMPTY));
-                $keywordsFromDb = array_map('strtolower', $text);
-                $matches = array_intersect($wordsInMessage, $keywordsFromDb);
+                    $botResponse = "Rekening Anda:" . number_format($hasil, 0, ',', '.');
+                } elseif (in_array('setoran', $matches)) {
+                    $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+                        ->whereHas('setoran', function ($query) {
+                            $query->where('id_userdetail', Auth::user()->user_detail->id);
+                        })
+                        ->latest() // Mengurutkan dari yang terbaru
+                        ->get();
 
-                if ($matches) {
-                    if (in_array('rekening', $matches)) {
-                        $angkaSaja = filter_var($request->message, FILTER_SANITIZE_NUMBER_INT);
+                    $total = $pencatatanSetoranItems->sum('setoran.total_setoran');
 
-                        $hasil = str_replace(['.', ','], '', $angkaSaja);
+                    $botResponse = "Total setoran Anda sampai saat ini adalah: Rp " . number_format($total, 0, ',', '.');
+                } elseif (
+                    in_array('setoran', $matches) &&
+                    in_array('bulan', $matches) &&
+                    in_array('ini', $matches) || in_array('setoran', $matches) &&
+                    in_array('bulan', $matches) &&
+                    in_array('sekarang', $matches)
+                ) {
+                    $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+                        ->whereHas('setoran', function ($query) {
+                            $query->where('id_userdetail', Auth::user()->user_detail->id)
+                                ->whereMonth('tanggal_setoran', now()->month)
+                                ->whereYear('tanggal_setoran', now()->year);
+                        })
+                        ->latest() // Mengurutkan dari yang terbaru
+                        ->get();
 
-                        $botResponse = "Rekening Anda:" . number_format($hasil, 0, ',', '.');
-                    } elseif (in_array('setoran', $matches)) {
-                        $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
-                            ->whereHas('setoran', function ($query) {
-                                $query->where('id_userdetail', Auth::user()->user_detail->id);
-                            })
-                            ->latest() // Mengurutkan dari yang terbaru
-                            ->get();
+                    $total = $pencatatanSetoranItems->sum('setoran.total_setoran');
 
-                        $total = $pencatatanSetoranItems->sum('setoran.total_setoran');
+                    $botResponse = "Total setoran Anda bulan ini adalah: Rp " . number_format($total, 0, ',', '.');
+                } elseif (in_array('jadwal', $matches)) {
 
-                        $botResponse = "Total setoran Anda sampai saat ini adalah: Rp " . number_format($total, 0, ',', '.');
-                    } elseif (
-                        in_array('setoran', $matches) &&
-                        in_array('bulan', $matches) &&
-                        in_array('ini', $matches) || in_array('setoran', $matches) &&
-                        in_array('bulan', $matches) &&
-                        in_array('sekarang', $matches)
-                    ) {
-                        dd('setoran bulan ini');
-                    } elseif (in_array('jadwal', $matches)) {
+                    $jadwalTerbaru = $this->jadwalPelaksanaanServices->getJadwalTerbaru();
 
-                        $jadwalTerbaru = $this->jadwalPelaksanaanServices->getJadwalTerbaru();
+                    $botResponse = "Jadwal Terbaru RT mu yakni " . $jadwalTerbaru->tanggal_setoran;
+                } elseif (in_array('jumlah', $matches)) {
+                    if (in_array(needle: 'rw', haystack: $matches)) {
+                        $jumlahNasabah = UserDetail::where('id_roles', 3)->count();
 
-                        $botResponse = "Jadwal Terbaru RT mu yakni " . $jadwalTerbaru->tanggal_setoran;
-                    } elseif (in_array('jumlah', $matches)) {
-                        if (in_array(needle: 'rw', haystack: $matches)) {
-                            dd('rw');
-                        } elseif (in_array(needle: 'sampah', haystack: $matches)) {
+                        $botResponse = "Jumlah Nasabah di RW anda ada " . number_format($jumlahNasabah, 0, ',', '.');
+                    } elseif (in_array(needle: 'nasabah', haystack: $matches)) {
 
-                            $jumlahSampah = Sampah::where('id_userdetail', Auth::user()->user_detail->id)->count();
+                        $jumlahNasabah = UserDetail::where('id_roles', 3)->count();
 
-                            $botResponse = "Jumlah Jenis Sampah di RT anda ada " . number_format($jumlahSampah, 0, ',', '.');
+                        $botResponse = "Jumlah Nasabah di RW anda ada " . number_format($jumlahNasabah, 0, ',', '.');
+                    } elseif (in_array(needle: 'tertinggi', haystack: $matches)) {
+
+                        $topNasabah = UserDetail::where('id_roles', 3)
+                            ->withCount(['setoran as total_setoran' => function ($query) {
+                                $query->select(\DB::raw("SUM(total_setoran)"));
+                            }])
+                            ->orderByDesc('total_setoran')
+                            ->first();
+
+                        if ($topNasabah) {
+                            $botResponse = "Nasabah dengan setoran tertinggi adalah " . $topNasabah->fullName . " dengan total setoran Rp " . number_format($topNasabah->total_setoran, 0, ',', '.');
+                        } else {
+                            $botResponse = "Tidak ada data nasabah.";
                         }
-                    } else {
-                        $botResponse = 'Maaf saya tidak bisa memahami anda';
+                    } elseif (in_array(needle: 'terbanyak', haystack: $matches)) {
+
+                        $topSampah = Sampah::select('jenis_sampah', \DB::raw("COUNT(*) as jumlah"))
+                            ->groupBy('jenis_sampah')
+                            ->orderByDesc('jumlah')
+                            ->first();
+
+                        if ($topSampah) {
+                            $botResponse = "Jenis sampah terbanyak adalah " . $topSampah->jenis_sampah . " dengan jumlah " . number_format($topSampah->jumlah, 0, ',', '.') . " jenis.";
+                        } else {
+                            $botResponse = "Tidak ada data sampah.";
+                        }
+                    } elseif (in_array(needle: 'sampah', haystack: $matches)) {
+
+                        $jumlahSampah = Sampah::where('id_userdetail', Auth::user()->user_detail->id)->count();
+
+                        $botResponse = "Jumlah Jenis Sampah di RT anda ada " . number_format($jumlahSampah, 0, ',', '.');
                     }
                 } else {
                     $botResponse = 'Maaf saya tidak bisa memahami anda';
                 }
-
-                $this->chatServices->createChatBot([
-                    'id_userdetail' => Auth::user()->user_detail->id,
-                    'chat'     => $message,
-                    'bot_response'       => $botResponse,
-                ]);
             } else {
-                $user = Auth::user();
-                $myDetail = $user->user_detail;
+                $botResponse = 'Maaf saya tidak bisa memahami anda';
+            }
 
-                $targetUser = User::with('user_detail')->find($id);
+            $this->chatServices->createChatBot([
+                'id_userdetail' => Auth::user()->user_detail->id,
+                'chat'     => $message,
+                'bot_response'       => $botResponse,
+            ]);
+        } else {
+            $user = Auth::user();
+            $myDetail = $user->user_detail;
 
+            $targetUser = User::with('user_detail')->find($id);
 
+            if ($targetUser && $targetUser->user_detail) {
                 $recipientDetailId = $targetUser->user_detail->id;
-                $this->chatServices->createChat([
+                $newChat = $this->chatServices->createChat([
                     'id_userdetail' => $recipientDetailId,
                     'sender_id'     => $user->id,
                     'message'       => $request->message,
                     'time'          => now()->format('H:i'),
                 ]);
 
+                // Broadcast realtime ke penerima
+                event(new \App\Events\NewChatMessage($newChat, $myDetail->fullName, $targetUser->id));
+
                 $targetUser->notify(new ChatSendNotif(
                     $myDetail->id,
                     'Pesan baru dari ' . $myDetail->fullName,
                     '/bank-sampah/chat'
                 ));
+            } else {
+                return back()->with('error', 'Penerima tidak ditemukan.');
             }
-
-
-            return redirect()->back();
-        } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
         }
+
+
+        return redirect()->back();
     }
 
     /**
@@ -211,19 +255,17 @@ class KetuaRWChatController extends Controller
      */
     public function update(Request $request, $id)
     {
-        try {
-            $user = Auth::user();
-            $myDetail = $user->user_detail;
+        $user = Auth::user();
+        $myDetail = $user->user_detail;
 
-            $targetUser = User::with('user_detail')->find($id);
+        $targetUser = User::with('user_detail')->find($id);
 
-            if (!$targetUser || !$targetUser->user_detail) {
-                throw new \Exception("Penerima tidak ditemukan.");
-            }
-
+        if (!$targetUser || !$targetUser->user_detail) {
+            return back()->with('error', 'Penerima tidak ditemukan.');
+        } else {
             $recipientDetailId = $targetUser->user_detail->id;
 
-            $this->chatServices->updateChat($request->id, [
+            $result = $this->chatServices->updateChat($request->id, [
                 'id_userdetail' => $recipientDetailId,
                 'sender_id'     => $user->id,
                 'message'       => $request->message,
@@ -232,9 +274,11 @@ class KetuaRWChatController extends Controller
                 'is_read' => true
             ]);
 
-            return redirect()->back();
-        } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            if ($result) {
+                return redirect()->back();
+            } else {
+                return back()->with('error', 'Gagal memperbarui chat.');
+            }
         }
     }
 
@@ -243,56 +287,52 @@ class KetuaRWChatController extends Controller
      */
     public function destroy($id)
     {
-        try {
-            $this->chatServices->deleteChat($id);
+        $result = $this->chatServices->deleteChat($id);
+        if ($result) {
             return redirect()->back()->with('message', 'Data berhasil dihapus');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
+        } else {
+            return back()->with('error', 'Gagal menghapus');
         }
     }
 
     public function deleteRoomChat($id)
     {
-        try {
-            $this->chatServices->deleteRoomChat($id);
+        $result = $this->chatServices->deleteRoomChat($id);
+        if ($result) {
             return redirect()->back()->with('message', 'Data berhasil dihapus');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
+        } else {
+            return back()->with('error', 'Gagal menghapus');
         }
     }
 
     public function readChat(Request $request, $id)
     {
-        try {
-            $user = Auth::user();
-            $myDetail = $user->user_detail;
+        $user = Auth::user();
+        $myDetail = $user->user_detail;
 
-            $targetUser = User::with('user_detail')->find($id);
+        $targetUser = User::with('user_detail')->find($id);
 
-            if (!$targetUser || !$targetUser->user_detail) {
-                throw new \Exception("Penerima tidak ditemukan.");
-            }
-
-            $recipientDetailId = $targetUser->user_detail->id;
-
-            $this->chatServices->readChat($id, [
-                'id_userdetail' => $recipientDetailId,
-                'sender_id'     => $user->id,
-                'message'       => $request->message,
-                'time'          => now()->format('H:i'),
-                'read_at'          => now()->format('H:i'),
-                'is_read' => true
-            ]);
-
-            return redirect()->back();
-        } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+        if (!$targetUser || !$targetUser->user_detail) {
+            return back()->with('error', 'Penerima tidak ditemukan.');
         }
+
+        $recipientDetailId = $targetUser->user_detail->id;
+
+        $this->chatServices->readChat($id, [
+            'id_userdetail' => $recipientDetailId,
+            'sender_id'     => $user->id,
+            'message'       => $request->message,
+            'time'          => now()->format('H:i'),
+            'read_at'          => now()->format('H:i'),
+            'is_read' => true
+        ]);
+
+        event(new \App\Events\MessageRead($user->id, $targetUser->id));
+
+        return redirect()->back();
     }
 }
 
-
-// <?php
 
 // namespace App\Http\Controllers\Admin\KetuaRW;
 
@@ -307,7 +347,6 @@ class KetuaRWChatController extends Controller
 // use App\Models\UserDetail;
 // use App\Notifications\Admin\ChatSendNotif;
 // use App\Services\ChatServices;
-// use App\Services\GroqServices;
 // use App\Services\KetuaRW\JadwalPelaksanaanServices;
 // use App\Services\KetuaRW\KelolaBankSampahServices;
 // use Illuminate\Http\Request;
@@ -321,7 +360,6 @@ class KetuaRWChatController extends Controller
 //      */
 
 //     public function __construct(
-//         protected GroqServices $groqServices,
 //         protected KelolaBankSampahServices $kelolaBankSampahServices,
 //         protected ChatServices $chatServices,
 //         protected JadwalPelaksanaanServices $jadwalPelaksanaanServices
@@ -399,50 +437,63 @@ class KetuaRWChatController extends Controller
 //             $botResponse = '';
 
 //             if ($fullName === 'AI Banksa') {
-//                 $text           = ['Tambahkan', 'Ubah', 'Hapus', 'Rekening', 'Total', 'Setoran', 'Bulan', 'Jadwal', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW', 'data', 'belum'];
+//                 $text = ['Tambahkan', 'Ubah', 'Hapus', 'Rekening', 'Total', 'Setoran', 'Bulan', 'Jadwal', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW', 'data', 'belum'];
+
 //                 $wordsInMessage = array_map('strtolower', preg_split('/\s+/', $message, -1, PREG_SPLIT_NO_EMPTY));
 //                 $keywordsFromDb = array_map('strtolower', $text);
-//                 $matches        = array_intersect($wordsInMessage, $keywordsFromDb);
+//                 $matches = array_intersect($wordsInMessage, $keywordsFromDb);
 
-//                 $contextData = '';
-//                 $userDetail  = Auth::user()->user_detail;
+//                 if ($matches) {
+//                     if (in_array('rekening', $matches)) {
+//                         $angkaSaja = filter_var($request->message, FILTER_SANITIZE_NUMBER_INT);
 
-//                 // --- Kumpulkan data DB sebagai context ---
-//                 if (in_array('setoran', $matches)) {
-//                     $items = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
-//                         ->whereHas('setoran', fn($q) => $q->where('id_userdetail', $userDetail->id))
-//                         ->latest()->get();
+//                         $hasil = str_replace(['.', ','], '', $angkaSaja);
 
-//                     $total    = $items->sum('setoran.total_setoran');
-//                     $bulanIni = $items->filter(fn($i) => $i->created_at->isCurrentMonth())->sum('setoran.total_setoran');
+//                         $botResponse = "Rekening Anda:" . number_format($hasil, 0, ',', '.');
+//                     } elseif (in_array('setoran', $matches)) {
+//                         $pencatatanSetoranItems = PencatatanSetoranItems::with(['setoran.user_detail', 'sampah'])
+//                             ->whereHas('setoran', function ($query) {
+//                                 $query->where('id_userdetail', Auth::user()->user_detail->id);
+//                             })
+//                             ->latest() // Mengurutkan dari yang terbaru
+//                             ->get();
 
-//                     $contextData .= "Total setoran keseluruhan: Rp " . number_format($total, 0, ',', '.') . ". ";
-//                     $contextData .= "Total setoran bulan ini: Rp " . number_format($bulanIni, 0, ',', '.') . ". ";
+//                         $total = $pencatatanSetoranItems->sum('setoran.total_setoran');
+
+//                         $botResponse = "Total setoran Anda sampai saat ini adalah: Rp " . number_format($total, 0, ',', '.');
+//                     } elseif (
+//                         in_array('setoran', $matches) &&
+//                         in_array('bulan', $matches) &&
+//                         in_array('ini', $matches) || in_array('setoran', $matches) &&
+//                         in_array('bulan', $matches) &&
+//                         in_array('sekarang', $matches)
+//                     ) {
+//                         dd('setoran bulan ini');
+//                     } elseif (in_array('jadwal', $matches)) {
+
+//                         $jadwalTerbaru = $this->jadwalPelaksanaanServices->getJadwalTerbaru();
+
+//                         $botResponse = "Jadwal Terbaru RT mu yakni " . $jadwalTerbaru->tanggal_setoran;
+//                     } elseif (in_array('jumlah', $matches)) {
+//                         if (in_array(needle: 'rw', haystack: $matches)) {
+//                             dd('rw');
+//                         } elseif (in_array(needle: 'sampah', haystack: $matches)) {
+
+//                             $jumlahSampah = Sampah::where('id_userdetail', Auth::user()->user_detail->id)->count();
+
+//                             $botResponse = "Jumlah Jenis Sampah di RT anda ada " . number_format($jumlahSampah, 0, ',', '.');
+//                         }
+//                     } else {
+//                         $botResponse = 'Maaf saya tidak bisa memahami anda';
+//                     }
+//                 } else {
+//                     $botResponse = 'Maaf saya tidak bisa memahami anda';
 //                 }
-
-//                 if (in_array('jadwal', $matches)) {
-//                     $jadwal       = $this->jadwalPelaksanaanServices->getJadwalTerbaru();
-//                     $contextData .= "Jadwal setoran terbaru: " . $jadwal->tanggal_setoran . ". ";
-//                 }
-
-//                 if (in_array('sampah', $matches) || in_array('jumlah', $matches)) {
-//                     $jumlahSampah = Sampah::where('id_userdetail', $userDetail->id)->count();
-//                     $contextData .= "Jumlah jenis sampah di RT: " . $jumlahSampah . " jenis. ";
-//                 }
-
-//                 if (in_array('rekening', $matches)) {
-//                     $angkaSaja    = filter_var($message, FILTER_SANITIZE_NUMBER_INT);
-//                     $hasil         = str_replace(['.', ','], '', $angkaSaja);
-//                     $contextData .= "Nomor rekening: " . $hasil . ". ";
-//                 }
-
-//                 // --- Kirim ke Groq ---
-//                 $botResponse = $this->groqServices->ask($message, $contextData ?: 'Tidak ada data spesifik.');
 
 //                 $this->chatServices->createChatBot([
-//                     'id_userdetail' => $userDetail->id,
-//                     'chat'          => $message,
-//                     'bot_response'  => $botResponse,
+//                     'id_userdetail' => Auth::user()->user_detail->id,
+//                     'chat'     => $message,
+//                     'bot_response'       => $botResponse,
 //                 ]);
 //             } else {
 //                 $user = Auth::user();
@@ -573,4 +624,3 @@ class KetuaRWChatController extends Controller
 //         }
 //     }
 // }
-

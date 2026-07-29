@@ -40,10 +40,10 @@ class TransactionServices
 
                 // Store File
                 $role = Auth::user()->user_detail->id_roles;
-                $folderPath = 'public/files/documentUser/Nasabah/' . $data['id_userdetail'];
+                $folderPath = 'files/documentUser/Nasabah/' . $data['id_userdetail'];
 
 
-                $files->storeAs($folderPath, $original_filesname);
+                $files->storeAs($folderPath, $original_filesname, 'public');
 
 
                 // ELOQUENT

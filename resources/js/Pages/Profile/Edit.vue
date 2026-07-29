@@ -445,7 +445,7 @@ const breadcrumbItems = [
         </div>
 
 
-        <div class="w-full hidden md:flex items-center  z-50 relative bottom-0 bg-black">
+        <div class="w-full hidden md:flex items-center z-20 relative bottom-0 bg-black">
 
             <div class="right-0  w-max absolute items-end">
                 <div class="text-center right-0 relative inset-0 w-full py-5 flex flex-col space-y-3">
