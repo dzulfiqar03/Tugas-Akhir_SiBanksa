@@ -204,3 +204,41 @@ const handlePage = () => {
     }
 }
 </style>
+
+<style>
+@media print {
+
+    /* 1. Sembunyikan SEMUA elemen di halaman */
+    body * {
+        visibility: hidden !important;
+    }
+
+    /* 2. Tampilkan kembali area kwitansi dan semua isinya */
+    #receipt,
+    #receipt * {
+        visibility: visible !important;
+    }
+
+    /* 3. Atur posisi kwitansi ke paling atas halaman */
+    #receipt {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 20px !important;
+        border: none !important;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 4. Sembunyikan elemen pembungkus layout (header atas, bottom nav, sidebar, dsb) */
+    nav,
+    aside,
+    header,
+    .print\:hidden {
+        display: none !important;
+    }
+}
+</style>

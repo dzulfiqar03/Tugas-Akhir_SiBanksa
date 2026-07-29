@@ -126,13 +126,15 @@
                     <template v-if="detectChat === 'AI Banksa'" v-for="(msg, i) in activeChat.user_chat" :key="i">
 
                         <template v-if="activeChat.id === 'AI_BOT'">
-                            <div class="flex w-full justify-end">
-                                <div
-                                    class="max-w-[75%] hover:-translate-x-3 duration-75 p-3 rounded-2xl bg-[#dcf8c6] dark:bg-emerald-800 rounded-tr-none shadow-sm">
-                                    <p class="text-sm text-black dark:text-white">{{ msg.user_msg }}</p>
-                                    <div class="text-[9px] text-right opacity-50 mt-1 uppercase">{{ msg.time }}</div>
-                                </div>
-                            </div>
+                           <div class="flex w-full justify-end">
+    <div class="max-w-[75%] hover:-translate-x-3 duration-75 p-3 rounded-2xl bg-[#dcf8c6] dark:bg-emerald-800 rounded-tr-none shadow-sm">
+        <p class="text-sm text-black dark:text-white">{{ msg.user_msg }}</p>
+        <div class="text-[9px] text-right opacity-50 mt-1 uppercase flex items-center justify-end gap-1">
+            <span>{{ msg.time }}</span>
+            <i class="fas fa-check-double text-[11px] text-sky-500"></i>
+        </div>
+    </div>
+</div>
                             <div class="flex w-full justify-start">
                                 <div
                                     class="max-w-[75%] p-3 hover:translate-x-3 duration-75 rounded-2xl bg-white dark:bg-gray-800 rounded-tl-none border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -162,9 +164,12 @@
                                     : 'bg-white dark:bg-gray-800  text-black dark:text-gray-100  dark:border-gray-700 rounded-tl-none border border-gray-100',
                                 idBtn === msg.id ? 'ring-4 ring-emerald-200 dark:ring-emerald-900 shadow-md' : ''
                             ]">
-                                <p class="text-sm leading-relaxed">{{ msg.message }}</p>
-                                <div class="text-[9px] text-right text-gray-500 dark:text-gray-400 mt-1 uppercase">{{
-                                    msg.time }}</div>
+                               <p class="text-sm leading-relaxed">{{ msg.message }}</p>
+<div class="text-[9px] text-right text-gray-500 dark:text-gray-400 mt-1 uppercase flex items-center justify-end gap-1">
+    <span>{{ msg.time }}</span>
+    <i v-if="msg.sender_id === currentUserId" class="fas fa-check-double text-[11px]"
+        :class="msg.is_read ? 'text-sky-500' : 'text-gray-400 dark:text-gray-500'"></i>
+</div>
 
                                 <div v-if="idBtn === msg.id" :class="[
                                     'absolute top-full mt-2 w-40 bg-white dark:bg-gray-800 shadow-2xl rounded-xl border dark:border-gray-700 z-50 overflow-hidden',
@@ -302,6 +307,8 @@ import { Head, router, usePage } from '@inertiajs/vue3';
 import { onClickOutside } from '@vueuse/core';
 import Swal from 'sweetalert2';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
+
+import { onBeforeUnmount } from 'vue'
 const props = defineProps({
     sidebardata: Object,
     allNasabah: Array,
@@ -583,8 +590,50 @@ onMounted(() => {
     updateTheme();
     console.log(notifEnable)
 
+     const myUserId = page.props.auth.user.id;
+
+    window.Echo.private(`App.Models.User.${myUserId}`)
+        .listen('.NewChatMessage', (e) => {
+            const targetChat = chatTersedia.value.find(c => String(c.id) === String(e.sender_id));
+
+            if (targetChat) {
+                targetChat.user_chat.push({
+                    id: e.id,
+                    sender_id: e.sender_id,
+                    message: e.message,
+                    time: e.time,
+                    is_read: false
+                });
+
+                if (activeChat.value?.id === targetChat.id) {
+                    scrollToBottom();
+                }
+            } else {
+                chatTersedia.value.unshift({
+                    id: e.sender_id,
+                    fullName: e.sender_name,
+                    user_chat: [{ id: e.id, sender_id: e.sender_id, message: e.message, time: e.time, is_read: false }]
+                });
+            }
+        })
+        .listen('.MessageRead', (e) => {
+            // e.reader_id = orang yang baru saja membaca pesan-pesan kita
+            const targetChat = chatTersedia.value.find(c => String(c.id) === String(e.reader_id));
+
+            if (targetChat) {
+                targetChat.user_chat.forEach(msg => {
+                    if (String(msg.sender_id) === String(myUserId)) {
+                        msg.is_read = true;
+                    }
+                });
+            }
+        });
+
 });
 
+onBeforeUnmount(() => {
+    window.Echo.leave(`App.Models.User.${page.props.auth.user.id}`);
+});
 
 const toggleSound = () => {
     const audio = new Audio('/sounds/notification.mp3');

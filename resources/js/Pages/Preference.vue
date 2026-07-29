@@ -69,32 +69,70 @@
 
                     <div class="border-t border-gray-100 dark:border-gray-700"></div>
 
-<div class="flex items-center justify-between">
-    <div class="flex items-center gap-3">
-        <div class="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg">
                                 <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-        </div>
-        <div>
+                                </svg>
+                            </div>
+                            <div>
                                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Notifikasi Perangkat
                                 </h3>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Terima info sampah saat browser
                                     ditutup</p>
-        </div>
-    </div>
+                            </div>
+                        </div>
 
-    <button type="button" @click="requestNotificationPermission"
-        class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
-        Aktifkan Izin
-    </button>
-</div>
+                        <button type="button" @click="requestNotificationPermission"
+                            class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+                            Aktifkan Izin
+                        </button>
+                    </div>
                 </div>
 
             </div>
         </div>
+
+        <div class="border-t my-5 border-gray-100 dark:border-gray-700"></div>
+
+        <div class=" w-full  space-y-4">
+
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Manual Book</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Lihat tutorial website sibanksa disini!!!</p>
+            </div>
+            <div
+                class="bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 rounded-2xl p-6 transition-all">
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-orange-50 dark:bg-orange-500/10 rounded-lg">
+                            <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Manual Book</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Unduh panduan penggunaan aplikasi
+                                SiBanksa</p>
+                        </div>
+                    </div>
+
+                    <a href="https://drive.google.com/uc?export=download&id=1erFhUhyfl5mmUCkewNxJeVRhDNxKzADl"
+                        target="_blank" rel="noopener noreferrer"
+                        class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                        <i class="fas fa-download"></i> Unduh Manual Book
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
 
 
 
