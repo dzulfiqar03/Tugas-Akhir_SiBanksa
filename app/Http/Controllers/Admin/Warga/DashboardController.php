@@ -94,7 +94,7 @@ class DashboardController extends Controller
             ->with(['pencatatan_items.sampah', 'jadwal', 'transaction'])
             ->whereHas('transaction')
             ->latest()
-            ->take(5)
+            ->take(7)
             ->get()
             ->map(function ($p) {
                 $firstItem = $p->pencatatan_items->first();
@@ -141,7 +141,7 @@ class DashboardController extends Controller
 
         $jadwalRT =  JadwalPelaksanaan::whereHas('user_detail', function ($q) use ($detail) {
             $q->where('id_rt', $detail->id_rt);
-        })->get();
+        })->with('pencatatan_setoran')->get();
 
         $priceList = Sampah::select('nama_sampah as nama', 'harga as harga')->whereHas('user_detail', function ($q) {
             $q->where('id_rt', auth()->user()->user_detail->id_rt);
