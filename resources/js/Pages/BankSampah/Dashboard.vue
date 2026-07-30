@@ -772,7 +772,7 @@ const exportAsImage = async () => {
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
 
 
-        <div v-if="statusVerifikasi === 'Pengajuan Verifikasi'" class="animate-reveal max-w-7xl mx-auto space-y-6">
+        <div v-if="statusVerifikasi === 'Pengajuan Verifikasi' || statusVerifikasi === 'Ditolak'" class="animate-reveal max-w-7xl mx-auto space-y-6">
             <div class="card w-full shadow-sm border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
 
 
@@ -780,7 +780,13 @@ const exportAsImage = async () => {
                     class=" p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-700 dark:text-amber-400 text-sm grid items-center gap-3">
                     <div class="flex space-x-3 items-center">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <span>Akun Anda sedang dalam proses verifikasi.</span>
+                        <template v-if="statusVerifikasi === 'Pengajuan Verifikasi'">
+                            <span>Akun Anda sedang dalam proses verifikasi.</span>
+                        </template>
+
+                        <template v-else-if="statusVerifikasi === 'Ditolak'">
+                            <span>Akun Anda ditolak, silahkan periksa data dan dokumen anda.</span>
+                        </template>
                     </div>
 
 
