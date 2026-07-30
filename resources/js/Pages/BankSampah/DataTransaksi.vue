@@ -217,10 +217,18 @@ const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tun
         updateMobileData(api);
     },
         columns: [
-            {
-                data: null,
-            render: (data, type, row, meta) => meta.row + 1
-        },
+   {
+    data: 'jadwal',
+    render: (data, type, row, meta) => {
+        if (!row.jadwal || !row.jadwal.tanggal_setoran) {
+            return '<span class="text-gray-400">-</span>';
+        }
+
+        const tanggal = new Date(row.jadwal.tanggal_setoran);
+        const options = { day: '2-digit', month: 'short', year: 'numeric' };
+        return tanggal.toLocaleDateString('id-ID', options);
+    }
+},
         {
             // Langsung akses user_detail (tanpa kata 'jadwal')
             data: 'user_detail.fullName',
@@ -307,7 +315,7 @@ render: (data, type, row) => {
                 const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(row))));
                 return row.user_transaction.length === 0 ? !row.user_bank || row.user_bank.length === 0 ? ` <button
                                             onclick="window.uploadBukti('${base64Data}')"
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
+                                            class="flex items-center gap-2 px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-lg transition shadow-md shadow-red-500/20">
                                             <i class="fas fa-bell"></i> Kirim Bukti Pembayaran
                                         </button>`: ` <button
                                             onclick="window.uploadBukti('${base64Data}')"
@@ -393,7 +401,7 @@ exportOptions: {
                         // Atur Lebar (Pastikan array ini jumlahnya sama dengan colCount)
                         // Jika tabelmu punya 6 kolom, gunakan ini:
                         if (colCount === 6) {
-                            tableNode.table.widths = [25, '*', 100, 60, 80, 50];
+                            tableNode.table.widths = [80, '*', 100, 60, 80, 50];
                         }
 
                         // 3. TAMBAHKAN BARIS TOTAL DENGAN LOGIKA DINAMIS
@@ -507,7 +515,7 @@ exportOptions: {
 
                 // 4. Atur Lebar Kolom
                 var colConf = [
-                    { id: 'A', width: 5 }, { id: 'B', width: 30 },
+                    { id: 'A', width: 20 }, { id: 'B', width: 30 },
                     { id: 'C', width: 20 }, { id: 'D', width: 15 },
                     { id: 'E', width: 20 }, { id: 'F', width: 15 }
                 ];
@@ -575,7 +583,7 @@ exportOptions: {
 
                     return `
             <tr style="border-bottom: 1px solid #f3f4f6;">
-                <td style="padding: 12px; text-align: center;">${index + 1}</td>
+                <td style="padding: 12px; text-align: center;">${item.jadwal.tanggal_setoran}</td>
                 <td style="padding: 12px; font-weight: 600; text-transform: uppercase;">
                     ${item.user_detail.fullName}
                 </td>
@@ -616,7 +624,7 @@ exportOptions: {
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <h2 style="margin: 0; font-size: 28px; color: #d1d5db; letter-spacing: 4px;">SAMPAH</h2>
+                    <h2 style="margin: 0; font-size: 28px; color: #d1d5db; letter-spacing: 4px;">TRANSAKSI</h2>
                 </div>
             </div>
 
@@ -637,7 +645,7 @@ exportOptions: {
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
                 <thead>
                     <tr style="background: #f9fafb; color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">
-                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">No</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Tanggal Setor</th>
                         <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Nama Lengkap</th>
                         <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: center;">Nomor Rekening</th>
                         <th style="padding: 12px; border-bottom: 2px solid #f3f4f6; text-align: left;">Bank</th>
@@ -1168,7 +1176,7 @@ const maskPhone = (phone) => {
                                         <label
                                             class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
                                         <select @change="handleCategoryFilter"
-                                            class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+                                            class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-black dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
                                             <option value="">Semua</option>
                                             <option value="Tunai">Tunai</option>
                                             <option value="Non-Tunai">Non Tunai</option>
@@ -1194,7 +1202,7 @@ const maskPhone = (phone) => {
                                 class="w-full stripe hover">
                                 <thead>
                                     <tr class="text-gray-500">
-                                        <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">No</th>
+                                        <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Tanggal Setor</th>
                                         <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Nasabah</th>
                                         <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Nomor Rekening</th>
                                         <th class="pb-4 font-semibold uppercase text-[12px] tracking-wider text-center">Bank</th>

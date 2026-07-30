@@ -524,24 +524,60 @@ const calendarAttributes = computed(() => {
         dates: new Date(), // Otomatis mengambil tanggal hari ini
     });
 
-    if (props.jadwal) {
-        props.jadwal.forEach(item => {
+  if (props.jadwal) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    props.jadwal.forEach(item => {
+        const pencatatan = props.setoran.find(s => s.setoran && s.setoran.id_jadwal === item.id);
+        const jmlWargaDicatat = props.setoran.filter(s => s.setoran && s.setoran.id_jadwal === item.id).length;
+
+        const tgl = new Date(item.tanggal_setoran);
+        tgl.setHours(0, 0, 0, 0);
+
+        const sudahLewat = tgl.getTime() < today.getTime();
+        const hariIni = tgl.getTime() === today.getTime();
+
+        if (hariIni) {
             attributes.push({
-                key: item.id,
-                highlight: {
-                    color: 'green',
-                    fillMode: 'light',
-                },
+                key: `today-${item.id}`,
+                highlight: { color: 'red', fillMode: 'light' },
                 dates: new Date(item.tanggal_setoran),
-                popover: {
-                    label: item.kegiatan,
-                    visibility: 'hover',
-                },
+                popover: { label: 'Jadwal Pelaksanaan Sedang Berlangsung', visibility: 'hover' },
                 customData: item,
                 isEvent: true
             });
-        });
-    }
+        } else if (sudahLewat && pencatatan) {
+            attributes.push({
+                key: `recorded-${item.id}`,
+                highlight: { color: 'blue', fillMode: 'light' },
+                dates: new Date(item.tanggal_setoran),
+                popover: { label: `${jmlWargaDicatat} warga telah dicatat`, visibility: 'hover' },
+                customData: item,
+                isEvent: true
+            });
+        } else if (sudahLewat && !pencatatan) {
+            attributes.push({
+                key: `missed-${item.id}`,
+                highlight: { color: 'gray', fillMode: 'light' },
+                dates: new Date(item.tanggal_setoran),
+                popover: { label: 'Jadwal ini terlewat tanpa pencatatan', visibility: 'hover' },
+                customData: item,
+                isEvent: true
+            });
+        } else {
+            // belum lewat & bukan hari ini => akan datang
+            attributes.push({
+                key: `upcoming-${item.id}`,
+                highlight: { color: 'green', fillMode: 'light' },
+                dates: new Date(item.tanggal_setoran),
+                popover: { label: 'Jadwal Pelaksanaan Mendatang', visibility: 'hover' },
+                customData: item,
+                isEvent: true
+            });
+        }
+    });
+}
 
     return attributes;
 });
@@ -599,10 +635,21 @@ const handleDayClick = (day) => {
     if (clickedAttribute) {
         const eventData = clickedAttribute.customData;
 
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // reset ke tengah malam biar fair compare
+        const tgl = new Date(eventData.tanggal_setoran);
+        if (tgl < today) {
+            Swal.fire({
+                title: 'Jadwal Lewat',
+                text: 'Jadwal ini sudah lewat, tidak dapat diubah.',
+                icon: 'warning'
+            });
+            return;
+        }
         Swal.fire({
             title: 'Detail Jadwal',
             html: `
-                <p><strong>Kegiatan:</strong> ${eventData.kegiatan}</p>
+                <p><strong>Kegiatan:</strong> Pelaksanaan Bank Sampah</p>
                 <p><strong>Tanggal:</strong> ${new Date(eventData.tanggal_setoran)
                     .toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             `,
@@ -772,7 +819,8 @@ const exportAsImage = async () => {
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
 
 
-        <div v-if="statusVerifikasi === 'Pengajuan Verifikasi' || statusVerifikasi === 'Ditolak'" class="animate-reveal max-w-7xl mx-auto space-y-6">
+        <div v-if="statusVerifikasi === 'Pengajuan Verifikasi' || statusVerifikasi === 'Ditolak'"
+            class="animate-reveal max-w-7xl mx-auto space-y-6">
             <div class="card w-full shadow-sm border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
 
 
@@ -828,7 +876,7 @@ const exportAsImage = async () => {
                                         {{ Math.min(Math.round(nasabah2.profile_completion.percentage), 100) }}%
                                     </span>
                                 </div>
-                                   <div v-if="nasabah2.profile_completion.percentage < 100"
+                                <div v-if="nasabah2.profile_completion.percentage < 100"
                                     class="mt-2 flex flex-col lg:flex-row  gap-2 w-full text-[10px] font-bold text-red-500">
                                     <h1 class="text-[11px] shrink-0">Data Kurang:</h1>
 
@@ -855,7 +903,8 @@ const exportAsImage = async () => {
                                             class="text-[10px] font-bold uppercase tracking-widest">Akun</span>
                                     </div>
 
-                                    <div :class="step >= 1 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px  flex-1"></div>
+                                    <div :class="step >= 1 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px  flex-1">
+                                    </div>
 
 
                                     <div class="flex items-center gap-2 cursor-pointer" @click="step = 2">
@@ -866,7 +915,8 @@ const exportAsImage = async () => {
                                             class="text-[10px] font-bold uppercase tracking-widest">Data Diri</span>
                                     </div>
 
-                                    <div :class="step >= 2 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px flex-1"></div>
+                                    <div :class="step >= 2 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px flex-1">
+                                    </div>
                                     <div class="flex items-center gap-2 cursor-pointer" @click="step = 3">
                                         <span
                                             :class="step >= 3 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
@@ -878,7 +928,8 @@ const exportAsImage = async () => {
 
 
 
-                                    <div :class="step >= 3 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px flex-1"></div>
+                                    <div :class="step >= 3 ? 'bg-emerald-600' : 'bg-gray-200 '" class="h-px flex-1">
+                                    </div>
                                     <div class="flex items-center gap-2 cursor-pointer" @click="step = 4">
                                         <span
                                             :class="step >= 4 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500'"
@@ -923,7 +974,7 @@ const exportAsImage = async () => {
                                 <div v-if="step === 2" class="space-y-5">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div v-for="field in filteredFields" :key="field.name"
-                                            :class="field.name === 'rt' || field.type === 'radio' ?'col-span-1 md:col-span-2' : 'col-span-1'">
+                                            :class="field.name === 'rt' || field.type === 'radio' ? 'col-span-1 md:col-span-2' : 'col-span-1'">
 
 
 
@@ -1360,10 +1411,28 @@ const exportAsImage = async () => {
                         <div class="mt-4 space-y-2">
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
                             <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Jadwal Pengangkutan /
-                                    Kegiatan</span>
+                                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Kegiatan Bank Sampah
+                                    Berlangsung</span>
                             </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Jadwal Pelaksanaan
+                                    Mendatang</span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Setoran Telah
+                                    Dicatat</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Batas Jadwal Lewat
+                                    (Belum
+                                    Melakukan Pencatatan)</span>
+                            </div>
+
                         </div>
                     </div>
 

@@ -56,7 +56,7 @@ class DataTransaksiController extends Controller
 
 
 
-        $nasabahList = PencatatanSetoran::with(['user_detail.userbank', 'pencatatan_items'])
+        $nasabahList = PencatatanSetoran::with(['user_detail.userbank', 'jadwal','pencatatan_items'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_rt', Auth::user()->user_detail->id_rt);
             })

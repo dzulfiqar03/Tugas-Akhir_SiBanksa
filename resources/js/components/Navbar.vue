@@ -215,11 +215,83 @@ onMounted(() => {
 
             router.reload({ only: ['initialNotifications', 'unreadCount'] });
         });
+
+        //  window.Echo.private(`rt.${user.value?.user_detail?.id_rt}`)
+        // .notification((n) => {
+        //     // Logika yang sama seperti di atas, hanya menyesuaikan channel RT
+        //     if (typeof window.playNotif === 'function') {
+        //         window.playNotif();
+        //     } else if (window.audioUnlocked && window.notificationAudio) {
+        //         window.notificationAudio.currentTime = 0;
+        //         window.notificationAudio.play().catch(e => console.log("Audio blocked:", e));
+        //     }
+
+        //     if (Notification.permission === 'granted') {
+        //         if ('serviceWorker' in navigator) {
+        //             navigator.serviceWorker.ready
+        //                 .then(registration => {
+        //                     if (registration && registration.active) {
+        //                         registration.showNotification(n.title || 'SiBanksa', {
+        //                             body: n.body || n.message,
+        //                             icon: '/main-logo.svg',
+        //                             badge: '/main-logo.svg',
+        //                             data: { url: n.url || '/dashboard' }
+        //                         });
+        //                     } else {
+        //                         console.warn('Service Worker ready tapi belum active. Mencoba fallback ke browser notification.');
+        //                         new Notification(n.title || 'SiBanksa', {
+        //                             body: n.body || n.message,
+        //                             icon: '/main-logo.svg',
+        //                             badge: '/main-logo.svg',
+        //                             data: { url: n.url || '/dashboard' }
+        //                         });
+        //                     }
+        //                 })
+        //                 .catch(err => {
+        //                     console.error('Gagal memuat Service Worker ready:', err);
+        //                 });
+        //         } else {
+        //             new Notification(n.title || 'SiBanksa', {
+        //                 body: n.body || n.message,
+        //                 icon: '/main-logo.svg',
+        //                 badge: '/main-logo.svg',
+        //                 data: { url: n.url || '/dashboard' }
+        //             });
+        //         }
+        //     }
+
+        //     Swal.fire({
+        //         title: 'Notifikasi Baru!',
+        //         text: n.message,
+        //         icon: 'success',
+        //         toast: true,
+        //         position: 'top-end',
+        //         timer: 5000,
+        //         showConfirmButton: false,
+        //         timerProgressBar: true,
+        //         didOpen: (toast) => {
+        //             toast.style.cursor = 'pointer';
+        //             toast.onmouseenter = Swal.stopTimer;
+        //             toast.onmouseleave = Swal.resumeTimer;
+        //             toast.onclick = () => {
+        //                 router.visit(n.url || '/notifications');
+        //             };
+        //         },
+        //     });
+
+        //     notifications.value.unshift({
+        //         id: n.id || Date.now(),
+        //         message: n.message,
+        //         url: n.url,
+        //         created_at: 'Baru saja',
+        //         read_at: null
+        //     });
 });
 
 onBeforeUnmount(() => {
     if (window.Echo && userId) {
         window.Echo.leave(`App.Models.User.${userId}`);
+        // window.Echo.leave(`rt.${user.value?.user_detail?.id_rt}`);
     }
 });
 

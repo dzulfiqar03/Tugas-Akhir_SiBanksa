@@ -230,24 +230,62 @@ const calendarAttributes = computed(() => {
     });
     if (!props.rtJadwal) return [];
 
-    if (props.rtJadwal) {
-        props.rtJadwal.forEach(item => {
+if (props.rtJadwal) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    props.rtJadwal.forEach(item => {
+        const setoran = item.pencatatan_setoran?.filter(setor =>
+            setor.id_jadwal === item.id && setor.id_userdetail === user.value.user_detail?.id
+        );
+
+        const tgl = new Date(item.tanggal_setoran);
+        tgl.setHours(0, 0, 0, 0);
+
+        const sudahLewat = tgl.getTime() < today.getTime();
+        const hariIni = tgl.getTime() === today.getTime();
+        const adaSetoran = setoran && setoran.length > 0;
+
+        if (hariIni) {
             attributes.push({
-                key: item.id,
-                highlight: {
-                    color: 'green',
-                    fillMode: 'light',
-                },
+                key: `today-${item.id}`,
+                highlight: { color: 'red', fillMode: 'light' },
                 dates: new Date(item.tanggal_setoran),
-                popover: {
-                    label: item.kegiatan,
-                    visibility: 'hover',
-                },
+                popover: { label: 'Jadwal Pelaksanaan Sedang Berlangsung', visibility: 'hover' },
                 customData: item,
                 isEvent: true
             });
-        });
-    }
+        } else if (sudahLewat && adaSetoran) {
+            attributes.push({
+                key: item.id,
+                highlight: { color: 'blue', fillMode: 'light' },
+                dates: new Date(item.tanggal_setoran),
+                popover: { label: 'Setoran Telah Dicatat', visibility: 'hover' },
+                customData: item,
+                isEvent: true
+            });
+        } else if (sudahLewat && !adaSetoran) {
+            attributes.push({
+                key: item.id,
+                highlight: { color: 'gray', fillMode: 'light' },
+                dates: new Date(item.tanggal_setoran),
+                popover: { label: 'Setoran Belum dicatat', visibility: 'hover' },
+                customData: item,
+                isEvent: true
+            });
+        } else {
+            // belum lewat & bukan hari ini => akan datang
+            attributes.push({
+                key: item.id,
+                highlight: { color: 'green', fillMode: 'light' },
+                dates: new Date(item.tanggal_setoran),
+                popover: { label: 'Jadwal Pelaksanaan Akan Datang', visibility: 'hover' },
+                customData: item,
+                isEvent: true
+            });
+        }
+    });
+}
     return attributes;
 });
 
@@ -1127,19 +1165,32 @@ const deleteDoc = (id) => {
                     <div
                         class="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <h3 class="font-bold text-gray-800 dark:text-gray-100 mb-4 text-sm flex items-center gap-2">
-                            <i class="fas fa-truck-loading text-emerald-500"></i> Jadwal Penjemputan RT
+                            <i class="fas fa-truck-loading text-emerald-500"></i> Jadwal Pelaksanaan Setoran
                         </h3>
                         <Calendar :attributes="calendarAttributes" is-expanded
                             class="w-full !max-w-none !min-w-full !border-none !bg-transparent"
                             :is-dark="page.props.auth.user.theme === 'dark'" :style="{ width: '100% !important' }" />
 
-                        <div class="mt-4 space-y-2">
+                       <div class="mt-4 space-y-2">
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
                             <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Jadwal Pengangkutan /
-                                    Kegiatan</span>
+                                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Jadwal Pelaksanaan Sedang Berlangsung</span>
                             </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Jadwal Pelaksanaan Mendatang</span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Setoran Telah Dicatat</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Batas Jadwal Lewat (Belum Melakukan Pencatatan)</span>
+                            </div>
+
                         </div>
                     </div>
 
