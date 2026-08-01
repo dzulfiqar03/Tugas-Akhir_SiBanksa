@@ -1474,7 +1474,7 @@ const breadcrumbItems = [
                     <DataTable v-else
                         :key="viewMode + selectedBulan + selectedSampah + selectedJadwalFilter + activeCategory"
                         :options="dtOptions" :data="processedData" ref="dtInstance">
-                        <thead class="dark:text-white">
+                        <thead class="dark:text-white text-black">
                         </thead>
                         <tfoot class="bg-gray-50 dark:bg-gray-900 font-bold">
                             <tr class="text-gray-800 dark:text-white border-t-2 border-emerald-500">
