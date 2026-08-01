@@ -6,8 +6,7 @@ import { computed, ref } from 'vue'
 const props = defineProps({
     nasabahList: Array,
     sidebardata: Object,
-        petugas: Array,
-
+    petugas: Array,
 })
 
 const workflowSteps = [
@@ -48,7 +47,7 @@ const timelineSteps = computed(() => {
             status,
             divisi: wf?.divisi || '-',
             petugas: wf?.petugas?.join(', ') || '-',
-            waktu: wf?.waktu || null
+            waktu: wf?.created_at || null,
         }
     })
 })
@@ -64,9 +63,59 @@ const progressPercentage = computed(() => {
     return Math.round((completed / workflowSteps.length) * 100)
 })
 
+// ================= HASIL SETORAN =================
+// Data kategori (jenis sampah, jumlah/berat, harga satuan, subtotal) dikirim
+// backend lewat workflow['Pencatatan'].detail.kategori (lihat PencatatanSetoranController@index)
+const getKategoriFromWorkflow = (workflow) => {
+    return workflow?.['Pencatatan']?.detail?.kategori || []
+}
+
+const sumBerat = (kategori) =>
+    kategori.reduce((sum, k) => sum + (parseFloat(k.berat) || 0), 0)
+
+const sumSubtotal = (kategori) =>
+    kategori.reduce((sum, k) => sum + (parseFloat(k.subtotal) || 0), 0)
+
+const hasilSetoran = computed(() => {
+    const wf = selectedSetoran.value?.workflow || {}
+    const pencatatan = wf['Pencatatan']
+
+    if (!pencatatan?.completed) return null
+
+    const kategori = getKategoriFromWorkflow(wf)
+
+    return {
+        kategori,
+        totalBerat: sumBerat(kategori),
+        totalNominal: sumSubtotal(kategori),
+        statusPencairan: wf['Pencairan']?.completed ? 'Sudah Dicairkan' : 'Menunggu Pencairan'
+    }
+})
+
+const getHasilRingkas = (workflow) => {
+    const pencatatan = workflow?.['Pencatatan']
+    if (!pencatatan?.completed) return null
+
+    const kategori = getKategoriFromWorkflow(workflow)
+    if (!kategori.length) return null
+
+    return {
+        totalBerat: sumBerat(kategori),
+        totalNominal: sumSubtotal(kategori)
+    }
+}
+
+const formatRupiah = (value) => {
+    if (!value && value !== 0) return '-'
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(value)
+}
+
 // ================= UTIL =================
 const formatDate = (date) => {
-    if (!date) return '-'
     return new Date(date).toLocaleString('id-ID')
 }
 
@@ -97,7 +146,6 @@ const formatDates = (dateString) => {
 
     const date = new Date(dateString);
 
-    // Mengecek apakah date valid untuk menghindari 'Invalid Date'
     if (isNaN(date.getTime())) return dateString;
 
     return new Intl.DateTimeFormat('id-ID', {
@@ -115,17 +163,15 @@ const formatDates = (dateString) => {
     <AuthenticatedLayout :sidebardata="sidebardata" :breadcrumb-items="breadcrumbItems">
 
 
-                <div v-if="props.petugas.length == 0" class="flex flex-col space-y-5 m-auto h-max items-center justify-center py-10 text-center">
-        <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-            <i class="fas fa-users-slash text-3xl text-gray-400"></i>
+        <div v-if="props.petugas.length == 0" class="flex flex-col space-y-5 m-auto h-max items-center justify-center py-10 text-center">
+            <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-users-slash text-3xl text-gray-400"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Struktur Kepengurusan Bank Sampah Anda Belum Diatur</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mt-2">
+                Tunggu admin mengatur struktur kepengurusan bank sampah Anda untuk mulai memantau status setoran Anda.
+            </p>
         </div>
-        <h2 class="text-xl font-bold text-gray-800 dark:text-white">Struktur Kepengurusan Bank Sampah Anda Belum Diatur</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mt-2">
-            Tunggu admin mengatur struktur kepengurusan bank sampah Anda untuk mulai memantau status setoran Anda.
-        </p>
-
-
-    </div>
 
         <div v-else class="max-w-6xl mx-auto px-4 py-10 space-y-10">
 
@@ -177,10 +223,11 @@ const formatDates = (dateString) => {
                 </div>
 
                 <!-- Progress Bar -->
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-12">
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-8">
                     <div class="bg-emerald-500 h-3 rounded-full transition-all duration-700"
                         :style="{ width: progressPercentage + '%' }"></div>
                 </div>
+
 
                 <!-- ================= DESKTOP ================= -->
                 <div class="hidden md:flex justify-between relative">
@@ -211,9 +258,7 @@ const formatDates = (dateString) => {
                                 <p class="text-xs text-gray-600 dark:text-gray-300">
                                     PJ: {{ step.petugas }}
                                 </p>
-                                <p class="text-xs text-gray-400">
-                                    {{ formatDate(step.waktu) }}
-                                </p>
+                               
                             </div>
 
                         </div>
@@ -251,9 +296,7 @@ const formatDates = (dateString) => {
                                 Penanggung Jawab: {{ step.petugas }}
                             </p>
 
-                            <p class="text-xs text-gray-400 mt-1">
-                                {{ formatDate(step.waktu) }}
-                            </p>
+
 
                         </div>
 
@@ -289,6 +332,14 @@ const formatDates = (dateString) => {
                                         'text-gray-500': getOverallStatus(item.workflow) === 'Menunggu'
                                     }">
                                         {{ getOverallStatus(item.workflow) }}
+                                    </span>
+                                </p>
+
+                                <!-- Ringkasan hasil -->
+                                <p v-if="getHasilRingkas(item.workflow)" class="text-xs text-gray-500 mt-1">
+                                    {{ getHasilRingkas(item.workflow).totalBerat }} kg ·
+                                    <span class="text-emerald-600 font-medium">
+                                        {{ formatRupiah(getHasilRingkas(item.workflow).totalNominal) }}
                                     </span>
                                 </p>
                             </div>

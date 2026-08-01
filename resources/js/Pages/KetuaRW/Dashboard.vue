@@ -537,13 +537,25 @@ const breadcrumbItems = [
                                     </div>
                                     <div>
                                         <p class="text-xs font-bold text-gray-700 dark:text-gray-300">{{ n.name }}</p>
-                                        <p class="text-[9px] text-gray-400 tracking-wider">{{
+
+                                        <div class="flex gap-0.5 items-center">
+                                              <p class="text-[9px] text-gray-400 tracking-wider">{{
                                             formatShortDate(n.created_at) }}</p>
+
+                                              <p class="text-[9px] bg-gray-400 px-2 rounded-full text-white font-bold tracking-wider">RT:0{{ n.parent_id }}</p>
+                                        </div>
+
                                     </div>
                                 </div>
                                 <span
-                                    class="text-[9px] px-2 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg font-bold text-gray-500 group-hover:text-emerald-600">ID:
-                                    {{ n.id }}</span>
+                                :class="{
+                                    'bg-emerald-500/20 text-emerald-500': n.status === 'Disetujui',
+                                    'bg-yellow-500/20 text-yellow-500': n.status === 'Pengajuan Verifikasi',
+                                    'bg-red-500/20 text-red-500': n.status === 'Ditolak',
+                                    'bg-gray-500/20 text-gray-500': n.status === 'Pending'
+                                }"
+                                    class="text-[9px] px-2 py-1 rounded-lg font-bold">Status:
+                                    {{ n.status }}</span>
                             </div>
                         </div>
                     </div>

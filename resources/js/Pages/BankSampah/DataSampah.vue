@@ -598,7 +598,7 @@ const breadcrumbItems = [
                                             :placeholder="field.placeholder">
 
                                         <p v-if="form.harga > 0"
-                                            class="dark:text-white transition-all ease-in-out duration-300">Saldo Bersih
+                                            class="dark:text-white text-black transition-all ease-in-out duration-300">Saldo Bersih
                                             Sampah {{ form.nama_sampah }} <span
                                                 :class="[form.saldo <= 0 ? 'text-red-500' : 'text-emerald-500', 'font-bold']">
                                                 {{ form.saldo }}</span></p>
@@ -663,7 +663,7 @@ const breadcrumbItems = [
                             <label
                                 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori:</label>
                             <select @change="handleCategoryFilter"
-                                class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+                                class="border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm bg-white text-black dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
                                 <option value="">Semua</option>
                                 <option value="Daur Ulang">Daur Ulang</option>
                                 <option value="Non Daur Ulang">Non Daur Ulang</option>

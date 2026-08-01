@@ -220,9 +220,6 @@ const isNonTunai = props.nasabah.some(n => n.user_detail?.pencairan_via === 'Tun
    {
     data: 'jadwal',
     render: (data, type, row, meta) => {
-        if (!row.jadwal || !row.jadwal.tanggal_setoran) {
-            return '<span class="text-gray-400">-</span>';
-        }
 
         const tanggal = new Date(row.jadwal.tanggal_setoran);
         const options = { day: '2-digit', month: 'short', year: 'numeric' };

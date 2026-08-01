@@ -68,19 +68,17 @@ class DataTransaksiController extends Controller
             ->get();
 
         $nasabah = $nasabahList
-            ->map(function ($user) {
+    ->map(function ($setoran) {
 
-                $detail = $user->user_detail;
+        $detail = $setoran->user_detail;
 
-                $userBank = UserBank::where('id_userdetail', $detail->id)->with('bank')->get();
-                // Tambahkan ke object user
-                $user->user_bank = $userBank;
+        $userBank = UserBank::where('id_userdetail', $detail->id)->with('bank')->get();
+        $setoran->user_bank = $userBank;
 
-                $user->user_transaction = UserTransaction::where('pencatatan_setoran_id', 'setoran.id')->get();
+        $setoran->user_transaction = UserTransaction::where('pencatatan_setoran_id', $setoran->id)->get();
 
-
-                return $user;
-            });
+        return $setoran;
+    });
 
         return Inertia::render('BankSampah/DataTransaksi', [
             'initialNotifications' => $notifications,
