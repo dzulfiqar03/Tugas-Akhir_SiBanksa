@@ -1175,7 +1175,7 @@ const deleteDoc = (id) => {
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 rounded-full bg-red-500"></div>
-                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Jadwal Pelaksanaan Sedang Berlangsung</span>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Waktu Hari Ini</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 rounded-full bg-emerald-500"></div>

@@ -1412,8 +1412,7 @@ const exportAsImage = async () => {
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan:</p>
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 rounded-full bg-red-500"></div>
-                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Kegiatan Bank Sampah
-                                    Berlangsung</span>
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Waktu Hari Ini</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
@@ -1470,7 +1469,12 @@ const exportAsImage = async () => {
 
 
                                 <span
-                                    class="text-[10px] w-full bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg font-bold">
+                                :class="[
+                                   user.user_detail?.status ==='Pengajuan Verifikasi' ? 'bg-yellow-100 text-yellow-700' :
+                                   user.user_detail?.status ==='Disetujui' ? 'bg-emerald-100 text-emerald-700' :
+                                   user.user_detail?.status ==='Ditolak' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
+                                ]"
+                                    class="text-[10px] w-full px-2 py-1 rounded-lg font-bold">
                                     {{ user.user_detail?.status }}
                                 </span>
                             </button>

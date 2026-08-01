@@ -497,7 +497,7 @@ class WargaChatController extends Controller
 
 //             $botResponse = '';
 
-//             if ($fullName === 'AI Banksa') {
+//             if ($fullName === 'AI Banksa') 
 //                 $text = ['Tambahkan', 'Ubah', 'Hapus', 'Rekening', 'Total', 'Setoran', 'Bulan', 'Jadwal', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW', 'data', 'belum'];
 
 //                 $wordsInMessage = array_map('strtolower', preg_split('/\s+/', $message, -1, PREG_SPLIT_NO_EMPTY));
