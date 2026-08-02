@@ -138,35 +138,43 @@ const formatChildRow = (d) => {
             return `<tr><td colspan="3" class="text-center py-4 text-gray-400 italic bg-gray-50/50">Tidak ada ${type} untuk jadwal ini</td></tr>`;
         }
 
-        return files.map((f, index) => `
-            <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
-                <td class="py-3 px-4">
-                    <div class="flex items-center dark:text-white text-black gap-3">
-                       ${d.tanggal_setoran}
-                    </div>
-                </td>
-                <td class="py-3 px-4">
-                    <div class="flex items-center gap-3">
-                        ${type === 'Dokumen'
-                ? '<i class="fas fa-file-pdf text-red-500 text-lg"></i>'
-                : `<img src="/storage/photo/evidenceUser/BankSampah/RT0${d.id_rt}/${f.original_photoname}" class="w-8 h-8 rounded object-cover border">`
-            }
-                        <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">
-                            ${type === 'Dokumen' ? f.original_filesname : f.original_photoname}
-                        </span>
-                    </div>
-                </td>
-                <td class="py-3 px-4 text-right">
-                    <div class="flex justify-end gap-2">
-                        <button onclick="window.handleOpenPreview('${type === 'Dokumen' ? f.original_filesname : f.original_photoname}', '${d.id_rt}', '${type === 'Dokumen' ? 'Dokumen' : 'Evidence'}')"
-                                class="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-md text-xs font-bold transition">
-                            <i class="fas fa-eye mr-1"></i> LIHAT
-                        </button>
+        return files.map((f) => {
+            // Ambil tanggal per-file, BUKAN dari d (parent row) yang statis
+            const tanggal = type === 'Dokumen'
+                ? (f.jadwal?.tanggal_setoran || '-')   // relasi id_jadwal -> jadwal_pelaksanaan
+                : (f.name || '-');                      // EvidenceArchiver.name = tanggal_setoran
 
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+            const fileName = type === 'Dokumen' ? f.original_filesname : f.original_photoname;
+
+            return `
+                <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                    <td class="py-3 px-4">
+                        <div class="flex items-center dark:text-white text-black gap-3">
+                           ${tanggal}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-3">
+                            ${type === 'Dokumen'
+                    ? '<i class="fas fa-file-pdf text-red-500 text-lg"></i>'
+                    : `<img src="/storage/photo/evidenceUser/BankSampah/RT0${d.id_rt}/${f.original_photoname}" class="w-8 h-8 rounded object-cover border">`
+                }
+                            <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                                ${fileName}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="window.handleOpenPreview('${fileName}', '${d.id_rt}', '${type === 'Dokumen' ? 'Dokumen' : 'Evidence'}')"
+                                    class="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-md text-xs font-bold transition">
+                                <i class="fas fa-eye mr-1"></i> LIHAT
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     };
 
     return `
@@ -209,7 +217,7 @@ const formatChildRow = (d) => {
                     <table class="w-full text-left border-collapse border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr>
-                                                                <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase">Jadwal</th>
+                                <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase">Jadwal</th>
                                 <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase">Preview & Nama</th>
                                 <th class="py-3 px-4 text-[10px] font-black text-gray-400 uppercase text-right">Aksi</th>
                             </tr>
@@ -222,7 +230,6 @@ const formatChildRow = (d) => {
 
             </div>
         </div>
-
     `;
 };
 

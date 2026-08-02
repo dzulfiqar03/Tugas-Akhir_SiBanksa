@@ -30,7 +30,8 @@ class KelolaBankSampahServices
             'user_detail.userbank',
             'user_detail.jadwal',
             'user_detail.user_log',
-            'user_detail.pencatatan'
+            'user_detail.pencatatan',
+
         ])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 2)
@@ -93,7 +94,7 @@ class KelolaBankSampahServices
     public function getAllTransaction()
     {
 
-        $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.image', 'user_detail.document'])
+        $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.image', 'user_detail.document.jadwal'])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 2);
                 $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%')

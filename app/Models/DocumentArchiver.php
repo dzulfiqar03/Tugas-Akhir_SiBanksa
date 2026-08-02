@@ -20,6 +20,6 @@ class DocumentArchiver extends Model
 
     public function jadwal()
     {
-        return $this->belongsTo(JadwalPelaksanaan::class, 'id_userdetail', 'id');
+        return $this->belongsTo(JadwalPelaksanaan::class, 'id_jadwal', 'id');
     }
 }
