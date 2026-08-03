@@ -382,9 +382,7 @@ const breadcrumbItems = [
                                 <button @click="filterCategory = 'balance'"
                                     :class="filterCategory === 'balance' ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-400'"
                                     class="px-4 py-1.5 rounded-lg text-[10px] transition-all">SALDO</button>
-                                <button @click="filterCategory = 'weight'"
-                                    :class="filterCategory === 'weight' ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-400'"
-                                    class="px-4 py-1.5 rounded-lg text-[10px] transition-all">BERAT</button>
+                   
                             </div>
                         </div>
                         <div class="h-[350px]">
