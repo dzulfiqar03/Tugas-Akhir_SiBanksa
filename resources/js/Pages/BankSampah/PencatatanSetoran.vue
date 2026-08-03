@@ -190,26 +190,20 @@ const processedData = computed(() => {
         let total = 0;
 
         (nasabah.pencatatan || []).forEach(nota => {
-            const tgl = new Date(nota.created_at);
+            // 🔧 GANTI created_at -> jadwal.tanggal_setoran, samakan dengan dynamicColumns
+            const tgl = new Date(nota.jadwal.tanggal_setoran);
 
             const matchYear = tgl.getFullYear() === selectedYear.value;
 
             const matchJadwal = !selectedJadwalFilter.value ||
                 Number(nota.id_jadwal) === Number(selectedJadwalFilter.value);
 
-            const matchBulan =
-                viewMode.value === 'sampah'
-                    ? (!selectedBulan.value || (tgl.getMonth() + 1) === Number(selectedBulan.value))
-                    : (!selectedBulan.value || (tgl.getMonth() + 1) === Number(selectedBulan.value));
-
-
+            const matchBulan = !selectedBulan.value || (tgl.getMonth() + 1) === Number(selectedBulan.value);
 
             if (matchYear && matchJadwal && matchBulan) {
                 (nota.pencatatan_items || []).forEach(item => {
-
                     if (viewMode.value === 'sampah') {
                         const info = props.jenisSampah.find(s => s.id === item.sampah_id);
-
                         const matchKategori = info?.kategori?.trim() === activeCategory.value.trim();
                         const matchSampah = !selectedSampah.value || item.sampah_id === Number(selectedSampah.value);
 
@@ -219,7 +213,6 @@ const processedData = computed(() => {
                     } else {
                         total += parseFloat(item.subtotal || 0);
                     }
-
                 });
             }
         });

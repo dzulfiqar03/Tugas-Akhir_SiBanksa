@@ -376,13 +376,13 @@ const breadcrumbItems = [
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
                             <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 flex items-center gap-2">
                                 <i class="fas fa-chart-bar text-emerald-500"></i>
-                                {{ selectedUnitId === 'all' ? 'Statistik Jenis Sampah Wilayah' : 'Top Nasabah Unit' }}
+                                {{ selectedUnitId === 'all' ? 'Statistik Peringkat Bank Sampah' : 'Top Nasabah Unit' }}
                             </h3>
                             <div class="flex gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-xl font-bold">
                                 <button @click="filterCategory = 'balance'"
                                     :class="filterCategory === 'balance' ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-400'"
                                     class="px-4 py-1.5 rounded-lg text-[10px] transition-all">SALDO</button>
-                   
+
                             </div>
                         </div>
                         <div class="h-[350px]">
