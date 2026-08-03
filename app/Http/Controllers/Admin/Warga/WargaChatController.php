@@ -61,11 +61,14 @@ class WargaChatController extends Controller
         $finalChatList = $formattedChats->values()->toArray();
         array_unshift($finalChatList, $aiRoom);
 
+        $myDetail = Auth::user()->user_detail;
+    $myRt = $myDetail->id_rt;
         // Di Controller Index
         return Inertia::render('Warga/Chat', [
             'sidebardata' => $menu,
             'allNasabah'  => $finalChatList,
-            'nasabahList' => UserDetail::with(['user_log'])->orderByRaw('fullName')->get()->map(function ($u) {
+            'nasabahList' => UserDetail::with(['user_log'])->where('id_rt', $myRt)
+            ->where('id', '!=', $myDetail->id)->orderByRaw('fullName')->get()->map(function ($u) {
                 $lastLog = $u->user_log->sortByDesc('id')->first();
 
                 $isOnline = ($lastLog && $lastLog->action === 'LOGIN');
@@ -497,7 +500,7 @@ class WargaChatController extends Controller
 
 //             $botResponse = '';
 
-//             if ($fullName === 'AI Banksa') 
+//             if ($fullName === 'AI Banksa') {
 //                 $text = ['Tambahkan', 'Ubah', 'Hapus', 'Rekening', 'Total', 'Setoran', 'Bulan', 'Jadwal', 'Ini', 'Sekarang', 'Saat ini', 'Hari ini', 'Nasabah', 'Tertinggi', 'Sampah', 'Terbanyak', 'Jumlah', 'RW', 'data', 'belum'];
 
 //                 $wordsInMessage = array_map('strtolower', preg_split('/\s+/', $message, -1, PREG_SPLIT_NO_EMPTY));

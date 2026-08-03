@@ -56,11 +56,14 @@ class UserChatController extends Controller
         $finalChatList = $formattedChats->values()->toArray();
         array_unshift($finalChatList, $aiRoom);
 
+        $myDetail = Auth::user()->user_detail;
+    $myRt = $myDetail->id_rt;
         // Di Controller Index
         return Inertia::render('BankSampah/Chat', [
             'sidebardata' => $menu,
             'allNasabah'  => $finalChatList,
-            'nasabahList' => UserDetail::with(['user_log'])->orderByRaw('fullName')->get()->map(function ($u) {
+            'nasabahList' => UserDetail::with(['user_log'])->where('id_rt', $myRt)
+            ->where('id', '!=', $myDetail->id)->where('status', 'Disetujui')->orderByRaw('fullName')->get()->map(function ($u) {
                 $lastLog = $u->user_log->sortByDesc('id')->first();
 
                 $isOnline = ($lastLog && $lastLog->action === 'LOGIN');
