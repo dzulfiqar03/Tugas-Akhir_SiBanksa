@@ -199,8 +199,8 @@ const detailMap = ref(null)
 const openDetail = (base64) => {
     const row = JSON.parse(decodeURIComponent(escape(atob(base64))));
 
-    console.log(row);
-    selectedData.value = row
+    row.location = row.location ?? { open_street: null };
+    selectedData.value = row;
     isPreviewOpen.value = true;
 };
 
@@ -881,7 +881,7 @@ const breadcrumbItems = [
                                             {{ selectedData.fullName }}
                                             <span
                                                 class="md:text-sm text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{{
-                                                    props.nasabah?.user_detail.location.open_street.type }}</span>
+                                                    props.nasabah?.user_detail?.location?.open_street?.type }}</span>
                                         </h1>
                                         <p class="text-gray-600 dark:text-gray-400 mt-1 md:text-base text-xs">
                                             {{ selectedData.roles.role }} • RT0{{ selectedData.rt.RT }}
@@ -890,12 +890,13 @@ const breadcrumbItems = [
                                             {{ selectedData.address }}
                                         </p>
                                     </div>
-                                    <a :href="`https://www.google.com/maps/search/?api=1&query=${selectedData.location.open_street.latitude},${selectedData.location.open_street.longitude}`"
-                                        target="_blank"
-                                        class="flex items-center justify-center gap-2 w-full bg-white border border-gray-300 text-gray-700 text-xs py-2 rounded-lg">
-                                        <i class="fas fa-map">
-                                        </i> Buka di Google Maps
-                                    </a>
+                                   <a v-if="selectedData.location?.open_street"
+    :href="`https://www.google.com/maps/search/?api=1&query=${selectedData.location.open_street.latitude},${selectedData.location.open_street.longitude}`"
+    target="_blank"
+    class="flex items-center justify-center gap-2 w-full bg-white border border-gray-300 text-gray-700 text-xs py-2 rounded-lg">
+    <i class="fas fa-map"></i> Buka di Google Maps
+</a>
+<p v-else class="text-xs text-gray-400 italic text-center">Lokasi belum tersedia</p>
                                 </div>
 
                             </div>

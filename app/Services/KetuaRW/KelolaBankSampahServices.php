@@ -31,7 +31,8 @@ class KelolaBankSampahServices
             'user_detail.jadwal',
             'user_detail.user_log',
             'user_detail.pencatatan',
-
+                    'user_detail.document.jadwal',   // <-- tambahkan: dokumen + relasi jadwalnya
+        'user_detail.image',
         ])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 2)
@@ -94,20 +95,22 @@ class KelolaBankSampahServices
     public function getAllTransaction()
     {
 
-        $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.image', 'user_detail.document.jadwal'])
+        $bankSampah = $this->user::with(['user_detail.userbank', 'user_detail.jadwal', 'user_detail.user_log', 'user_detail.image'  => fn($q) => $q->latest()->take(5), 'user_detail.document.jadwal'  => fn($q) => $q->latest()->take(5)])
             ->whereHas('user_detail', function ($query) {
                 $query->where('id_roles', 2);
                 $query->where('fullName', 'LIKE', '%Petugas Bank Sampah%')
                     ->orWhere('fullName', 'LIKE', '%Bank Sampah%');
             })
-            ->whereHas('user_detail.document')
-            ->whereHas('user_detail.document')
-            ->get()
+            ->whereHas('user_detail.document')->take(5)->latest()->get()
             ->map(function ($user) {
 
 
                 $idRT = $user->user_detail->id_rt;
 
+                $user->user_detail->setRelation(
+        'document',
+        $user->user_detail->document->sortByDesc('created_at')->take(5)->values()
+    );
 
                 $totalSetoranRT = DB::table('pencatatan_setoran')
                     ->join('user_details', 'id_userdetail', '=', 'user_details.id')
