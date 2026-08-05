@@ -1171,7 +1171,6 @@ const breadcrumbItems = [
     </option>
 </select>
 
-<!-- Ganti pesan warning lama dengan info netral, bukan larangan -->
 <p v-if="form.id_userdetail && filteredJadwal.length === 0"
     class="text-[10px] text-amber-600 mt-1 italic">
     * Belum ada jadwal pelaksanaan tersedia.
