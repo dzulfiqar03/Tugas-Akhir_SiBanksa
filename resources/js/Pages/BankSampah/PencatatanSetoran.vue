@@ -60,21 +60,22 @@ const form = useForm({
 });
 
 const filteredJadwal = computed(() => {
-
     const semuaJadwal = props.jadwalPelaksanaan || [];
-    const itemsTercatat = props.pencatatanSetoran || [];
-
     if (!form.id_userdetail) return [];
 
-    const idJadwalTerpakai = itemsTercatat
-        .filter(item =>
-            Number(item.id_userdetail) === Number(form.id_userdetail)
-        )
-        .map(item => Number(item.id_jadwal));
+    return semuaJadwal.map(j => {
+        const jumlahSetoran = (props.pencatatanSetoran || []).filter(item =>
+            Number(item.id_userdetail) === Number(form.id_userdetail) &&
+            Number(item.id_jadwal) === Number(j.id)
+        ).length;
 
-    return semuaJadwal.filter(j =>
-        !idJadwalTerpakai.includes(Number(j.id))
-    );
+        return { ...j, jumlahSetoran };
+    });
+});
+
+const jadwalTerpilihInfo = computed(() => {
+    const jadwal = filteredJadwal.value.find(j => Number(j.id) === Number(form.id_jadwal));
+    return jadwal?.jumlahSetoran || 0;
 });
 
 
@@ -1156,24 +1157,28 @@ const breadcrumbItems = [
                                 <div>
                                                                     <InputLabel :for="'Jadwal Pelaksanaan'" :value="'Jadwal Pelaksanaan'" />
 
-                                    <select v-model="form.id_jadwal" :key="form.id_userdetail"
-                                                                                     class="w-full  dark:border-gray-600 bg-white text-black  rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
-                                                                                      :disabled="!form.id_userdetail"
-                                        :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_jadwal'] }">
+                                  <select v-model="form.id_jadwal" :key="form.id_userdetail"
+    class="w-full dark:border-gray-600 bg-white text-black rounded-xl p-2.5 dark:bg-gray-900 dark:text-white focus:ring-emerald-500 border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+    :disabled="!form.id_userdetail"
+    :class="{ 'border-red-500 ring-1 ring-red-500': form.errors['id_jadwal'] }">
 
-                                        <option value="" disabled>
-                                            {{ !form.id_userdetail ? 'Pilih Nasabah dulu' : 'Pilih Jadwal' }}
-                                        </option>
+    <option value="" disabled>
+        {{ !form.id_userdetail ? 'Pilih Nasabah dulu' : 'Pilih Jadwal' }}
+    </option>
 
-                                        <option v-for="j in filteredJadwal" :key="j.id" :value="j.id">
-                                            {{ formatDate(j.tanggal_setoran) }}
-                                        </option>
-                                    </select>
+    <option v-for="j in filteredJadwal" :key="j.id" :value="j.id">
+        {{ formatDate(j.tanggal_setoran) }}{{ j.jumlahSetoran > 0 ? ` (sudah ${j.jumlahSetoran}x setor)` : '' }}
+    </option>
+</select>
 
-                                    <p v-if="form.id_userdetail && filteredJadwal.length === 0"
-                                        class="text-[10px] text-amber-600 mt-1 italic">
-                                        * Semua jadwal untuk nasabah ini sudah tercatat.
-                                    </p>
+<!-- Ganti pesan warning lama dengan info netral, bukan larangan -->
+<p v-if="form.id_userdetail && filteredJadwal.length === 0"
+    class="text-[10px] text-amber-600 mt-1 italic">
+    * Belum ada jadwal pelaksanaan tersedia.
+</p>
+<p v-else-if="jadwalTerpilihInfo > 0" class="text-[10px] text-blue-600 mt-1 italic">
+    * Nasabah ini sudah {{ jadwalTerpilihInfo }}x menyetor pada jadwal ini. Input ini akan tercatat sebagai setoran tambahan.
+</p>
                                 </div>
 
                             </div>

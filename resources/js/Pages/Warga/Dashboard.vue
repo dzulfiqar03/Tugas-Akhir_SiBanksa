@@ -962,7 +962,7 @@ const deleteDoc = (id) => {
                 <div class="relative z-10">
                     <div class="flex justify-between items-center mb-10">
                         <div>
-                            <p class="text-xs opacity-80 uppercase tracking-widest">Saldo Tabungan</p>
+                            <p class="text-xs opacity-80 uppercase tracking-widest">Total Dana Tercairkan</p>
                             <h2 class="text-4xl font-black mt-2">{{ formatRupiah(totalSaldo) }}
                             </h2>
                         </div>
@@ -1033,7 +1033,7 @@ const deleteDoc = (id) => {
                     <div
                         class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                         <div class="p-6 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center">
-                            <h3 class="font-bold text-gray-800 dark:text-gray-100">Riwayat Setoran</h3>
+                            <h3 class="font-bold text-gray-800 dark:text-gray-100">Riwayat Pencairan</h3>
                             <button v-if="props.recentTransactions?.length > 0" @click="viewPencairan"
                                 class="text-xs text-emerald-600 font-bold">
                                 Lihat Semua
@@ -1046,7 +1046,7 @@ const deleteDoc = (id) => {
                                     class="bg-gray-50 dark:bg-gray-700 text-[10px] text-gray-400 uppercase font-bold">
                                     <tr>
                                         <th class="px-6 py-3">Tanggal</th>
-                                        <th class="px-6 py-3 text-right">Subtotal</th>
+                                        <th class="px-6 py-3 text-right">Nominal Dicairkan</th>
                                     </tr>
                                 </thead>
 
