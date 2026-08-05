@@ -65,6 +65,7 @@ const form = useForm({
     fullName: '',
     pencatatan_setoran_id: '',
     bukti_pembayaran: '',
+    metode_pencairan: '',
     fileDoc: []
 
 
@@ -88,7 +89,6 @@ const renamedFileList = computed(() => {
 
 
 const editData = (item) => {
-    // 1. Cek tipe data: Jika string berarti dari DataTables (Base64), jika object berarti dari Mobile
     let row;
     if (typeof item === 'string') {
         try {
@@ -98,22 +98,19 @@ const editData = (item) => {
             return;
         }
     } else {
-        // Jika sudah berupa object (dari mobile), langsung pakai
         row = item;
     }
-
-    // 2. Sekarang variabel 'row' sudah pasti berisi Object, jalankan logika sisanya
-    console.log("Data yang akan diedit:", row);
 
     isEdit.value = true;
     form.id = row.user_detail?.id_user;
     form.fullName = row.user_detail?.fullName;
     form.id_userdetail = row.id_userdetail;
     form.id_jadwal = row.id_jadwal;
-
-    // Pastikan pengambilan ID aman
     form.pencatatan_setoran_id =
         row.pencatatan_items?.find(i => i.pencatatan_setoran_id)?.pencatatan_setoran_id ?? null;
+
+    // BARU — default ikut preferensi nasabah, tapi bisa diubah bank sampah di form
+    form.metode_pencairan = row.user_detail?.pencairan_via || 'Tunai';
 
     form.bukti_pembayaran = '';
     showForm.value = true;
@@ -1082,6 +1079,30 @@ const maskPhone = (phone) => {
 
                                 <input type="hidden" name="id_userdetail" v-model="form.id_userdetail">
 
+                                <div class="flex flex-col">
+    <InputLabel :for="'metode_pencairan'" :value="'Metode Pencairan (untuk transaksi ini)'" />
+    <div class="flex gap-2 mt-1">
+        <button type="button" @click="form.metode_pencairan = 'Tunai'"
+            :class="form.metode_pencairan === 'Tunai'
+                ? 'bg-emerald-500 text-white border-emerald-500'
+                : 'bg-white dark:bg-gray-900 text-gray-500 border-gray-200 dark:border-gray-700'"
+            class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold border transition">
+            <i class="fas fa-money-bill-wave mr-1"></i> Tunai
+        </button>
+        <button type="button" @click="form.metode_pencairan = 'Non-Tunai'"
+            :class="form.metode_pencairan === 'Non-Tunai'
+                ? 'bg-blue-500 text-white border-blue-500'
+                : 'bg-white dark:bg-gray-900 text-gray-500 border-gray-200 dark:border-gray-700'"
+            class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold border transition">
+            <i class="fas fa-university mr-1"></i> Non Tunai
+        </button>
+    </div>
+    <p class="text-[10px] text-gray-400 mt-1 italic">
+        Preferensi nasabah: {{ form.fullName ? (props.nasabahAll?.find(n => n.user_detail?.id_user === form.id)?.user_detail?.pencairan_via || '-') : '-' }}.
+        Pilihan di atas hanya berlaku untuk transaksi ini.
+    </p>
+    <p v-if="form.errors.metode_pencairan" class="text-red-500 text-xs mt-1">{{ form.errors.metode_pencairan }}</p>
+</div>
                                 <div class="grid grid-cols-1 gap-4">
 
 

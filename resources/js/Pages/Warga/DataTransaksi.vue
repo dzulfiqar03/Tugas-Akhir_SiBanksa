@@ -280,8 +280,7 @@ const viewDetails = (transaction) => {
                                     </button>
                                 </div>
                             </div>
-                            <p class="text-emerald-300/80 text-xs font-bold uppercase tracking-[0.3em] mb-2">Total Saldo
-                                Terkumpul</p>
+                            <p class="text-emerald-300/80 text-xs font-bold uppercase tracking-[0.3em] mb-2">Total Dana Yang Dicairkan</p>
                             <h2 class="text-5xl md:text-6xl text-white font-black tracking-tighter mb-6">
                                 {{ formatRupiah(totalSaldo) }}
                             </h2>
