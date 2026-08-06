@@ -9,6 +9,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SWPushNotifController;
 use App\Http\Controllers\System\InternetConnController;
 use App\Http\Controllers\WelcomePageController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -63,3 +64,11 @@ Route::middleware(['auth', 'session'])->group(function () {
 
 Route::fallback([PageController::class, 'pageNotFound'])->name('fallback');
 Route::get('/splash', fn() => inertia('Splash'))->name('splash');
+
+Route::post('/push-subscribe', function (Request $request) {
+    auth()->user()->updatePushSubscription(
+        $request->endpoint,
+        $request->keys['p256dh'],
+        $request->keys['auth']
+    );
+});

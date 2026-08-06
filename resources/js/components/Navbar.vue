@@ -128,93 +128,66 @@ onMounted(() => {
     // Pastikan userId didefinisikan (diambil dari props atau usePage)
     const userId = page.props.auth.user.id;
 
-    window.Echo
-        .private(`App.Models.User.${userId}`)
-        .notification((n) => {
-            // 1. MAINAKAN SUARA (Gunakan fungsi global playNotif agar lebih aman)
-            if (typeof window.playNotif === 'function') {
-                window.playNotif();
-            } else if (window.audioUnlocked && window.notificationAudio) {
-                // Fallback jika fungsi global tidak ada
-                window.notificationAudio.currentTime = 0;
-                window.notificationAudio.play().catch(e => console.log("Audio blocked:", e));
+    window.Echo.private(`App.Models.User.${userId}`)
+    .notification((n) => {
+        if (typeof window.playNotif === 'function') {
+            window.playNotif();
+        }
+
+        // Native notification HANYA kalau tab tidak fokus / diminimize
+        if (document.hidden && Notification.permission === 'granted') {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready
+                    .then(registration => {
+                        if (registration?.active) {
+                            registration.showNotification(n.title || 'SiBanksa', {
+                                body: n.body || n.message,
+                                icon: '/main-logo.svg',
+                                badge: '/main-logo.svg',
+                                data: { url: n.url || '/dashboard' }
+                            });
+                        }
+                    })
+                    .catch(err => console.error('Gagal memuat Service Worker ready:', err));
+            } else {
+                new Notification(n.title || 'SiBanksa', {
+                    body: n.body || n.message,
+                    icon: '/main-logo.svg',
+                    data: { url: n.url || '/dashboard' }
+                });
             }
+        }
 
-            // 1. Cek izin notifikasi terlebih dahulu
-            if (Notification.permission === 'granted') {
-
-                // 2. Pastikan browser mendukung Service Worker
-                if ('serviceWorker' in navigator) {
-
-                    // 3. Tunggu sampai SW benar-benar siap (Resolve Promise)
-                    navigator.serviceWorker.ready
-                        .then(registration => {
-                            // Pastikan objek registration benar-benar ada dan aktif
-                            if (registration && registration.active) {
-                                registration.showNotification(n.title || 'SiBanksa', {
-                                    body: n.body || n.message,
-                                    icon: '/main-logo.svg', // Pastikan file /main-logo.svg ada di folder public/ root
-                                    badge: '/main-logo.svg',
-                                    data: { url: n.url || '/dashboard' }
-                                });
-                            } else {
-                                // Fallback jika SW terdaftar tapi belum sepenuhnya aktif di halaman ini
-                                console.warn('Service Worker ready tapi belum active. Mencoba fallback ke browser notification.');
-                                new Notification(n.title || 'SiBanksa', {
-                                    body: n.body || n.message,
-                                    icon: '/main-logo.svg',
-                                    badge: '/main-logo.svg',
-                                    data: { url: n.url || '/dashboard' }
-                                });
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Gagal memuat Service Worker ready:', err);
-                        });
-
-                } else {
-                    // Fallback non-Service Worker jika dibuka di browser jadul / mode incognito tertentu
-                    new Notification(n.title || 'SiBanksa', {
-                        body: n.body || n.message,
-                        icon: '/main-logo.svg',
-                        badge: '/main-logo.svg',
-                        data: { url: n.url || '/dashboard' }
-                    });
-                }
-            }
-            // 2. TAMPILKAN SWAL
-            Swal.fire({
-                title: 'Notifikasi Baru!',
-                text: n.message,
-                icon: 'success',
-                toast: true,
-                position: 'top-end',
-                timer: 5000,
-                showConfirmButton: false,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.style.cursor = 'pointer';
-                    toast.onmouseenter = Swal.stopTimer;
-                    toast.onmouseleave = Swal.resumeTimer;
-                    toast.onclick = () => {
-                        // Gunakan router.visit agar tidak reload full page
-                        router.visit(n.url || '/notifications');
-                    };
-                },
-            });
-
-            notifications.value.unshift({
-                id: n.id || Date.now(),
-                message: n.message,
-                url: n.url,
-                created_at: 'Baru saja', // Sesuaikan dengan key dari database Anda
-                read_at: null
-            });
-
-            count.value++;
-
-            router.reload({ only: ['initialNotifications', 'unreadCount'] });
+        // Toast SELALU tampil karena tab lagi aktif dilihat user
+        Swal.fire({
+            title: 'Notifikasi Baru!',
+            text: n.message,
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            timer: 5000,
+            showConfirmButton: false,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.style.cursor = 'pointer';
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+                toast.onclick = () => router.visit(n.url || '/notifications');
+            },
         });
+
+        notifications.value.unshift({
+            id: n.id || Date.now(),
+            message: n.message,
+            url: n.url,
+            created_at: 'Baru saja',
+            read_at: null
+        });
+
+        count.value++;
+
+        router.reload({ only: ['initialNotifications', 'unreadCount'] });
+    });
 
         //  window.Echo.private(`rt.${user.value?.user_detail?.id_rt}`)
         // .notification((n) => {

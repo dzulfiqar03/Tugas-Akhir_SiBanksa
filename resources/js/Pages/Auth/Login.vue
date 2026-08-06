@@ -277,10 +277,22 @@ const toggleVisibility = (field) => {
                                     </svg>
                                 </div>
                             </Link>
-                            <Link href="/register"
+                            <div class="flex space-x-1 items-center">
+                  <a href="https://drive.google.com/uc?export=download&id=1erFhUhyfl5mmUCkewNxJeVRhDNxKzADl"
+    target="_blank" rel="noopener noreferrer"
+    class="group flex items-center gap-1 rounded-lg text-xs font-medium bg-emerald-500 px-3 py-2 text-white dark:text-emerald-400 overflow-hidden">
+    <i class="fas fa-book"></i>
+    <span class="max-w-0 group-hover:max-w-xs whitespace-nowrap overflow-hidden transition-all duration-300 group-hover:underline">
+        Unduh Manual Book
+    </span>
+</a>
+
+                     <Link href="/register"
                                 class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg">
                                 Daftar Akun
                             </Link>
+                            </div>
+
                         </div>
 
                     </div>

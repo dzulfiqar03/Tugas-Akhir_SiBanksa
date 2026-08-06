@@ -160,6 +160,7 @@
 
         </div>
     </div>
+
 </template>
 
 
@@ -270,6 +271,62 @@ window.playNotif = playNotification;
 const isSessionExpired = ref(false)
 const showIOSInstall = ref(false)
 
+/* =========================
+   URL BASE64 -> UINT8ARRAY (dibutuhkan VAPID key)
+========================= */
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4)
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+    const rawData = window.atob(base64)
+    const outputArray = new Uint8Array(rawData.length)
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i)
+    }
+    return outputArray
+}
+
+/* =========================
+   REGISTER SW & PUSH SUBSCRIBE
+========================= */
+async function registerPushNotification() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.warn('Push notification tidak didukung browser ini')
+        return
+    }
+
+    try {
+        const reg = await navigator.serviceWorker.register('/sw.js')
+        console.log('SW Registered!', reg)
+
+        const permission = await Notification.requestPermission()
+        if (permission !== 'granted') {
+            console.warn('Izin notifikasi ditolak user')
+            return
+        }
+
+        let subscription = await reg.pushManager.getSubscription()
+        if (!subscription) {
+            subscription = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(page.props.vapidPublicKey),
+            })
+        }
+
+        await fetch('/push-subscribe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(subscription)
+        })
+
+        console.log('Subscription berhasil dikirim ke server')
+    } catch (err) {
+        console.error('Gagal registrasi push notification:', err)
+    }
+}
+
 onMounted(() => {
     updateTheme()
 
@@ -283,11 +340,7 @@ onMounted(() => {
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW Registered!', reg))
-            .catch(err => console.error('SW Registration Failed:', err));
-    }
+ registerPushNotification()
 
     router.on('invalid', (event) => {
         const status = event.detail.response.status
