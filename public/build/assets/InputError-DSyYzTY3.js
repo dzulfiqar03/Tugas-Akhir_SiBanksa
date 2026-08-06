@@ -1,1 +1,0 @@
-import{j as t,L as s,g as a,d as r,t as o,o as c}from"./app-CuzoSVHP.js";const n={class:"text-sm text-red-600 dark:text-red-400"},d={__name:"InputError",props:{message:{type:String}},setup(e){return(i,m)=>t((c(),a("div",null,[r("p",n,o(e.message),1)],512)),[[s,e.message]])}};export{d as _};

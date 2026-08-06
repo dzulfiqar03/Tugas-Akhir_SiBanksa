@@ -103,7 +103,7 @@ class HandleInertiaRequests extends Middleware
             ];
         }
         return array_merge(parent::share($request), [
-
+            'vapidPublicKey' => config('webpush.vapid.public_key'),
             'flash' => [
                 'message' => fn() => $request->session()->get('message'),
             ],
