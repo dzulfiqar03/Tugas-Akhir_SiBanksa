@@ -1,21 +1,26 @@
 Security Policy
 Supported Versions
+
 Proyek ini merupakan Tugas Akhir yang dikembangkan dan dipelihara secara aktif. Hanya versi terbaru di branch main yang mendapat pembaruan keamanan.
+
 Version	Supported
 main (latest)	:white_check_mark:
 < main	:x:
+
 Reporting a Vulnerability
 Jika kamu menemukan celah keamanan (vulnerability) pada aplikasi ini, mohon jangan membuka issue publik di GitHub. Silakan laporkan langsung melalui:
 Email: muhammaddzulfiqar03@gmail.com
 Subjek email: [SECURITY] SiBanksa - <ringkasan singkat masalah>
+
 Sertakan dalam laporan:
-Deskripsi celah keamanan dan potensi dampaknya
-Langkah-langkah untuk mereproduksi masalah (jika memungkinkan)
-Versi/commit yang terpengaruh
-Apa yang bisa diharapkan
-Konfirmasi penerimaan laporan dalam 1–3 hari kerja
-Update status investigasi dalam 7 hari kerja
-Jika celah dikonfirmasi valid, perbaikan akan diprioritaskan dan dirilis secepat mungkin, dengan kredit ke pelapor (kecuali diminta anonim)
-Jika laporan ditolak (bukan celah keamanan, out of scope, dsb.), akan diberikan penjelasan alasannya
+- Deskripsi celah keamanan dan potensi dampaknya
+- Langkah-langkah untuk mereproduksi masalah (jika memungkinkan)
+- Versi/commit yang terpengaruh
+- Apa yang bisa diharapkan
+- Konfirmasi penerimaan laporan dalam 1–3 hari kerja
+- Update status investigasi dalam 7 hari kerja
+- Jika celah dikonfirmasi valid, perbaikan akan diprioritaskan dan dirilis secepat mungkin, dengan kredit ke pelapor (kecuali diminta anonim)
+- Jika laporan ditolak (bukan celah keamanan, out of scope, dsb.), akan diberikan penjelasan alasannya
+
 Catatan
 Repository ini bersifat publik untuk keperluan akademik (Tugas Akhir) dan dilindungi oleh HKI No. EC002026139430. Laporan keamanan tetap sangat dihargai meskipun proyek ini bukan aplikasi produksi skala besar — laporan akan ditinjau dan ditangani sebagaimana mestinya.
