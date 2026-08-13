@@ -258,7 +258,7 @@ const formatDates = (dateString) => {
                                 <p class="text-xs text-gray-600 dark:text-gray-300">
                                     PJ: {{ step.petugas }}
                                 </p>
-                               
+
                             </div>
 
                         </div>
