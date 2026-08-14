@@ -224,4 +224,9 @@ Proyek ini dikembangkan untuk keperluan akademik (Tugas Akhir). Silakan hubungi 
 
 Dikembangkan oleh **Muhammad Dzulfiqar** — Mahasiswa Sistem Informasi 2022, Telkom University Surabaya.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dzulfiqar03/dzulfiqar03/output/github-contribution-grid-snake-dark.svg#gh-dark-mode-only" alt="snake animation" />
+  <img src="https://raw.githubusercontent.com/dzulfiqar03/dzulfiqar03/output/github-contribution-grid-snake.svg#gh-light-mode-only" alt="snake animation" />
+</p>
+
 <p align="center">Made with ♻️ for a cleaner neighborhood</p>
