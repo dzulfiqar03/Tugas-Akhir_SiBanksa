@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0   # wajib, biar semua commit history repo ini terbaca
 
       - name: Generate snake SVG
-        run: node .github/scripts/generate-repo-snake.js
+        run: node .github/scripts/generate-repo-snake.cjs
 
       - name: Simpan svg sementara di luar repo
         run: cp dist/repo-snake.svg /tmp/repo-snake.svg
