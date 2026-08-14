@@ -1,0 +1,37 @@
+name: Generate Repo Snake
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # sekali sehari
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # wajib, biar semua commit history repo ini terbaca
+
+      - name: Generate snake SVG
+        run: node .github/scripts/generate-repo-snake.js
+
+      - name: Simpan svg sementara di luar repo
+        run: cp dist/repo-snake.svg /tmp/repo-snake.svg
+
+      - name: Push ke branch snake-output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan snake-output
+          git reset --hard
+          cp /tmp/repo-snake.svg ./repo-snake.svg
+          git add repo-snake.svg
+          git commit -m "Update repo snake"
+          git push origin snake-output --force
